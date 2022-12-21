@@ -21,22 +21,19 @@ __plugin_meta__ = PluginMetadata(
 信息数据  # 查看已启用群以及服务器信息
 """,
 )
-file_path = Path(__file__).parent
+path = Path("data")
 data_filename = "mc_status_data.json"
 group_list = {}
 
-
 def read_file():
-    # with open(f"data/{data_filename}", "r", encoding="utf-8") as r:
-    with open(file_path / data_filename, "r", encoding="utf-8") as r:
+    with open(path / data_filename, "r", encoding="utf-8") as r:
         tmp_data = load(r)
         for i in tmp_data:
             group_list[int(i)] = tmp_data[i]
 
 
 def save_file():
-    # with open(f"data/{data_filename}", "w", encoding="utf-8") as w:
-    with open(file_path / data_filename, "w", encoding="utf-8") as w:
+    with open(path / data_filename, "w", encoding="utf-8") as w:
         dump(group_list, w, indent=4, ensure_ascii=False)
 
 
@@ -45,6 +42,8 @@ driver = get_driver()
 
 @driver.on_startup
 async def on_startup():
+    if not Path.exists(path):
+        Path.mkdir(path)
     try:
         read_file()
     except:
