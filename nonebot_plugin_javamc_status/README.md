@@ -1,20 +1,16 @@
 <!-- [![tests](https://github.com/ffreemt/nonebot-plugin-guess-game/actions/workflows/routine-tests.yml/badge.svg)](https://github.com/ffreemt/nonebot-plugin-guess-game/actions/workflows/routine-tests.yml) -->
-# nonebot-plugin-javamc-status
+# nonebot_plugin_javamc_status
 [![nonebot2](https://img.shields.io/static/v1?label=nonebot&message=v2rc1%2B&color=green)](https://v2.nonebot.dev/)[![python](https://img.shields.io/static/v1?label=python+&message=3.9%2B&color=blue)](https://img.shields.io/static/v1?label=python+&message=3.7%2B&color=blue)[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Nonebot2查询JAVA MC服务器在线信息插件
 
 ### 安装
 
+使用nb-cli安装
 ```bash
-pip install nonebot-plugin-javamc-status
+nb plugin install nonebot_plugin_javamc_status
 ```
-```python
-# 在bot.py添加
-...
-nonebot.load_plugin("nonebot-plugin-javamc-status")
-...
-```
+
 或者  
 直接把插件clone下来放进去plugins文件夹
 
