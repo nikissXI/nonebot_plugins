@@ -12,7 +12,7 @@ pip install nonebot-plugin-javamc-status
 ```python
 # 在bot.py添加
 ...
-nonebot.load_plugin("nonebot_plugin_guess")
+nonebot.load_plugin("nonebot-plugin-javamc-status")
 ...
 ```
 或者  
