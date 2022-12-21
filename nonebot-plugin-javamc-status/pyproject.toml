@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "nonebot-plugin-mc-status"
+name = "nonebot-plugin-javamc-status"
 version = "0.1.0"
 description = "Nonebot2查询JAVA MC服务器在线信息插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "nonebot-plugin-mc-status"}]
-homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_status"
-repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_status"
-documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_status#README.md"
+packages = [{include = "nonebot-plugin-javamc-status"}]
+homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot-plugin-javamc-status"
+repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot-plugin-javamc-status"
+documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot-plugin-javamc-status#README.md"
 
 [[tool.poetry.source]]
 name = "tsinghua"

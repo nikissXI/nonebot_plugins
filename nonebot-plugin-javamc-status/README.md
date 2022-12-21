@@ -1,5 +1,5 @@
 <!-- [![tests](https://github.com/ffreemt/nonebot-plugin-guess-game/actions/workflows/routine-tests.yml/badge.svg)](https://github.com/ffreemt/nonebot-plugin-guess-game/actions/workflows/routine-tests.yml) -->
-# nonebot-plugin-mc-status
+# nonebot-plugin-javamc-status
 [![nonebot2](https://img.shields.io/static/v1?label=nonebot&message=v2rc1%2B&color=green)](https://v2.nonebot.dev/)[![python](https://img.shields.io/static/v1?label=python+&message=3.9%2B&color=blue)](https://img.shields.io/static/v1?label=python+&message=3.7%2B&color=blue)[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Nonebot2查询JAVA MC服务器在线信息插件
@@ -7,31 +7,19 @@ Nonebot2查询JAVA MC服务器在线信息插件
 ### 安装
 
 ```bash
-pip install nonebot-plugin-guess
-# pip install nonebot-plugin-guess -U  # 升级到最新版
+pip install nonebot-plugin-javamc-status
 ```
-or
-```bash
-poetry add nonebot-plugin-guess
-# poetry add nonebot-plugin-guess@latest   # 升级到最新版
-```
-or
-```
-poetry add git+https://github.com/ffreemt/nonebot-plugin-guess-game.git
-```
-or
-```
-pip install git+https://github.com/ffreemt/nonebot-plugin-guess-game.git
-```
-
-
-### 使用
 ```python
-# bot.py
+# 在bot.py添加
 ...
 nonebot.load_plugin("nonebot_plugin_guess")
 ...
 ```
+或者  
+直接把插件clone下来放进去plugins文件夹
+
+### 使用
+
 添加了服务器信息后，会在bot根目录下的data目录创建一个mc_status_data.json文件，用于存储插件信息
 
 ### 默认命令  
