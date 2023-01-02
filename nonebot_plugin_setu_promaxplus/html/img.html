@@ -1,0 +1,61 @@
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+
+<style>
+    a {
+        text-decoration: none;
+    }
+
+    /*定义竖屏 css*/
+    @media screen and (orientation:portrait) {
+        img {
+            max-width: 80vw;
+            max-height: auto;
+            margin: 0 0 10pt 0;
+        }
+    }
+
+    /*定义横屏 css*/
+    @media screen and (orientation:landscape) {
+        img {
+            max-height: 80vh;
+            max-width: auto;
+            margin: 0 0 10pt 0;
+        }
+    }
+
+</style>
+
+<body>
+    <div style="text-align:center;">
+        <p>
+            <a href="javascript:alert('某些图片需要梯子，目前仍在测试阶段，访问不保证稳定性\n如要直接获取图片链接在链接加上&fw=1');">
+                喵喵温馨提醒
+            </a>&emsp13;
+            <a href="{{ img_api_url_num }}&c=3">三连发</a>
+            <a href="{{ img_api_url_num }}&c=5">五连发</a>
+            <a href="{{ img_api_url_num }}&c=10">十连发</a>
+            <br />
+
+            {{ urls | safe }}
+            <a href="{{ img_api_url_fn }}">个人库</a>
+            &emsp13;
+            <a href="{{ img_api_url_all }}">随机</a>
+        </p>
+        <div>
+            {{ img_list | safe }}
+        </div>
+        <a  style="padding-bottom: 20px;font-size: large;" href="{{ img_api_url }}">不够看？点击下一批</a>
+    </div>
+</body>
+<script>
+
+
+</script>
+
+</html>
