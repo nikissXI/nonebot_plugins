@@ -175,9 +175,9 @@ async def handle_tutu(bot: Bot, event: MessageEvent, matchgroup=RegexGroup()):
                     group_id=event.group_id, messages=msg_list
                 )
             )["message_id"]
-        except:
+        except Exception as e:
             var.group_cooldown.discard(event.group_id)
-            await tutu.finish(f"图片（合并消息）发送失败")
+            await tutu.finish(f"图片（合并消息）发送失败 {repr(e)}")
 
         var.group_cooldown.discard(event.group_id)
         await sleep(80)
@@ -188,8 +188,8 @@ async def handle_tutu(bot: Bot, event: MessageEvent, matchgroup=RegexGroup()):
     elif merge_send:
         try:
             await bot.send_private_forward_msg(user_id=event.user_id, messages=msg_list)
-        except:
-            await tutu.send(f"图片（合并消息）发送失败")
+        except Exception as e:
+            await tutu.send(f"图片（合并消息）发送失败 {repr(e)}")
         finally:
             var.user_cooldown.discard(event.user_id)
             await tutu.finish()
