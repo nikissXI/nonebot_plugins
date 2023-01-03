@@ -155,7 +155,7 @@ https://mp.weixin.qq.com/
 
 **爬取B站专栏图片**  
 用网页打开某个UP的账号空间，点TA的专栏，就会打开 https://space.bilibili.com/XXXXXXX/article  
-<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/bili.jpg"/>
+<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/bili.jpg"/>  
 然后就会自动翻页爬取所有文章url了，可以在结果文件夹里看到进度，爬取完会有个DONE文件
 
 **提取文章url**  
