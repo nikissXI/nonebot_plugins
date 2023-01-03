@@ -110,7 +110,7 @@ https://image.anosu.top/pixiv/direct?r18=1
 
 **本地图片库**  
 即data/tutu_local_img_lib/中的图片，放入图片url文件后，使用命令“图图插件接口管理 刷新本地”进行导入  
-访问接口url如果没有在.env配置tutu_site_url，就是nonebot的地址和端口号，如绑定的host=127.0.0.1，port=8080，就是http://127.0.0.1:8080/img_api?fw=1&fn=\<filename\>
+访问接口url如果没有在.env配置tutu_site_url，就是nonebot的地址和端口号，如绑定的host=127.0.0.1，port=8080，就是http://127.0.0.1:8080/img_api?fw=1&fn=<filename\>
 | 参数 | 说明 |
 |:-----:|:----:|
 | fw | 是否重定向，0返回网页，1重定向到图片url |
