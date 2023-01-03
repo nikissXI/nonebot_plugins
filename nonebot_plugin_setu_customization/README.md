@@ -120,7 +120,7 @@ https://image.anosu.top/pixiv/direct?r18=1
 # 添加一个接口到二次元类型接口
 图图插件接口管理 二次元 + https://api.lolicon.app/setu/v2
 # 添加一个本地图片库接口到三次元类型接口
-图图插件接口管理 三次元 + http://127.0.0.1:8080/img_api?fw=1&fn=self_cosplay
+图图插件接口管理 三次元 + 本地图库self_cosplay
 # 爬取一篇微信文章的图片到本地图片库self_anime
 https://mp.weixin.qq.com/s/IHeYqZTu8xYLv7nDkRwxUQ self_anime
 # 该命令等效于上面的命令 默认2指self_anime，3指self_cosplay

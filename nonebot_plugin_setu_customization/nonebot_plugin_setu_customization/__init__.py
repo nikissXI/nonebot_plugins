@@ -284,6 +284,12 @@ async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
         if api_type not in var.api_list_online:
             await api_manage.finish(f"不存在【{api_type}】类型api，删除失败")
         else:
+            if todo_api_url.find("本地图库") != -1:
+                filename = todo_api_url[4:]
+                todo_api_url = (
+                    f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
+                )
+
             if todo_api_url in var.api_list_online[api_type]:
                 var.api_list_online[api_type].remove(todo_api_url)
                 if not var.api_list_online[api_type]:
@@ -298,9 +304,11 @@ async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
 
     elif choice == "+":
         if api_type in var.api_list_online:
-            if todo_api_url.find("本地图库"):
+            if todo_api_url.find("本地图库") != -1:
                 filename = todo_api_url[4:]
-                todo_api_url= f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
+                todo_api_url = (
+                    f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
+                )
 
             if todo_api_url not in var.api_list_online[api_type]:
                 var.api_list_online[api_type].append(todo_api_url)
