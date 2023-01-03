@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_javamc_status"
-version = "0.1.1"
+version = "0.1.2"
 description = "Nonebot2查询JAVA MC服务器在线信息插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
