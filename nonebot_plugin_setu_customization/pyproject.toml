@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "nonebot_plugin_setu_customization"
 version = "0.1.0"
-description = "Nonebot2 超级setu插件（bushi"
+description = "Nonebot2 可动态管理API并带网页浏览的setu插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
 readme = "README.md"
