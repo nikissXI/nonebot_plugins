@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "nonebot_plugin_setu_promaxplus"
+name = "nonebot_plugin_setu_customization"
 version = "0.1.0"
 description = "Nonebot2 超级setu插件（bushi"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "nonebot_plugin_setu_promaxplus"}]
-homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_promaxplus"
-repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_promaxplus"
-documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_promaxplus#README.md"
+packages = [{include = "nonebot_plugin_setu_customization"}]
+homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization"
+repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization"
+documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization#README.md"
 
 [[tool.poetry.source]]
 name = "tsinghua"
