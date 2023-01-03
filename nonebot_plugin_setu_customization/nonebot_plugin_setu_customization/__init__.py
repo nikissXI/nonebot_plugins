@@ -44,10 +44,16 @@ __plugin_meta__ = PluginMetadata(
 )
 
 # 群判断
-async def group_check(event: GroupMessageEvent, bot: Bot) -> bool:
-    return (
-        event.group_id in var.group_list and bot.self_id == plugin_config.tutu_bot_qqnum
-    )
+async def tutu_check(event: MessageEvent, bot: Bot) -> bool:
+    if isinstance(event, PrivateMessageEvent):
+        return event.sub_type == "friend"
+    elif isinstance(event, GroupMessageEvent):
+        return (
+            event.group_id in var.group_list
+            and bot.self_id == plugin_config.tutu_bot_qqnum
+        )
+    else:
+        return False
 
 
 # 管理员判断
@@ -58,7 +64,7 @@ async def admin_check(event: MessageEvent, bot: Bot) -> bool:
     )
 
 
-tutu = on_regex(r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$", rule=group_check)
+tutu = on_regex(r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$", rule=tutu_check)
 group_manage = on_regex(r"^图图插件群管理\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
 api_manage = on_regex(r"^图图插件接口管理\s*((\S+)(\s+(\+|\-)?\s+(\S+)?)?)?", rule=admin_check)
 api_test = on_regex(r"^图图插件接口测试\s*(\S+)?", rule=admin_check)
@@ -404,7 +410,9 @@ async def handle_wx_paqu(
     # else:
     img_url = matchgroup[0]
     if img_url == "文章爬取":
-        await art_paqu.finish("发送微信或B站的文章url\n微信文章 https://mp.weixin.qq.com/s 开头\nB站专栏文章 https://www.bilibili.com/read/cv 开头")
+        await art_paqu.finish(
+            "发送微信或B站的文章url\n微信文章 https://mp.weixin.qq.com/s 开头\nB站专栏文章 https://www.bilibili.com/read/cv 开头"
+        )
 
     filename = matchgroup[1]
     if not filename:
