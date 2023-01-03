@@ -34,8 +34,8 @@ tutu_self_anime_lib =  self_anime
 tutu_self_cosplay_lib = self_cosplay
 # 插件数据文件名
 tutu_data_filename = tutu_data.json
-# 网页访问地址，就是nonebot的监听地址和端口号，如 http://127.0.0.1:8080
-tutu_site_url = http://127.0.0.1:8080
+# 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
+tutu_site_url = http://hahaha.com:80
 # socks5代理地址，如 socks5://127.0.0.1:1234
 tutu_socks5_proxy = socks5://127.0.0.1:1234
 # http代理地址，如 http://127.0.0.1:1234
