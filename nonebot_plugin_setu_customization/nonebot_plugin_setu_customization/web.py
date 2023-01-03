@@ -47,7 +47,9 @@ async def img_api(
             for i in range(c):
                 img_url_list.append(choice(var.api_list_local[file_name]))
     else:
-        if mode == "all":
+        if not var.api_list_online:
+            return "no image"
+        elif mode == "all":
             for i in range(c):
                 img_type = choice(
                     [

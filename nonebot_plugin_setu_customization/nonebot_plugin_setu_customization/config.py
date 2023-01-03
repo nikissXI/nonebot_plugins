@@ -20,7 +20,7 @@ class Config(BaseModel, extra=Extra.ignore):
     tutu_self_cosplay_lib: str = "self_cosplay"
     # 插件数据文件名
     tutu_data_filename: str = "tutu_data.json"
-    # 网页访问地址，就是nonebot的监听地址和端口号，如 http://127.0.0.1:8080
+    # 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
     port: int = 8080
     tutu_site_url: str = f"http://127.0.0.1:{port}"
     # socks5代理地址，如 socks5://127.0.0.1:1234

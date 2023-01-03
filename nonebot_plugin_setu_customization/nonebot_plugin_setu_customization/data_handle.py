@@ -82,14 +82,18 @@ async def get_img_url(
     """
     向API发起请求，获取返回的图片url
     """
-    if plugin_config.tutu_socks5_proxy:
-        transport = AsyncProxyTransport.from_url(plugin_config.tutu_socks5_proxy)
-    else:
-        transport = None
+    socks5_proxy = None
+    http_proxy = None
+    if api_url.find("127.0.0.1") == -1:
+        if plugin_config.tutu_socks5_proxy:
+            socks5_proxy = AsyncProxyTransport.from_url(plugin_config.tutu_socks5_proxy)
+        if plugin_config.tutu_http_proxy:
+            http_proxy = plugin_config.tutu_http_proxy
+
     async with AsyncClient(
         headers=var.headers,
-        transport=transport,
-        proxies=plugin_config.tutu_http_proxy,
+        transport=socks5_proxy,
+        proxies=http_proxy,
         timeout=10,
         verify=False,
     ) as c:

@@ -34,12 +34,12 @@ tutu_self_anime_lib =  self_anime
 tutu_self_cosplay_lib = self_cosplay
 # 插件数据文件名
 tutu_data_filename = tutu_data.json
-# 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
-tutu_site_url = http://hahaha.com:80
 # socks5代理地址，如 socks5://127.0.0.1:1234
 tutu_socks5_proxy = socks5://127.0.0.1:1234
 # http代理地址，如 http://127.0.0.1:1234
 tutu_http_proxy = http://127.0.0.1:1234
+# 网页访问地址，不用网页浏览可不填，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
+tutu_site_url = http://hahaha.com:80
 # 使用网页访问时，微信图片反代地址，不用网页浏览可不填，如 http://img.example.top:114
 tutu_wx_img_proxy = http://img.example.top:114
 # 使用网页访问时，B站图片反代地址，不用网页浏览可不填，如 http://img.example.top:514

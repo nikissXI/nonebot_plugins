@@ -198,8 +198,8 @@ async def handle_tutu(bot: Bot, event: MessageEvent, matchgroup=RegexGroup()):
     else:
         try:
             await gather(*msg_list)
-        except:
-            await tutu.send(f"有部分图片发送失败")
+        except Exception as e:
+            await tutu.send(f"有部分图片发送失败 {repr(e)}")
         else:
             await tutu.finish("发送完毕~如果还有图没出来可能在路上哦")
         finally:
@@ -260,12 +260,12 @@ async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
         else:
             show_api_type_text = ""
         await api_manage.finish(
-            f"图图插件接口管理 {show_api_type_text}新类型/刷新本地 +/- [接口url]\n{api_list_online_text}\n【本地图片库】\n{api_list_local_text}"
+            f"图图插件接口管理 {show_api_type_text}新类型/刷新本地 +/- [接口url/本地图库<文件名>]\n{api_list_online_text}\n【本地图片库】\n{api_list_local_text}"
         )
     else:
-        api_type = matchgroup[1]
-        choice = matchgroup[3]
-        todo_api_url = matchgroup[4]
+        api_type: str = matchgroup[1]
+        choice: str = matchgroup[3]
+        todo_api_url: str = matchgroup[4]
 
     if api_type == "刷新本地":
         load_local_api()
@@ -298,6 +298,10 @@ async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
 
     elif choice == "+":
         if api_type in var.api_list_online:
+            if todo_api_url.find("本地图库"):
+                filename = todo_api_url[4:]
+                todo_api_url= f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
+
             if todo_api_url not in var.api_list_online[api_type]:
                 var.api_list_online[api_type].append(todo_api_url)
                 msg = f"【{api_type}】添加新的api成功"
@@ -598,13 +602,17 @@ async def handle_img_test(matchgroup=RegexGroup()):
     else:
         img_url = url_diy_replace(img_url)
         if plugin_config.tutu_socks5_proxy:
-            transport = AsyncProxyTransport.from_url(plugin_config.tutu_socks5_proxy)
+            socks5_proxy = AsyncProxyTransport.from_url(plugin_config.tutu_socks5_proxy)
         else:
-            transport = None
+            socks5_proxy = None
+        if plugin_config.tutu_http_proxy:
+            http_proxy = plugin_config.tutu_http_proxy
+        else:
+            http_proxy = None
         async with AsyncClient(
             headers=var.headers,
-            transport=transport,
-            proxies=plugin_config.tutu_http_proxy,
+            transport=socks5_proxy,
+            proxies=http_proxy,
             timeout=10,
             verify=False,
         ) as c:
