@@ -66,7 +66,7 @@ async def admin_check(event: MessageEvent, bot: Bot) -> bool:
 
 tutu = on_regex(r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$", rule=tutu_check)
 group_manage = on_regex(r"^图图插件群管理\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
-api_manage = on_regex(r"^图图插件接口管理\s*((\S+)(\s+(\+|\-)?\s+(\S+)?)?)?", rule=admin_check)
+api_manage = on_regex(r"^图图插件接口管理\s*((\S+)(\s+(\+|\-)?\s+([\s\S]*)?)?)?", rule=admin_check)
 api_test = on_regex(r"^图图插件接口测试\s*(\S+)?", rule=admin_check)
 tutu_kaipa = on_regex(r"^开爬\s*(停止|暂停|终止)?", rule=admin_check)
 art_paqu = on_regex(
@@ -303,29 +303,38 @@ async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
                 await api_manage.finish("不存在该api，删除失败")
 
     elif choice == "+":
-        if api_type in var.api_list_online:
+        todo_api_url_list = todo_api_url.split()
+        for todo_api_url in todo_api_url_list:
             if todo_api_url.find("本地图库") != -1:
                 filename = todo_api_url[4:]
                 todo_api_url = (
                     f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
                 )
 
-            if todo_api_url not in var.api_list_online[api_type]:
-                var.api_list_online[api_type].append(todo_api_url)
-                msg = f"【{api_type}】添加新的api成功"
+            if api_type in var.api_list_online:
+                if todo_api_url.find("本地图库") != -1:
+                    filename = todo_api_url[4:]
+                    todo_api_url = (
+                        f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
+                    )
+
+                if todo_api_url not in var.api_list_online[api_type]:
+                    var.api_list_online[api_type].append(todo_api_url)
+                    msg = f"{todo_api_url}\n添加到【{api_type}】"
+                else:
+                    await api_manage.send(f"{todo_api_url}\n已经添加过了")
+                    continue
             else:
-                await api_manage.finish("该api已经添加过了")
-        else:
-            var.api_list_online[api_type] = [todo_api_url]
-            msg = f"新增【{api_type}】类别，为其添加新的api成功"
-        save_data()
-        await api_manage.send(msg + "\n开始对api测试")
+                var.api_list_online[api_type] = [todo_api_url]
+                msg = f"新增【{api_type}】类别，为其添加新的api成功"
+            save_data()
+            await api_manage.send(msg + "\n开始对api测试")
 
-        success, text, ext_msg = await get_img_url(todo_api_url)
-        if success:
-            msg = f"API: {todo_api_url}\nimg_url: {text}\n{ext_msg}"
-            await api_manage.finish(msg)
-
+            success, text, ext_msg = await get_img_url(todo_api_url)
+            if success:
+                msg = f"API: {todo_api_url}\nimg_url: {text}\n{ext_msg}"
+                await api_manage.send(msg)
+        await api_manage.finish("api添加操作完毕")
 
 @api_test.handle()
 async def handle_api_test(matchgroup=RegexGroup()):

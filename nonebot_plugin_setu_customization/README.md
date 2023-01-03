@@ -60,8 +60,8 @@ data/tutu_data.json 存储群白名单信息，api接口信息，合并发送开
 data/tutu_local_img_lib/ 存储用户自己上传的图片url文件，如下图  
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/local_img_lib.jpg"/>
 
-如果要自己爬图入库的看最下方  
-tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文件，还是看最下方
+如果要自己爬图入库的看readme的《文章图片爬取》  
+tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文件，还是看readme的《文章图片爬取》  
 
 ### 命令  
 | 指令 | 说明 |
@@ -76,7 +76,7 @@ tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文
 | 爬取合并 | 是否将爬取结果合并发送，默认合并 |
 | 图片序号 | 每张发出来的图片都有一个序号，可查看之前发送的图片url |
 | 图片删除 | 删除本地库的某张图片 |
-| 开爬 | 上传指定格式的文件让nb爬（详情看readme最下方） |
+| 开爬 | 上传指定格式的文件让nb爬，详情看readme的《文章图片爬取》 |
 
 ### 自定义图片url关键字替换
 在data_handle.py文件里面的 url_diy_replace 函数，如果有其他更好的反代地址或其他需求可以自行调整
@@ -121,6 +121,11 @@ https://image.anosu.top/pixiv/direct?r18=1
 ```bash
 # 添加一个接口到二次元类型接口
 图图插件接口管理 二次元 + https://api.lolicon.app/setu/v2
+# 支持批量添加接口
+图图插件接口管理 二次元 + 
+https://api.lolicon.app/setu/v2  
+http://api.tangdouz.com/sjdmbz.php  
+https://api.dujin.org/pic/yuanshen/  
 # 添加一个本地图片库接口到三次元类型接口
 图图插件接口管理 三次元 + 本地图库self_cosplay
 # 爬取一篇微信文章的图片到本地图片库self_anime
@@ -170,3 +175,13 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 在nonebot根目录的“tutu_crawler”里新建一个文件夹，文件夹名字是爬取的图片加入的本地图片库，如“self_anime”，也可以直接新建一个名字“2”的文件夹，默认2指self_anime，3指self_cosplay  
 把wait_for_upload里面的文件根据类型上传到 tutu_crawler/<本地图片库>/里面  
 然后给机器人私聊发送“开爬”就会自动爬取
+
+## 更新
+
+### 2022/1/3 \[v1.1.0]
+
+* 增加批量导入api
+
+### 2022/1/3 \[v1.0.0]
+
+* 发布插件
