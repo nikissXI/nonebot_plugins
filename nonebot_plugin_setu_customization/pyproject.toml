@@ -18,7 +18,7 @@ default = true
 [tool.poetry.dependencies]
 python = "^3.9"
 nonebot2 = "^2.0.0-rc.1"
-nonebot-adapter-onebot = "^2.0.0-rc.1"
+nonebot-adapter-onebot = "^2.0.0"
 httpx = "^0.23.0"
 httpx-socks = "^0.7.3"
 beautifulsoup4 = "^4.0.0"
