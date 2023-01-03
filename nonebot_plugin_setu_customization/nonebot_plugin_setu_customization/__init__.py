@@ -83,6 +83,8 @@ img_test = on_regex(r"^图片测试\s*(\S+)?$", rule=admin_check)
 
 @tutu.handle(parameterless=[helpers.Cooldown(cooldown=3, prompt="我知道你很急，但你先别急")])
 async def handle_tutu(bot: Bot, event: MessageEvent, matchgroup=RegexGroup()):
+    if not var.api_list_online:
+        await tutu.finish("没有图片api呢")
     # CD
     if isinstance(event, GroupMessageEvent):
         if event.group_id in var.group_cooldown:
@@ -251,8 +253,14 @@ async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
                 for filename in var.api_list_local
             ]
         )
+        if not api_list_local_text:
+            api_list_local_text = "空"
+        if var.api_list_online:
+            show_api_type_text = f"{list(var.api_list_online)}/"
+        else:
+            show_api_type_text = ""
         await api_manage.finish(
-            f"图图插件接口管理 {list(var.api_list_online)}/新类型/刷新本地 +/- [接口url]\n{api_list_online_text}\n【本地api库（fn参数）】\n{api_list_local_text}"
+            f"图图插件接口管理 {show_api_type_text}新类型/刷新本地 +/- [接口url]\n{api_list_online_text}\n【本地图片库】\n{api_list_local_text}"
         )
     else:
         api_type = matchgroup[1]
@@ -267,7 +275,7 @@ async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
                 for filename in var.api_list_local
             ]
         )
-        await api_manage.finish(f"已刷新本地api库\n{api_list_local_text}")
+        await api_manage.finish(f"已刷新本地图片库\n{api_list_local_text}")
     elif not matchgroup[2]:
         await api_manage.finish("参数缺失")
 
