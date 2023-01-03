@@ -18,6 +18,8 @@ nb plugin install nonebot_plugin_setu_customization
 
 ```bash
 # 必填项
+# api超时，这个时间建议设置一分钟以上，否则发图多的时候容易超时报错
+api_timeout=60
 # 机器人的QQ号（由于开发者多gocq连接，所以有这个设置）
 tutu_bot_qqnum = 114514
 # 管理员的QQ号（别问我为什么要另外写）
