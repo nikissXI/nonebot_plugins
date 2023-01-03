@@ -56,7 +56,7 @@ tutu_crawler_keyword = ["删", "薪", "敏感", "暂停", "停更", "图包"]
 ### 目录
 data/tutu_data.json 存储群白名单信息，api接口信息，合并发送开关  
 data/tutu_local_img_lib/ 存储用户自己上传的图片url文件，如下图  
-<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/local_img_lib.jpg"/>
+<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/src/local_img_lib.jpg"/>
 
 如果要自己爬图入库的看最下方  
 tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文件，还是看最下方
@@ -78,7 +78,7 @@ tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文
 
 ### 自定义图片url关键字替换
 在data_handle.py文件里面的 url_diy_replace 函数，如果有其他更好的反代地址或其他需求可以自行调整
-<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/url_diy_replace.jpg"/>
+<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/src/url_diy_replace.jpg"/>
 
 ### 使用示例、导入api和图片库
 **二次元图片api**  
@@ -142,18 +142,18 @@ mitm.it
 **爬取微信公众号文章url 方法一**  
 PS：建议电脑端或iOS微信使用  
 微信连上代理后，大部分微信公众号的对话框有个查看历史文章（有的没有），点进去后浏览，一直往下刷到底就行，如果没有历史文章接口看方法二
-<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/weixin1.jpg"/>
+<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/src/weixin1.jpg"/>
 
 **爬取微信公众号文章url 方法二**  
 PS：容易被限制，如果翻页不回显数据就是被限制了，被限制就等几个小时再来（具体时间自己摸索），否则限制时间会大幅度延长
 注册一个微信公众平台账号  
 https://mp.weixin.qq.com/  
 依次点草稿箱、新的创作、写新图文，会有个新页面，在最上面有个超链接，点选择公众号，搜索公众号，然后选择就可以看到历史文章了，一页页往下翻，一次翻二三十页就好，不然容易被限制
-<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/weixin2.jpg"/>
+<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/src/weixin2.jpg"/>
 
 **爬取B站专栏图片**  
 用网页打开某个UP的账号空间，点TA的专栏，就会打开 https://space.bilibili.com/XXXXXXX/article  
-<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/bili.jpg"/>
+<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/src/bili.jpg"/>
 然后就会自动翻页爬取所有文章url了，可以在结果文件夹里看到进度，爬取完会有个DONE文件
 
 **提取文章url**  
