@@ -33,14 +33,13 @@ __plugin_meta__ = PluginMetadata(
 图图插件群管理 增删群
 图图插件接口管理 增删API接口
 图图插件接口测试 测试API接口
-开爬 上传指定格式的文件让nb爬
+图片测试 测试图片
+
 文章爬取 直接发文章url就行
-    支持微信文章 （https://mp.weixin.qq.com/s 开头）
-    支持B站专栏文章 （https://www.bilibili.com/read/cv 开头）
 爬取合并 是否将爬取结果合并发送（默认合并）
 图片序号 查看之前发送的图片url
 图片删除 删除本地库的某张图片
-图片测试 测试图片
+开爬 上传指定格式的文件让nb爬（详情看readme）
 """,
 )
 
@@ -65,7 +64,7 @@ api_manage = on_regex(r"^图图插件接口管理\s*((\S+)(\s+(\+|\-)?\s+(\S+)?)
 api_test = on_regex(r"^图图插件接口测试\s*(\S+)?", rule=admin_check)
 tutu_kaipa = on_regex(r"^开爬\s*(停止|暂停|终止)?", rule=admin_check)
 art_paqu = on_regex(
-    r"^(https://mp.weixin.qq.com/s\S+|https://www.bilibili.com/read/cv\S+)\s*(\S+)?",
+    r"^(文章爬取|https://mp.weixin.qq.com/s\S+|https://www.bilibili.com/read/cv\S+)\s*(\S+)?",
     rule=admin_check,
 )
 recall_paqu = on_regex(r"^撤销图片\s*(\d+)?", rule=admin_check)
@@ -403,6 +402,10 @@ async def handle_wx_paqu(
     # if not matchgroup[0]:
     #     await matcher.finish(f"微信文章爬取 [url] （添加到本地api {plugin_config.tutu_self_cosplay_lib}）")
     # else:
+    img_url = matchgroup[0]
+    if img_url == "文章爬取":
+        await art_paqu.finish("发送微信或B站的文章url\n微信文章 https://mp.weixin.qq.com/s 开头\nB站专栏文章 https://www.bilibili.com/read/cv 开头")
+
     filename = matchgroup[1]
     if not filename:
         await art_paqu.finish(
@@ -413,7 +416,7 @@ async def handle_wx_paqu(
     elif filename == "3":
         filename = plugin_config.tutu_self_cosplay_lib
 
-    img_url = matchgroup[0].replace("&amp;", "&").replace("\\", "")
+    img_url = img_url.replace("&amp;", "&").replace("\\", "")
     await get_art_img_url(img_url, filename, matcher, event, bot)
 
 
