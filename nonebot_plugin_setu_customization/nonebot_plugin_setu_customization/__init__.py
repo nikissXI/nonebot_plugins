@@ -66,7 +66,9 @@ async def admin_check(event: MessageEvent, bot: Bot) -> bool:
 
 tutu = on_regex(r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$", rule=tutu_check)
 group_manage = on_regex(r"^图图插件群管理\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
-api_manage = on_regex(r"^图图插件接口管理\s*((\S+)(\s+(\+|\-)?\s+([\s\S]*)?)?)?", rule=admin_check)
+api_manage = on_regex(
+    r"^图图插件接口管理\s*((\S+)(\s+(\+|\-)?\s+([\s\S]*)?)?)?", rule=admin_check
+)
 api_test = on_regex(r"^图图插件接口测试\s*(\S+)?", rule=admin_check)
 tutu_kaipa = on_regex(r"^开爬\s*(停止|暂停|终止)?", rule=admin_check)
 art_paqu = on_regex(
@@ -277,47 +279,46 @@ async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
         )
         await api_manage.finish(f"已刷新本地图片库\n{api_list_local_text}")
     elif not matchgroup[2]:
-        await api_manage.finish("参数缺失")
+        await api_manage.finish("参数缺失或格式错误")
 
     todo_api_url = todo_api_url.replace("&amp;", "&").replace("\\", "")
     if choice == "-":
-        if api_type not in var.api_list_online:
-            await api_manage.finish(f"不存在【{api_type}】类型api，删除失败")
-        else:
-            if todo_api_url.find("本地图库") != -1:
-                filename = todo_api_url[4:]
-                todo_api_url = (
-                    f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
-                )
-
-            if todo_api_url in var.api_list_online[api_type]:
-                var.api_list_online[api_type].remove(todo_api_url)
-                if not var.api_list_online[api_type]:
-                    var.api_list_online.pop(api_type)
-                    msg = f"【{api_type}】类型已无api，删除该类型"
-                else:
-                    msg = f"已从从【{api_type}】类型删除该api"
-                save_data()
-                await api_manage.finish(msg)
+        todo_api_url_list = todo_api_url.split()
+        for todo_api_url in todo_api_url_list:
+            if api_type not in var.api_list_online:
+                await api_manage.send(f"不存在【{api_type}】类型api，删除失败")
+                continue
             else:
-                await api_manage.finish("不存在该api，删除失败")
+                if todo_api_url.find("本地图库") != -1:
+                    filename = todo_api_url[4:]
+                    todo_api_url = f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
+                if todo_api_url in var.api_list_online[api_type]:
+                    var.api_list_online[api_type].remove(todo_api_url)
+                    if not var.api_list_online[api_type]:
+                        var.api_list_online.pop(api_type)
+                        msg = f"【{api_type}】类型已无api，删除该类型"
+                    else:
+                        msg = f"{todo_api_url}\n已从【{api_type}】类型删除"
+                    save_data()
+                    await api_manage.send(msg)
+                else:
+                    await api_manage.send(f"{todo_api_url}\n不存在，删除失败")
+        await api_manage.finish("api删除操作完毕")
 
     elif choice == "+":
         todo_api_url_list = todo_api_url.split()
         for todo_api_url in todo_api_url_list:
             if todo_api_url.find("本地图库") != -1:
                 filename = todo_api_url[4:]
-                todo_api_url = (
-                    f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
-                )
+                if filename not in var.api_list_local:
+                    await api_manage.send(
+                        f"不存在名为【{filename}】的本地图库，如未加载请使用“图图插件接口管理 刷新本地”"
+                    )
+                    continue
+                else:
+                    todo_api_url = f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
 
             if api_type in var.api_list_online:
-                if todo_api_url.find("本地图库") != -1:
-                    filename = todo_api_url[4:]
-                    todo_api_url = (
-                        f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
-                    )
-
                 if todo_api_url not in var.api_list_online[api_type]:
                     var.api_list_online[api_type].append(todo_api_url)
                     msg = f"{todo_api_url}\n添加到【{api_type}】"
@@ -335,6 +336,7 @@ async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
                 msg = f"API: {todo_api_url}\nimg_url: {text}\n{ext_msg}"
                 await api_manage.send(msg)
         await api_manage.finish("api添加操作完毕")
+
 
 @api_test.handle()
 async def handle_api_test(matchgroup=RegexGroup()):
