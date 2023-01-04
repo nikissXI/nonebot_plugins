@@ -7,7 +7,7 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.templating import Jinja2Templates
 from .config import plugin_config, var
-from .data_handle import get_img_url, cache_sent_img, img_proxy
+from .data_handle import get_img_url, cache_sent_img
 
 app = get_asgi()
 
@@ -19,6 +19,7 @@ async def img_api(
     mode: str = "all",
     fw: int = 0,
     c: int = 1,
+    api: str | None = None,
 ):
     templates = Jinja2Templates(directory=f"{Path(__file__).parent}/html")
     img_url_list = []
@@ -45,9 +46,17 @@ async def img_api(
             #     return "不支持该类型，因为微信的图有防盗链，可以用重定向浏览，加参数fw=1"
             # else:
             for i in range(c):
-                img_url_list.append(choice(var.api_list_local[file_name]))
+                img_url = choice(var.api_list_local[file_name])
+                img_num = cache_sent_img(
+                    f"{plugin_config.tutu_site_url}/img_api?fw=1&fn={file_name}", img_url
+                )
+                img_url_list.append((True, img_url, img_num))
+
     else:
-        if not var.api_list_online:
+        if api:
+            for i in range(c):
+                api_url_list.append(api)
+        elif not var.api_list_online:
             return "no image"
         elif mode == "all":
             for i in range(c):
@@ -84,29 +93,26 @@ async def img_api(
         for api_url in api_url_list:
             task_list.append(get_img_url(api_url))
 
-        gather_result = await gather(*task_list)
-
-        for success, text, ext_msg in gather_result:
-            if success:
-                img_url_list.append(text)
+        img_url_list = await gather(*task_list)
 
     if fw:
-        return RedirectResponse(url=img_url_list[0])
+        return RedirectResponse(url=img_url_list[0][2])
     else:
         if fn:
             img_api_url = f"{plugin_config.tutu_site_url}/img_api?fn={fn}&c={c}"
+        elif api:
+            img_api_url = f"{plugin_config.tutu_site_url}/img_api?api={api}&c={c}"
         else:
             img_api_url = f"{plugin_config.tutu_site_url}/img_api?mode={mode}&c={c}"
         urls = ""
         img_list = ""
         for mode in var.api_list_online:
             urls += f'<a href="{plugin_config.tutu_site_url}/img_api?mode={mode}&c={c}">{"." if mode == plugin_config.tutu_r18_name else mode}</a> &emsp13;'
-        for img_url in img_url_list:
-            img_num = cache_sent_img(img_url)
-            img_url = img_proxy(img_url)
-            img_list += (
-                f'<span>No.{img_num}</span><br /><img alt="img" src="{img_url}"><br />'
-            )
+        for success, img_url, img_num in img_url_list:
+            if success:
+                img_list += f'<span>No.{img_num}</span><br /><img alt="img" src="{img_url}"><br />'
+            else:
+                img_list += f"<span>No.{img_num}</span><br /><span>{img_url}</span><br />"
         return templates.TemplateResponse(
             "img.html",
             {

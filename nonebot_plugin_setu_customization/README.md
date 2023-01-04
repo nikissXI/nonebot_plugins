@@ -42,6 +42,8 @@ tutu_socks5_proxy = socks5://127.0.0.1:1234
 tutu_http_proxy = http://127.0.0.1:1234
 # 网页访问地址，不用网页浏览可不填，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
 tutu_site_url = http://hahaha.com:80
+# 使用网页访问时，新浪图片反代地址，不用网页浏览可不填，如 http://img.example.top:514
+tutu_sina_img_proxy = http://img.example.top:666
 # 使用网页访问时，微信图片反代地址，不用网页浏览可不填，如 http://img.example.top:114
 tutu_wx_img_proxy = http://img.example.top:114
 # 使用网页访问时，B站图片反代地址，不用网页浏览可不填，如 http://img.example.top:514
@@ -177,6 +179,10 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 然后给机器人私聊发送“开爬”就会自动爬取
 
 ## 更新
+### 2022/1/4 \[v1.2.0]
+
+* 出图改为nb下载好再发送，优化大量细节
+
 ### 2022/1/3 \[v1.1.1]
 
 * 优化接口管理功能

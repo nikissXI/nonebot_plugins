@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from io import BytesIO
 from os import listdir
 from random import choice
+from urllib.parse import unquote
 from httpx import AsyncClient
 from httpx_socks import AsyncProxyTransport
 from nonebot import on_fullmatch, on_regex
@@ -13,15 +14,15 @@ from nonebot.log import logger
 from nonebot.matcher import Matcher
 from nonebot.params import RegexGroup
 from nonebot.plugin import PluginMetadata
-from PIL import Image, ImageDraw, ImageFont
 from .config import load_local_api, plugin_config, save_data, var
 from .data_handle import (
-    cache_sent_img,
     get_art_img_url,
     get_img_url,
     load_crawler_files,
+    send_img_msg,
     to_node_msg,
     url_diy_replace,
+    download_img,
 )
 from .web import app
 
@@ -33,27 +34,20 @@ __plugin_meta__ = PluginMetadata(
 图图插件群管理 增删群
 图图插件接口管理 增删API接口
 图图插件接口测试 测试API接口
-图片测试 测试图片
-
+开爬 上传指定格式的文件让nb爬
 文章爬取 直接发文章url就行
 爬取合并 是否将爬取结果合并发送（默认合并）
 图片序号 查看之前发送的图片url
 图片删除 删除本地库的某张图片
-开爬 上传指定格式的文件让nb爬（详情看readme）
+图片测试 测试图片
 """,
 )
 
 # 群判断
-async def tutu_check(event: MessageEvent, bot: Bot) -> bool:
-    if isinstance(event, PrivateMessageEvent):
-        return event.sub_type == "friend"
-    elif isinstance(event, GroupMessageEvent):
-        return (
-            event.group_id in var.group_list
-            and bot.self_id == plugin_config.tutu_bot_qqnum
-        )
-    else:
-        return False
+async def group_check(event: GroupMessageEvent, bot: Bot) -> bool:
+    return (
+        event.group_id in var.group_list and bot.self_id == plugin_config.tutu_bot_qqnum
+    )
 
 
 # 管理员判断
@@ -64,7 +58,7 @@ async def admin_check(event: MessageEvent, bot: Bot) -> bool:
     )
 
 
-tutu = on_regex(r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$", rule=tutu_check)
+tutu = on_regex(r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$", rule=group_check)
 group_manage = on_regex(r"^图图插件群管理\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
 api_manage = on_regex(
     r"^图图插件接口管理\s*((\S+)(\s+(\+|\-)?\s+([\s\S]*)?)?)?", rule=admin_check
@@ -79,12 +73,14 @@ recall_paqu = on_regex(r"^撤销图片\s*(\d+)?", rule=admin_check)
 paqu_hebing = on_regex(r"^爬取合并(打开|关闭)?$", rule=admin_check)
 paqu_resend = on_fullmatch("爬取重放", rule=admin_check)
 img_no = on_regex(r"^图片序号\s*(\d+)?$", rule=admin_check)
-img_del = on_regex(r"^图片删除\s*((\S+)\s+(.*))?", rule=admin_check)
+img_del = on_regex(r"^图片删除\s*((\S+)\s+(\S+)\s*(\S+)?)?", rule=admin_check)
 img_test = on_regex(r"^图片测试\s*(\S+)?$", rule=admin_check)
 
 
 @tutu.handle(parameterless=[helpers.Cooldown(cooldown=3, prompt="我知道你很急，但你先别急")])
-async def handle_tutu(bot: Bot, event: MessageEvent, matchgroup=RegexGroup()):
+async def handle_tutu(
+    event: MessageEvent, matcher: Matcher, bot: Bot, matchgroup=RegexGroup()
+):
     if not var.api_list_online:
         await tutu.finish("没有图片api呢")
     # CD
@@ -95,22 +91,22 @@ async def handle_tutu(bot: Bot, event: MessageEvent, matchgroup=RegexGroup()):
         if event.user_id in var.user_cooldown:
             await tutu.finish("之前的都还没发完啊")
 
-    img_num = matchgroup[0]
+    send_num = matchgroup[0]
     api_type = matchgroup[1]
     if matchgroup[2]:
         merge_send = True
     else:
         merge_send = False
 
-    if not img_num:
-        img_num = 1
-    elif img_num == "帮助":
+    if not send_num:
+        send_num = 1
+    elif send_num == "帮助":
         await tutu.finish(
             "图图 [数量] [类型] [合并]\n如以下格式发送（注意空格）：\n图图\n图图 10 合并\n图图 二次元 合并\n图图 3 三次元 合并"
         )
     else:
-        img_num = int(img_num)
-        if img_num > 10:
+        send_num = int(send_num)
+        if send_num > 10:
             await tutu.finish("太多啦，顶不住！♀")
         else:
             await tutu.send("制作中，请稍后...♀")
@@ -147,27 +143,31 @@ async def handle_tutu(bot: Bot, event: MessageEvent, matchgroup=RegexGroup()):
         msg_list.append(to_node_msg(MS.text("消息会在一分钟后撤回，注意时间哦~")))
 
     task_list = []
-    for i in range(img_num):
+    for i in range(send_num):
         api_url = choice(var.api_list_online[choice(api_type)])
         task_list.append(get_img_url(api_url))
 
     gather_result = await gather(*task_list)
 
-    for success, text, ext_msg in gather_result:
+    for success, text, img_num in gather_result:
         if isinstance(event, GroupMessageEvent) or merge_send:
             if not success:
                 msg_list.append(to_node_msg(MS.text(text)))
             else:
-                img_num = cache_sent_img(text)
-                msg_list.append(
-                    to_node_msg(MS.text(f"No.{img_num}") + MS.image(text, timeout=60))
-                )
+                ds, result = await download_img(text)
+                if ds:
+                    msg_list.append(
+                        to_node_msg(
+                            MS.text(f"No.{img_num}") + MS.image(result, timeout=30)
+                        )
+                    )
+                else:
+                    msg_list.append(to_node_msg(MS.text(f"No.{img_num}\n{result}")))
         else:
             if not success:
                 msg_list.append(tutu.send(text))
             else:
-                img_num = cache_sent_img(text)
-                msg_list.append(tutu.send(f"No.{img_num}" + MS.image(text, timeout=60)))
+                msg_list.append(send_img_msg(matcher, img_num, text))
 
     # 群聊
     if isinstance(event, GroupMessageEvent):
@@ -198,14 +198,9 @@ async def handle_tutu(bot: Bot, event: MessageEvent, matchgroup=RegexGroup()):
 
     # 私聊单发
     else:
-        try:
-            await gather(*msg_list)
-        except Exception as e:
-            await tutu.send(f"有部分图片发送失败 {repr(e)}")
-        else:
-            await tutu.finish("发送完毕~如果还有图没出来可能在路上哦")
-        finally:
-            var.user_cooldown.discard(event.user_id)
+        await gather(*msg_list)
+        var.user_cooldown.discard(event.user_id)
+        await tutu.finish("发送完毕~如果还有图没出来可能在路上哦")
 
 
 @group_manage.handle()
@@ -354,7 +349,7 @@ async def handle_api_test(matchgroup=RegexGroup()):
 
             task_list = []
             for api_url in all_api_url:
-                task_list.append(get_img_url(api_url, True))
+                task_list.append(get_img_url(api_url, 10))
             gather_result = await gather(*task_list)
 
             for success, text, api_url in gather_result:
@@ -363,40 +358,10 @@ async def handle_api_test(matchgroup=RegexGroup()):
                 else:
                     msg_list.append(f"API: {api_url}\nimg_url: {text}")
             msg = "\n".join(msg_list)
-
-            lines = msg.splitlines()
-            line_count = len(lines)
-            # 读取字体
-            font = ImageFont.truetype(f"www/static/msyh.ttc", 16)
-            # 获取字体的行高
-            left, top, width, line_height = font.getbbox("a")
-            line_height += 3
-            # 获取画布需要的高度
-            height = line_height * line_count + 20
-            # 获取画布需要的宽度
-            width = int(max([font.getlength(line) for line in lines])) + 25
-            # 字体颜色
-            black_color = (0, 0, 0)
-            red_color = (211, 38, 38)
-            # 生成画布
-            image = Image.new("RGB", (width, height), (255, 255, 255))
-            draw = ImageDraw.Draw(image)
-            # 按行开画，c是计算写到第几行
-            c = 0
-            for line in lines:
-                if line.find("img_url: ") != -1:
-                    color = red_color
-                else:
-                    color = black_color
-                draw.text((10, 6 + line_height * c), line, font=font, fill=color)
-                c += 1
-            # 保存图片
-            img_bytes = BytesIO()
-            image.save(img_bytes, format="gif")
-            await api_test.finish(MS.image(img_bytes))
+            await api_test.finish(msg)
 
         else:
-            success, text, ext_msg = await get_img_url(api_url)
+            success, text, ext_msg = await get_img_url(api_url, 1)
             if success:
                 msg = f"API: {api_url}\nimg_url: {text}\n{ext_msg}"
                 await api_test.finish(msg)
@@ -420,12 +385,15 @@ async def handle_tutu_kaipa(
             f"当前任务信息\n文件名：{var.crawler_current_msg[0]}\n爬取进度：{var.crawler_current_msg[2]}/{var.crawler_current_msg[1]}\n已收录图片：{var.crawler_current_msg[3]}张\n入库文件名：{var.crawler_current_msg[4]}\n预计完成时间：{finish_time}\n\n发送 开爬停止 可停止任务"
         )
 
-    path_name = listdir(plugin_config.tutu_crawler_file_path)
-    if not path_name:
+    if not listdir(plugin_config.tutu_crawler_file_path):
         await tutu_kaipa.finish(f"{plugin_config.tutu_crawler_file_path}里没有任何文件夹")
-    else:
-        for local_api_filename in path_name:
-            await load_crawler_files(local_api_filename, matcher, event, bot)
+
+    while True:
+        path_name = listdir(plugin_config.tutu_crawler_file_path)
+        if path_name:
+            await load_crawler_files(path_name[0], matcher, event, bot)
+        else:
+            break
 
     var.crawler_task = False
     var.crawler_current_msg.clear()
@@ -444,7 +412,6 @@ async def handle_wx_paqu(
         await art_paqu.finish(
             "发送微信或B站的文章url\n微信文章 https://mp.weixin.qq.com/s 开头\nB站专栏文章 https://www.bilibili.com/read/cv 开头"
         )
-
     filename = matchgroup[1]
     if not filename:
         await art_paqu.finish(
@@ -516,12 +483,12 @@ async def handle_paqu_resend(bot: Bot, event: PrivateMessageEvent):
         img_url = value
         if var.merge_send:
             msg_list.append(to_node_msg(MS.text(f"序号：{img_num}  {img_url}")))
-            msg_list.append(to_node_msg(MS.image(img_url, timeout=60)))
+            msg_list.append(to_node_msg(MS.image(img_url, timeout=30)))
         else:
             img_url_msg_list.append(f"序号：{img_num}  {img_url}")
             task_list.append(
                 paqu_resend.send(
-                    MS.text(f"序号：{img_num}") + MS.image(img_url, timeout=60)
+                    MS.text(f"序号：{img_num}") + MS.image(img_url, timeout=30)
                 )
             )
     if var.merge_send:
@@ -540,10 +507,11 @@ async def handle_img_no(matchgroup=RegexGroup()):
         await img_no.finish(f"图片序号 [序号]")
     else:
         try:
-            img_url = var.sent_img_data[int(img_num)]
+            api_url = unquote(var.sent_img_apiurl_data[int(img_num)])
+            img_url = unquote(var.sent_img_imgurl_data[int(img_num)])
         except KeyError:
             await img_no.finish(f"No.{img_num}不存在")
-        await img_no.finish(f"No.{img_num}的url是\n{img_url}")
+        await img_no.finish(f"No.{img_num}\napi_url：{api_url}\nimg_url：{img_url}")
 
 
 @img_del.handle()
@@ -555,37 +523,35 @@ async def handle_img_del(matchgroup=RegexGroup()):
     else:
         api_type = matchgroup[1]
         img_url = matchgroup[2]
-        if api_type == "2":
-            api_type = plugin_config.tutu_self_anime_lib
-        elif api_type == "3":
-            api_type = plugin_config.tutu_self_cosplay_lib
-        elif api_type not in var.api_list_local:
-            await img_del.finish(
-                f"不存在本地库{api_type}，\n快捷名称：2是{plugin_config.tutu_self_anime_lib}，3是{plugin_config.tutu_self_cosplay_lib}"
-            )
+        new_api_type = matchgroup[3]
+
+        async def replace_apt_type_text(xx: str):
+            if xx == "2":
+                return plugin_config.tutu_self_anime_lib
+            elif xx == "3":
+                return plugin_config.tutu_self_cosplay_lib
+            elif xx not in var.api_list_local:
+                await img_del.finish(
+                    f"不存在本地库{api_type}\n快捷名称：2是{plugin_config.tutu_self_anime_lib}，3是{plugin_config.tutu_self_cosplay_lib}"
+                )
+            else:
+                return xx
+
+        api_type = await replace_apt_type_text(api_type)
+        if new_api_type:
+            new_api_type = await replace_apt_type_text(new_api_type)
 
         ext_msg = ""
         if img_url.find("序号") != -1:
             try:
-                aa, bb = img_url[2:].split()
-                img_num = int(aa)
-                if bb == "2":
-                    new_api_type = plugin_config.tutu_self_anime_lib
-                elif bb == "3":
-                    new_api_type = plugin_config.tutu_self_cosplay_lib
-                else:
-                    new_api_type = bb
-
+                img_num = int(img_url[2:])
             except ValueError:
-                await img_del.finish("序号格式输入有误，如“序号123 0”，后面的0是库名，2是二次元，3是三次元，0是no")
+                await img_del.finish("序号格式输入有误，如“序号123”")
 
-            if img_num in var.sent_img_data:
-                img_url = var.sent_img_data[img_num]
+            if img_num in var.sent_img_imgurl_data:
+                img_url = var.sent_img_imgurl_data[img_num]
 
-                if (
-                    new_api_type != "0"
-                    and img_url not in var.api_list_local[new_api_type]
-                ):
+                if new_api_type and img_url not in var.api_list_local[new_api_type]:
                     var.api_list_local[new_api_type].append(img_url)
                     with open(
                         f"{plugin_config.tutu_local_api_path}/{new_api_type}",
@@ -632,7 +598,7 @@ async def handle_img_test(matchgroup=RegexGroup()):
             headers=var.headers,
             transport=socks5_proxy,
             proxies=http_proxy,
-            timeout=10,
+            timeout=var.http_timeout,
             verify=False,
         ) as c:
             try:
@@ -642,4 +608,4 @@ async def handle_img_test(matchgroup=RegexGroup()):
                 logger.error(msg)
                 await img_test.finish(msg)
         img_bytes = BytesIO(rr.content)
-        await img_test.finish(MS.image(img_bytes, timeout=60))
+        await img_test.finish(MS.image(img_bytes, timeout=30))

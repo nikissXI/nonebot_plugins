@@ -1,8 +1,10 @@
+from asyncio import create_task as ct
 from asyncio import gather, sleep
 from datetime import datetime, timedelta
 from io import BytesIO
-from os import remove, rename, rmdir, listdir
-from re import search, findall
+from os import listdir, remove, rename, rmdir
+from re import findall, search
+from urllib.parse import unquote
 from bs4 import BeautifulSoup
 from httpx import AsyncClient, RemoteProtocolError
 from httpx_socks import AsyncProxyTransport
@@ -10,11 +12,10 @@ from nonebot.adapters.onebot.v11 import Bot, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.log import logger
 from nonebot.matcher import Matcher
-from nonebot import get_bot
 from PIL import Image, UnidentifiedImageError
 from ujson import dumps, loads
 from .config import plugin_config, var
-from asyncio import create_task as ct
+from nonebot import get_bot
 
 
 def url_diy_replace(img_url: str) -> str:
@@ -30,27 +31,23 @@ def url_diy_replace(img_url: str) -> str:
     # pixiv反代地址
     img_url = img_url.replace("i.pximg.net", "a.jitsu.top")
     img_url = img_url.replace("i.pixiv.re", "a.jitsu.top")
-    # 新浪图床反代地址
-    if img_url.find(".sinaimg.cn/") != -1:
-        img_url = (
-            "https://tvax1.sinaimg.cn/" + img_url[img_url.find(".sinaimg.cn/") + 12 :]
-        )
-    return img_url
-
-
-def img_proxy(img_url: str) -> str:
-    """
-    使用网页访问的时候，微信和B站的图片需要使用反代，否则无法访问，根据自己需求自己改
-    """
+    # 微信图床反代地址
     if plugin_config.tutu_wx_img_proxy and img_url.find("https://mmbiz.qpic.cn") != -1:
         img_url = img_url.replace(
             "https://mmbiz.qpic.cn", plugin_config.tutu_wx_img_proxy
         )
+    # B站图床反代地址
     if plugin_config.tutu_bili_img_proxy and img_url.find("https://i0.hdslb.com") != -1:
         img_url = img_url.replace(
             "https://i0.hdslb.com", plugin_config.tutu_bili_img_proxy
         )
-    return img_url
+    # 新浪图床反代地址
+    if plugin_config.tutu_sina_img_proxy and img_url.find(".sinaimg.cn") != -1:
+        img_url = img_url.replace(
+            img_url[: img_url.find(".sinaimg.cn") + 11],
+            plugin_config.tutu_sina_img_proxy,
+        )
+    return unquote(img_url)
 
 
 def to_node_msg(msg):
@@ -67,18 +64,76 @@ def to_node_msg(msg):
     }
 
 
-def cache_sent_img(img_url) -> int:
+def cache_sent_img(api_url: str, img_url: str) -> int:
     """
     每发一张图片都有一个编号，重启后重置，可以用于找某个图片的url，方便debug或别的
     """
+    if var.sent_img_num > 100000:
+        var.sent_img_num = 0
     var.sent_img_num += 1
-    var.sent_img_data[var.sent_img_num] = img_url
+    var.sent_img_apiurl_data[var.sent_img_num] = api_url
+    var.sent_img_imgurl_data[var.sent_img_num] = img_url
     return var.sent_img_num
 
 
-async def get_img_url(
-    api_url: str, api_test_all: bool = False
-) -> tuple[bool, str, str]:
+async def send_img_msg(matcher: Matcher, img_num: int, img_url: str):
+    try:
+        ds, result = await download_img(img_url)
+        if ds:
+            await matcher.send(f"No.{img_num}" + MS.image(result, timeout=30))
+        else:
+            await matcher.send(f"No.{img_num}\n{result}")
+
+    except Exception as e:
+        await matcher.send(f"No.{img_num}  {img_url}\n发送失败 {repr(e)}")
+
+
+async def download_img(img_url: str) -> tuple[bool, BytesIO | str]:
+    # 微信图床反代地址
+    if plugin_config.tutu_wx_img_proxy and img_url.find("https://mmbiz.qpic.cn") != -1:
+        headers = var.wx_headers
+    # B站图床反代地址
+    elif (
+        plugin_config.tutu_bili_img_proxy and img_url.find("https://i0.hdslb.com") != -1
+    ):
+        headers = var.bili_headers
+    # 新浪图床反代地址
+    elif plugin_config.tutu_sina_img_proxy and img_url.find(".sinaimg.cn") != -1:
+        headers = var.sina_headers
+    else:
+        headers = var.headers
+
+    socks5_proxy = None
+    http_proxy = None
+    if img_url.find("127.0.0.1") == -1:
+        if plugin_config.tutu_socks5_proxy:
+            socks5_proxy = AsyncProxyTransport.from_url(plugin_config.tutu_socks5_proxy)
+        if plugin_config.tutu_http_proxy:
+            http_proxy = plugin_config.tutu_http_proxy
+
+    async with AsyncClient(
+        headers=headers,
+        transport=socks5_proxy,
+        proxies=http_proxy,
+        timeout=var.http_timeout,
+        verify=False,
+    ) as c:
+        try:
+            rr = await c.get(url=img_url)
+        except Exception as e:
+            msg = f"{img_url}\n图片下载出错：{repr(e)}"
+            logger.error(msg)
+            bot = get_bot(plugin_config.tutu_bot_qqnum)
+            if bot:
+                await bot.send_private_msg(
+                    user_id=plugin_config.tutu_admin_qqnum, message=msg
+                )
+            return (False, msg)
+        else:
+            return (True, BytesIO(rr.content))
+
+
+async def get_img_url(api_url: str, api_test: int = 0) -> tuple[bool, str, str]:
     """
     向API发起请求，获取返回的图片url
     """
@@ -94,7 +149,7 @@ async def get_img_url(
         headers=var.headers,
         transport=socks5_proxy,
         proxies=http_proxy,
-        timeout=10,
+        timeout=var.http_timeout,
         verify=False,
     ) as c:
         try:
@@ -158,13 +213,15 @@ async def get_img_url(
                 user_id=plugin_config.tutu_admin_qqnum, message=msg
             )
         return (False, msg, "")
-
+    img_num = cache_sent_img(api_url, img_url)
     img_url = url_diy_replace(img_url)
     res_headers = "\n".join([f"'{i}' : '{j}'" for i, j in rr.headers.items()])
-    if api_test_all:
-        ext_msg = api_url
-    else:
+    if api_test == 0:
+        ext_msg = str(img_num)
+    elif api_test == 1:
         ext_msg = f"响应码: 【{rr.status_code}】\n响应头:\n{res_headers}\n响应内容:\n{rr.text}"
+    else:
+        ext_msg = api_url
     return (
         True,
         img_url,
@@ -188,18 +245,17 @@ async def load_crawler_files(
         )
         return
 
+    async def _rename(new_fn) -> str:
+        old_pathname = f"{plugin_config.tutu_crawler_file_path}{local_api_filename}"
+        new_pathname = f"{plugin_config.tutu_crawler_file_path}{new_fn}"
+        rename(old_pathname, new_pathname)
+        await matcher.send(f"[{old_pathname}]已重命名为[{new_pathname}]")
+        return new_fn
+
     if local_api_filename == "2":
-        old_pathname = f"{plugin_config.tutu_crawler_file_path}/{local_api_filename}"
-        new_pathname = f"{plugin_config.tutu_crawler_file_path}/{plugin_config.tutu_self_anime_lib}"
-        rename(old_pathname, new_pathname)
-        local_api_filename = plugin_config.tutu_self_anime_lib
-        await matcher.send(f"{old_pathname}已重命名为{new_pathname}")
+        local_api_filename = await _rename(plugin_config.tutu_self_anime_lib)
     elif local_api_filename == "3":
-        old_pathname = f"{plugin_config.tutu_crawler_file_path}/{local_api_filename}"
-        new_pathname = f"{plugin_config.tutu_crawler_file_path}/{plugin_config.tutu_self_cosplay_lib}"
-        rename(old_pathname, new_pathname)
-        local_api_filename = plugin_config.tutu_self_cosplay_lib
-        await matcher.send(f"{old_pathname}已重命名为{new_pathname}")
+        local_api_filename = await _rename(plugin_config.tutu_self_cosplay_lib)
 
     var.crawler_task = True
 
@@ -302,7 +358,7 @@ async def get_art_img_url(
     try:
         async with AsyncClient(
             headers=var.headers,
-            timeout=10,
+            timeout=var.http_timeout,
             verify=False,
         ) as c:
             res = await c.get(url)
@@ -361,7 +417,7 @@ async def get_art_img_url(
 
             async with AsyncClient(
                 headers=var.headers,
-                timeout=10,
+                timeout=var.http_timeout,
                 verify=False,
             ) as c:
                 res = await c.get(img_url)
@@ -488,12 +544,12 @@ async def get_art_img_url(
             var.tmp_data[img_num] = img_url
             if var.merge_send:
                 msg_list.append(to_node_msg(MS.text(f"序号：{img_num}  {img_url}")))
-                msg_list.append(to_node_msg(MS.image(img_url, timeout=60)))
+                msg_list.append(to_node_msg(MS.image(img_url, timeout=30)))
             else:
                 img_url_msg_list.append(f"序号：{img_num}  {img_url}")
                 task_list.append(
                     matcher.send(
-                        MS.text(f"序号：{img_num}") + MS.image(img_url, timeout=60)
+                        MS.text(f"序号：{img_num}") + MS.image(img_url, timeout=30)
                     )
                 )
 

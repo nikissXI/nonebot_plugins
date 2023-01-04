@@ -8,7 +8,7 @@ from pydantic import BaseModel, Extra
 class Config(BaseModel, extra=Extra.ignore):
     # 机器人的QQ号（由于开发者多gocq连接，所以有这个设置）
     tutu_bot_qqnum: str = "0"  # 必填
-    # 管理员的QQ号（别问我为什么要另外写）
+    # 管理员的QQ号（别问我为什么）
     tutu_admin_qqnum: int = 0  # 必填
     # R18类别的名称
     tutu_r18_name: str = "R18"
@@ -31,6 +31,8 @@ class Config(BaseModel, extra=Extra.ignore):
     tutu_wx_img_proxy: str | None = None
     # B站图片反代地址，如 http://img.example.top:514
     tutu_bili_img_proxy: str | None = None
+    # 新浪图片反代地址，如 http://img.example.top:514
+    tutu_sina_img_proxy: str | None = None
     # 爬取文章图片时，图片的宽或高小于多少忽略爬取
     tutu_crawler_min_width: int = 500
     tutu_crawler_min_height: int = 500
@@ -57,8 +59,9 @@ class Global_var:
     tmp_data: dict[int, str] = {}
     # 已发送的图片数量（用于sent_img_data的键名）
     sent_img_num = 0
-    # 发送过去的图片数据  图片序号 链接
-    sent_img_data: dict[int, str] = {}
+    # 发送过去的图片数据  图片序号
+    sent_img_apiurl_data: dict[int, str] = {}
+    sent_img_imgurl_data: dict[int, str] = {}
     # 是否有爬取任务
     crawler_task = False
     # 当前任务文件名，总数，剩余数，爬取图片数量，入库名
@@ -67,8 +70,22 @@ class Global_var:
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54",
     }
+    wx_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54",
+        "Referer": "https://mp.weixin.qq.com/",
+    }
+    bili_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54",
+        "Referer": "https://www.bilibili.com/",
+    }
+    sina_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54",
+        "Referer": "https://www.sina.com.cn/",
+    }
     # 每篇文章的爬取间隔
     paqu_cooldown = 3
+    # http请求超时
+    http_timeout = 20
 
 
 driver = get_driver()
