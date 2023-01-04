@@ -51,7 +51,7 @@ async def img_api(
                 #     f"{plugin_config.tutu_site_url}/img_api?fw=1&fn={file_name}", img_url
                 # )
                 img_num = fn_cache_sent_img(file_name, img_url)
-                img_url_list.append((True, url_diy_replace(img_url), f"fn{img_num}"))
+                img_url_list.append((True, img_url, f"fn{img_num}"))
 
     else:
         if api:
@@ -111,7 +111,7 @@ async def img_api(
             urls += f'<a href="{plugin_config.tutu_site_url}/img_api?mode={mode}&c={c}">{"." if mode == plugin_config.tutu_r18_name else mode}</a> &emsp13;'
         for success, img_url, img_num in img_url_list:
             if success:
-                img_list += f'<span>No.{img_num}</span><br /><img alt="img" src="{img_url}"><br />'
+                img_list += f'<span>No.{img_num}</span><br /><img alt="img" src="{url_diy_replace(img_url)}"><br />'
             else:
                 img_list += (
                     f"<span>No.{img_num}</span><br /><span>{img_url}</span><br />"
