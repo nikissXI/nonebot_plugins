@@ -227,10 +227,9 @@ async def get_img_url(
     else:
         ext_msg = api_url
 
-    img_url = url_diy_replace(img_url)
     return (
         True,
-        img_url,
+        url_diy_replace(img_url),
         ext_msg,
     )
 
