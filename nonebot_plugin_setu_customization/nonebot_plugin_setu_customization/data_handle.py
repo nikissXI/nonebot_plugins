@@ -133,7 +133,9 @@ async def download_img(img_url: str) -> tuple[bool, BytesIO | str]:
             return (True, BytesIO(rr.content))
 
 
-async def get_img_url(api_url: str, api_test: int = 0) -> tuple[bool, str, str]:
+async def get_img_url(
+    api_url: str, cache_data: bool = False, api_test: int = 0
+) -> tuple[bool, str, str]:
     """
     向API发起请求，获取返回的图片url
     """
@@ -213,15 +215,19 @@ async def get_img_url(api_url: str, api_test: int = 0) -> tuple[bool, str, str]:
                 user_id=plugin_config.tutu_admin_qqnum, message=msg
             )
         return (False, msg, "")
-    img_num = cache_sent_img(api_url, img_url)
-    img_url = url_diy_replace(img_url)
-    res_headers = "\n".join([f"'{i}' : '{j}'" for i, j in rr.headers.items()])
+
     if api_test == 0:
-        ext_msg = str(img_num)
+        if cache_data:
+            ext_msg = str(cache_sent_img(api_url, img_url))
+        else:
+            ext_msg = ""
     elif api_test == 1:
+        res_headers = "\n".join([f"'{i}' : '{j}'" for i, j in rr.headers.items()])
         ext_msg = f"响应码: 【{rr.status_code}】\n响应头:\n{res_headers}\n响应内容:\n{rr.text}"
     else:
         ext_msg = api_url
+
+    img_url = url_diy_replace(img_url)
     return (
         True,
         img_url,

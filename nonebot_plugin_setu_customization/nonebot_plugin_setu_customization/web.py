@@ -47,10 +47,10 @@ async def img_api(
             # else:
             for i in range(c):
                 img_url = choice(var.api_list_local[file_name])
-                img_num = cache_sent_img(
-                    f"{plugin_config.tutu_site_url}/img_api?fw=1&fn={file_name}", img_url
-                )
-                img_url_list.append((True, img_url, img_num))
+                # img_num = cache_sent_img(
+                #     f"{plugin_config.tutu_site_url}/img_api?fw=1&fn={file_name}", img_url
+                # )
+                img_url_list.append((True, img_url, "X"))
 
     else:
         if api:
@@ -91,12 +91,12 @@ async def img_api(
             return "该类别不存在"
 
         for api_url in api_url_list:
-            task_list.append(get_img_url(api_url))
+            task_list.append(get_img_url(api_url, cache_data=True))
 
         img_url_list = await gather(*task_list)
 
     if fw:
-        return RedirectResponse(url=img_url_list[0][2])
+        return RedirectResponse(url=img_url_list[0][1])
     else:
         if fn:
             img_api_url = f"{plugin_config.tutu_site_url}/img_api?fn={fn}&c={c}"

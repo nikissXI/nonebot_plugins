@@ -145,7 +145,7 @@ async def handle_tutu(
     task_list = []
     for i in range(send_num):
         api_url = choice(var.api_list_online[choice(api_type)])
-        task_list.append(get_img_url(api_url))
+        task_list.append(get_img_url(api_url, cache_data=True))
 
     gather_result = await gather(*task_list)
 
@@ -349,7 +349,7 @@ async def handle_api_test(matchgroup=RegexGroup()):
 
             task_list = []
             for api_url in all_api_url:
-                task_list.append(get_img_url(api_url, 10))
+                task_list.append(get_img_url(api_url, api_test=10))
             gather_result = await gather(*task_list)
 
             for success, text, api_url in gather_result:
@@ -361,7 +361,7 @@ async def handle_api_test(matchgroup=RegexGroup()):
             await api_test.finish(msg)
 
         else:
-            success, text, ext_msg = await get_img_url(api_url, 1)
+            success, text, ext_msg = await get_img_url(api_url, api_test=1)
             if success:
                 msg = f"API: {api_url}\nimg_url: {text}\n{ext_msg}"
                 await api_test.finish(msg)
@@ -503,6 +503,8 @@ async def handle_paqu_resend(bot: Bot, event: PrivateMessageEvent):
 @img_no.handle()
 async def handle_img_no(matchgroup=RegexGroup()):
     img_num = matchgroup[0]
+    logger.error(f"{var.sent_img_apiurl_data}")
+    logger.error(f"{var.sent_img_imgurl_data}")
     if not img_num:
         await img_no.finish(f"图片序号 [序号]")
     else:
