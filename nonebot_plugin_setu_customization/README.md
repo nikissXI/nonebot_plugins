@@ -26,8 +26,8 @@ tutu_bot_qqnum = 114514
 tutu_admin_qqnum = 114514
 
 # 非必填项
-# 图片下载模式，真则nonebot下载，假则协议端下载
-tutu_img_local_download = True
+# 图片下载模式，true则nonebot下载，false则协议端下载
+tutu_img_local_download = true
 # R18类别的名称
 tutu_r18_name = R18
 # 本地图片库的路径
