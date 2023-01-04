@@ -151,7 +151,7 @@ mitm.it
 ```
 
 **爬取微信公众号文章url 方法一**  
-PS：建议电脑端或iOS微信使用  
+PS：建议iOS微信爬取，装证书简单  
 微信连上代理后，大部分微信公众号的对话框有个查看历史文章（有的没有），点进去后浏览，一直往下刷到底就行，如果没有历史文章接口看方法二  
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/weixin1.jpg"/>
 

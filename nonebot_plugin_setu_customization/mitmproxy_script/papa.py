@@ -65,7 +65,7 @@ class SelfAddon:
 
                 for line in lines:
                     tt, uu = line.split(" *** ")
-                    self.history_url[nickname].append(uu)
+                    self.history_url[nickname].append(uu.strip())
                 print(f"读取【{nickname}】历史数据{len(self.history_url[nickname])}条")
 
     def response(self, flow: HTTPFlow):
@@ -291,7 +291,7 @@ class SelfAddon:
                     encoding="utf-8",
                 ) as a:
                     a.write(msg)
-                self.history_url[nickname].append(title)
+                self.history_url[nickname].append(url)
             else:
                 end = True
         return end
@@ -314,7 +314,7 @@ class SelfAddon:
                     headers={
                         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54",
                     },
-                    timeout=var.http_timeout,
+                    timeout=10,
                     verify=False,
                 ) as c:
                     res = await c.get(next_url)
