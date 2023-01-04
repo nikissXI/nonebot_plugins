@@ -10,6 +10,8 @@ class Config(BaseModel, extra=Extra.ignore):
     tutu_bot_qqnum: str = "0"  # 必填
     # 管理员的QQ号（别问我为什么）
     tutu_admin_qqnum: int = 0  # 必填
+    # 图片下载模式，真则nonebot下载，假则协议端下载
+    tutu_img_local_download: bool = True
     # R18类别的名称
     tutu_r18_name: str = "R18"
     # 本地图片库的路径
@@ -59,9 +61,13 @@ class Global_var:
     tmp_data: dict[int, str] = {}
     # 已发送的图片数量（用于sent_img_data的键名）
     sent_img_num = 0
+    fn_sent_img_num = 0
     # 发送过去的图片数据  图片序号
     sent_img_apiurl_data: dict[int, str] = {}
     sent_img_imgurl_data: dict[int, str] = {}
+    # 网页浏览个人库时发送过去的图片数据  图片序号
+    fn_sent_img_filename_data: dict[int, str] = {}
+    fn_sent_img_imgurl_data: dict[int, str] = {}
     # 是否有爬取任务
     crawler_task = False
     # 当前任务文件名，总数，剩余数，爬取图片数量，入库名
@@ -85,7 +91,7 @@ class Global_var:
     # 每篇文章的爬取间隔
     paqu_cooldown = 3
     # http请求超时
-    http_timeout = 20
+    http_timeout = 10
 
 
 driver = get_driver()

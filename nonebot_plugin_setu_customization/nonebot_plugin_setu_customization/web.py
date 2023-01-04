@@ -7,7 +7,7 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.templating import Jinja2Templates
 from .config import plugin_config, var
-from .data_handle import get_img_url, url_diy_replace
+from .data_handle import get_img_url, url_diy_replace, fn_cache_sent_img
 
 app = get_asgi()
 
@@ -50,7 +50,8 @@ async def img_api(
                 # img_num = cache_sent_img(
                 #     f"{plugin_config.tutu_site_url}/img_api?fw=1&fn={file_name}", img_url
                 # )
-                img_url_list.append((True, url_diy_replace(img_url), "X"))
+                img_num = fn_cache_sent_img(file_name, img_url)
+                img_url_list.append((True, url_diy_replace(img_url), f"fn{img_num}"))
 
     else:
         if api:
@@ -112,7 +113,9 @@ async def img_api(
             if success:
                 img_list += f'<span>No.{img_num}</span><br /><img alt="img" src="{img_url}"><br />'
             else:
-                img_list += f"<span>No.{img_num}</span><br /><span>{img_url}</span><br />"
+                img_list += (
+                    f"<span>No.{img_num}</span><br /><span>{img_url}</span><br />"
+                )
         return templates.TemplateResponse(
             "img.html",
             {

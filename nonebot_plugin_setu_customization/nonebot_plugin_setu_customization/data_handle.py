@@ -6,16 +6,48 @@ from os import listdir, remove, rename, rmdir
 from re import findall, search
 from urllib.parse import unquote
 from bs4 import BeautifulSoup
-from httpx import AsyncClient, RemoteProtocolError
+from httpx import AsyncClient, Response
 from httpx_socks import AsyncProxyTransport
 from nonebot.adapters.onebot.v11 import Bot, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.log import logger
 from nonebot.matcher import Matcher
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageDraw, ImageFont
 from ujson import dumps, loads
 from .config import plugin_config, var
 from nonebot import get_bot
+
+
+def text_to_img(text: str) -> BytesIO:
+    lines = text.splitlines()
+    line_count = len(lines)
+    # 读取字体
+    font = ImageFont.truetype(f"www/static/msyh.ttc", 16)
+    # 获取字体的行高
+    left, top, width, line_height = font.getbbox("a")
+    line_height += 3
+    # 获取画布需要的高度
+    height = line_height * line_count + 20
+    # 获取画布需要的宽度
+    width = int(max([font.getlength(line) for line in lines])) + 25
+    # 字体颜色
+    black_color = (0, 0, 0)
+    red_color = (211, 38, 38)
+    # 生成画布
+    image = Image.new("RGB", (width, height), (255, 255, 255))
+    draw = ImageDraw.Draw(image)
+    # 按行开画，c是计算写到第几行
+    c = 0
+    for line in lines:
+        if line.find("img_url: ") != -1:
+            color = red_color
+        else:
+            color = black_color
+        draw.text((10, 6 + line_height * c), line, font=font, fill=color)
+        c += 1
+    img_bytes = BytesIO()
+    image.save(img_bytes, format="jpeg")
+    return img_bytes
 
 
 def url_diy_replace(img_url: str) -> str:
@@ -76,13 +108,34 @@ def cache_sent_img(api_url: str, img_url: str) -> int:
     return var.sent_img_num
 
 
+def fn_cache_sent_img(filename: str, img_url: str) -> int:
+    """
+    每发一张图片都有一个编号，重启后重置，可以用于找某个图片的url，方便debug或别的
+    """
+    if var.fn_sent_img_num > 100000:
+        var.fn_sent_img_num = 0
+    var.fn_sent_img_num += 1
+    var.fn_sent_img_filename_data[var.fn_sent_img_num] = filename
+    var.fn_sent_img_imgurl_data[var.fn_sent_img_num] = img_url
+    return var.fn_sent_img_num
+
+
+async def send_error_msg(msg: str):
+    bot = get_bot(plugin_config.tutu_bot_qqnum)
+    if bot:
+        await bot.send_private_msg(user_id=plugin_config.tutu_admin_qqnum, message=msg)
+
+
 async def send_img_msg(matcher: Matcher, img_num: int, img_url: str):
     try:
-        ds, result = await download_img(img_url)
-        if ds:
-            await matcher.send(f"No.{img_num}" + MS.image(result, timeout=30))
+        if plugin_config.tutu_img_local_download:
+            ds, result = await download_img(img_url)
+            if ds:
+                await matcher.send(f"No.{img_num}" + MS.image(result, timeout=30))
+            else:
+                await matcher.send(f"No.{img_num}\n{result}")
         else:
-            await matcher.send(f"No.{img_num}\n{result}")
+            await matcher.send(f"No.{img_num}" + MS.image(img_url, timeout=30))
 
     except Exception as e:
         await matcher.send(f"No.{img_num}  {img_url}\n发送失败 {repr(e)}")
@@ -147,24 +200,34 @@ async def get_img_url(
         if plugin_config.tutu_http_proxy:
             http_proxy = plugin_config.tutu_http_proxy
 
-    async with AsyncClient(
-        headers=var.headers,
-        transport=socks5_proxy,
-        proxies=http_proxy,
-        timeout=var.http_timeout,
-        verify=False,
-    ) as c:
-        try:
-            rr = await c.get(url=api_url)
-        except Exception as e:
-            msg = f"{api_url}\n请求API出错：{repr(e)}"
-            logger.error(msg)
-            bot = get_bot(plugin_config.tutu_bot_qqnum)
-            if bot:
-                await bot.send_private_msg(
-                    user_id=plugin_config.tutu_admin_qqnum, message=msg
-                )
-            return (False, msg, "")
+    error_times = 0
+
+    async def _get_img_url(api_url: str) -> Response | str:
+        nonlocal error_times
+        async with AsyncClient(
+            headers=var.headers,
+            transport=socks5_proxy,
+            proxies=http_proxy,
+            timeout=var.http_timeout,
+            verify=False,
+        ) as c:
+            try:
+                rr = await c.get(url=api_url)
+                return rr
+            except Exception as e:
+                error_times += 1
+                if error_times < 3:
+                    await sleep(error_times)
+                    return await _get_img_url(api_url)
+                else:
+                    msg = f"{api_url}\n请求API出错：{repr(e)}"
+                    logger.error(msg)
+                    await send_error_msg(msg)
+                    return msg
+
+    rr = await _get_img_url(api_url)
+    if isinstance(rr, str):
+        return (False, rr, "")
 
     if rr.status_code == 200:
         # 判断有没有original关键字，有就找原图
@@ -194,26 +257,14 @@ async def get_img_url(
         except IndexError:
             msg = f"{api_url}\n找不到img_url\n响应码: {rr.status_code}\n响应内容: {rr.text}"
             logger.error(msg)
-            bot = get_bot(plugin_config.tutu_bot_qqnum)
-            if bot:
-                await bot.send_private_msg(
-                    user_id=plugin_config.tutu_admin_qqnum, message=msg
-                )
-            return (
-                False,
-                msg,
-                "",
-            )
+            await send_error_msg(msg)
+            return (False, msg, "")
     elif 300 < rr.status_code < 310:
         img_url = rr.headers["location"]
     else:
         msg = f"{api_url}\n获取图片url出错 [{rr.status_code}]"
         logger.error(msg)
-        bot = get_bot(plugin_config.tutu_bot_qqnum)
-        if bot:
-            await bot.send_private_msg(
-                user_id=plugin_config.tutu_admin_qqnum, message=msg
-            )
+        await send_error_msg(msg)
         return (False, msg, "")
 
     if api_test == 0:

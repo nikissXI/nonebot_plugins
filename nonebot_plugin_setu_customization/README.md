@@ -26,6 +26,8 @@ tutu_bot_qqnum = 114514
 tutu_admin_qqnum = 114514
 
 # 非必填项
+# 图片下载模式，真则nonebot下载，假则协议端下载
+tutu_img_local_download = True
 # R18类别的名称
 tutu_r18_name = R18
 # 本地图片库的路径
@@ -37,17 +39,17 @@ tutu_self_cosplay_lib = self_cosplay
 # 插件数据文件名
 tutu_data_filename = tutu_data.json
 # socks5代理地址，如 socks5://127.0.0.1:1234
-tutu_socks5_proxy = socks5://127.0.0.1:1234
+tutu_socks5_proxy = None
 # http代理地址，如 http://127.0.0.1:1234
-tutu_http_proxy = http://127.0.0.1:1234
+tutu_http_proxy = None
 # 网页访问地址，不用网页浏览可不填，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
-tutu_site_url = http://hahaha.com:80
+tutu_site_url = None
 # 使用网页访问时，新浪图片反代地址，不用网页浏览可不填，如 http://img.example.top:514
-tutu_sina_img_proxy = http://img.example.top:666
+tutu_sina_img_proxy = None
 # 使用网页访问时，微信图片反代地址，不用网页浏览可不填，如 http://img.example.top:114
-tutu_wx_img_proxy = http://img.example.top:114
+tutu_wx_img_proxy = None
 # 使用网页访问时，B站图片反代地址，不用网页浏览可不填，如 http://img.example.top:514
-tutu_bili_img_proxy = http://img.example.top:514
+tutu_bili_img_proxy = None
 # 爬取文章图片时，图片的宽或高小于多少忽略爬取
 tutu_crawler_min_width =  500
 tutu_crawler_min_height =  500
@@ -179,6 +181,10 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 然后给机器人私聊发送“开爬”就会自动爬取
 
 ## 更新
+### 2022/1/4 \[v1.3.0]
+
+* 增加本地下图和远端下图配置，优化api请求逻辑
+
 ### 2022/1/4 \[v1.2.2]
 
 * 出图改为nb下载好再发送，优化大量细节，修bug

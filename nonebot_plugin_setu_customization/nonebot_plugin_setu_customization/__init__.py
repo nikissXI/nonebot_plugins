@@ -13,6 +13,7 @@ from nonebot.adapters.onebot.v11 import PrivateMessageEvent, helpers
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 from nonebot.params import RegexGroup
+from nonebot.permission import Permission
 from nonebot.plugin import PluginMetadata
 from .config import load_local_api, plugin_config, save_data, var
 from .data_handle import (
@@ -22,6 +23,7 @@ from .data_handle import (
     send_img_msg,
     to_node_msg,
     url_diy_replace,
+    text_to_img,
     download_img,
 )
 from .web import app
@@ -72,7 +74,7 @@ art_paqu = on_regex(
 recall_paqu = on_regex(r"^撤销图片\s*(\d+)?", rule=admin_check)
 paqu_hebing = on_regex(r"^爬取合并(打开|关闭)?$", rule=admin_check)
 paqu_resend = on_fullmatch("爬取重放", rule=admin_check)
-img_no = on_regex(r"^图片序号\s*(\d+)?$", rule=admin_check)
+img_no = on_regex(r"^图片序号\s*((fn)?(\d+))?$", rule=admin_check)
 img_del = on_regex(r"^图片删除\s*((\S+)\s+(\S+)\s*(\S+)?)?", rule=admin_check)
 img_test = on_regex(r"^图片测试\s*(\S+)?$", rule=admin_check)
 
@@ -154,15 +156,23 @@ async def handle_tutu(
             if not success:
                 msg_list.append(to_node_msg(MS.text(text)))
             else:
-                ds, result = await download_img(text)
-                if ds:
+                if plugin_config.tutu_img_local_download:
+                    ds, result = await download_img(text)
+                    if ds:
+                        msg_list.append(
+                            to_node_msg(
+                                MS.text(f"No.{img_num}") + MS.image(result, timeout=30)
+                            )
+                        )
+                    else:
+                        msg_list.append(to_node_msg(MS.text(f"No.{img_num}\n{result}")))
+                else:
                     msg_list.append(
                         to_node_msg(
-                            MS.text(f"No.{img_num}") + MS.image(result, timeout=30)
+                            MS.text(f"No.{img_num}") + MS.image(text, timeout=30)
                         )
                     )
-                else:
-                    msg_list.append(to_node_msg(MS.text(f"No.{img_num}\n{result}")))
+
         else:
             if not success:
                 msg_list.append(tutu.send(text))
@@ -357,8 +367,11 @@ async def handle_api_test(matchgroup=RegexGroup()):
                     msg_list.append(f"API: {api_url}\n错误信息: {text}")
                 else:
                     msg_list.append(f"API: {api_url}\nimg_url: {text}")
-            msg = "\n".join(msg_list)
-            await api_test.finish(msg)
+            text = "\n".join(msg_list)
+            await api_test.finish(text)
+
+            # img_bytes = text_to_img(text)
+            # await api_test.finish(MS.image(img_bytes))
 
         else:
             success, text, ext_msg = await get_img_url(api_url, api_test=1)
@@ -502,25 +515,35 @@ async def handle_paqu_resend(bot: Bot, event: PrivateMessageEvent):
 
 @img_no.handle()
 async def handle_img_no(matchgroup=RegexGroup()):
-    img_num = matchgroup[0]
-    logger.error(f"{var.sent_img_apiurl_data}")
-    logger.error(f"{var.sent_img_imgurl_data}")
-    if not img_num:
-        await img_no.finish(f"图片序号 [序号]")
+    fn = matchgroup[1]
+    img_num = matchgroup[2]
+    if not matchgroup[0]:
+        await img_no.finish(f"图片序号 [数字/fn数字]")
     else:
+        if fn:
+            no_format = "No.fn"
+            one = var.fn_sent_img_filename_data
+            two = var.fn_sent_img_imgurl_data
+        else:
+            no_format = "No."
+            one = var.sent_img_apiurl_data
+            two = var.sent_img_imgurl_data
+
         try:
-            api_url = unquote(var.sent_img_apiurl_data[int(img_num)])
-            img_url = unquote(var.sent_img_imgurl_data[int(img_num)])
+            api_url = unquote(one[int(img_num)])
+            img_url = unquote(two[int(img_num)])
         except KeyError:
-            await img_no.finish(f"No.{img_num}不存在")
-        await img_no.finish(f"No.{img_num}\napi_url：{api_url}\nimg_url：{img_url}")
+            await img_no.finish(f"{no_format}{img_num}不存在")
+        await img_no.finish(
+            f"{no_format}{img_num}\n{'filename' if fn else 'api_url'}：{api_url}\nimg_url：{img_url}"
+        )
 
 
 @img_del.handle()
 async def handle_img_del(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         await img_del.finish(
-            f"图片删除 [本地库] [url]\n本地库快捷名称：2是{plugin_config.tutu_self_anime_lib}，3是{plugin_config.tutu_self_cosplay_lib}\nurl快捷名称 序号[数字]"
+            f"图片删除 [本地库] [url]\n本地库快捷名称：2是{plugin_config.tutu_self_anime_lib}，3是{plugin_config.tutu_self_cosplay_lib}，fn是根据fn序号删\nurl快捷名称 序号[数字]"
         )
     else:
         api_type = matchgroup[1]
@@ -528,13 +551,21 @@ async def handle_img_del(matchgroup=RegexGroup()):
         new_api_type = matchgroup[3]
 
         async def replace_apt_type_text(xx: str):
+            nonlocal img_url
             if xx == "2":
                 return plugin_config.tutu_self_anime_lib
             elif xx == "3":
                 return plugin_config.tutu_self_cosplay_lib
+            elif xx == "fn":
+                try:
+                    xx = var.fn_sent_img_filename_data[int(img_url)]
+                    img_url = var.fn_sent_img_imgurl_data[int(img_url)]
+                    return xx
+                except ValueError:
+                    await img_del.finish("请在url参数位置直接写数字")
             elif xx not in var.api_list_local:
                 await img_del.finish(
-                    f"不存在本地库{api_type}\n快捷名称：2是{plugin_config.tutu_self_anime_lib}，3是{plugin_config.tutu_self_cosplay_lib}"
+                    f"不存在本地库{xx}\n快捷名称：2是{plugin_config.tutu_self_anime_lib}，3是{plugin_config.tutu_self_cosplay_lib}，fn是根据fn序号删"
                 )
             else:
                 return xx
@@ -548,25 +579,27 @@ async def handle_img_del(matchgroup=RegexGroup()):
             try:
                 img_num = int(img_url[2:])
             except ValueError:
-                await img_del.finish("序号格式输入有误，如“序号123”")
+                await img_del.finish("序号格式输入有误，如“序号12”、“序号fn12”")
 
             if img_num in var.sent_img_imgurl_data:
                 img_url = var.sent_img_imgurl_data[img_num]
-
-                if new_api_type and img_url not in var.api_list_local[new_api_type]:
-                    var.api_list_local[new_api_type].append(img_url)
-                    with open(
-                        f"{plugin_config.tutu_local_api_path}/{new_api_type}",
-                        "a",
-                        encoding="utf-8",
-                    ) as a:
-                        a.write(img_url + "\n")
-                    ext_msg = f"，并将该图片加入{new_api_type}"
-
             else:
                 await img_del.finish("序号url不存在")
         else:
-            img_url = matchgroup[2].replace("&amp;", "&").replace("\\", "")
+            img_url = img_url.replace("&amp;", "&").replace("\\", "")
+
+        if new_api_type:
+            if img_url not in var.api_list_local[new_api_type]:
+                var.api_list_local[new_api_type].append(img_url)
+                with open(
+                    f"{plugin_config.tutu_local_api_path}/{new_api_type}",
+                    "a",
+                    encoding="utf-8",
+                ) as a:
+                    a.write(img_url + "\n")
+                ext_msg = f"，并将该图片加入{new_api_type}"
+            else:
+                ext_msg = f"，图片已在{new_api_type}中，不加入"
 
         if img_url in var.api_list_local[api_type]:
             var.api_list_local[api_type].remove(img_url)
@@ -600,13 +633,13 @@ async def handle_img_test(matchgroup=RegexGroup()):
             headers=var.headers,
             transport=socks5_proxy,
             proxies=http_proxy,
-            timeout=var.http_timeout,
+            timeout=10,
             verify=False,
         ) as c:
             try:
                 rr = await c.get(url=img_url)
             except Exception as e:
-                msg = f"图片请求API出错：{repr(e)}"
+                msg = f"图片请求出错：{repr(e)}"
                 logger.error(msg)
                 await img_test.finish(msg)
         img_bytes = BytesIO(rr.content)
