@@ -1,30 +1,73 @@
-from asyncio import create_task as ct
-from asyncio import gather, sleep
+from asyncio import gather, get_running_loop, sleep
 from datetime import datetime, timedelta
+from functools import wraps
 from io import BytesIO
 from os import listdir, remove, rename, rmdir
+from random import randint
 from re import findall, search
+from traceback import format_exc
 from urllib.parse import unquote
 from bs4 import BeautifulSoup
 from httpx import AsyncClient, Response
 from httpx_socks import AsyncProxyTransport
-from nonebot.adapters.onebot.v11 import Bot, MessageEvent
+from nonebot import get_bot
+from nonebot.adapters.onebot.v11 import ActionFailed, Bot, Message, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
+from nonebot.adapters.onebot.v11 import NetworkError
+from nonebot.exception import FinishedException
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 from PIL import Image, ImageDraw, ImageFont
 from ujson import dumps, loads
 from .config import plugin_config, var
-from nonebot import get_bot
 
 
-def text_to_img(text: str) -> BytesIO:
+###################################
+# 异常处理
+###################################
+def handle_exception(name: str):
+    def wrapper(func):
+        @wraps(func)
+        async def inner(**kwargs):
+            now = datetime.now()
+            time_str = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
+            try:
+                await func(**kwargs)
+            except ActionFailed as e:
+                if e.info["wording"] == "消息不存在":
+                    return
+                msg = f"{time_str}\n{name} 处理器信息发送失败！\n失败原因：{e.info['msg']}  {e.info['wording']}"
+                logger.error(msg)
+                await send_error_msg(msg)
+            except NetworkError:
+                msg = f"{time_str}\n{name} 处理器信息发送超时！"
+                logger.error(msg)
+                await send_error_msg(msg)
+            except FinishedException:
+                raise
+            except Exception:
+                # 代码本身出问题
+                error_msg = format_exc()
+                msg = f"{time_str}\n{name} 处理器执行出错!\n错误追踪:"
+                logger.error(msg + f"\n{error_msg}")
+                await send_error_msg(msg + MS.image(text_to_img(error_msg)))
+
+        return inner
+
+    return wrapper
+
+
+def text_to_img(text: str, font_path: str = plugin_config.tutu_font_path) -> BytesIO:
+    """
+    字转图片
+    """
     lines = text.splitlines()
     line_count = len(lines)
     # 读取字体
-    font = ImageFont.truetype(f"www/static/msyh.ttc", 16)
+    font = ImageFont.truetype(font_path, 16)
     # 获取字体的行高
     left, top, width, line_height = font.getbbox("a")
+    # 增加行距
     line_height += 3
     # 获取画布需要的高度
     height = line_height * line_count + 20
@@ -39,15 +82,29 @@ def text_to_img(text: str) -> BytesIO:
     # 按行开画，c是计算写到第几行
     c = 0
     for line in lines:
-        if line.find("img_url: ") != -1:
-            color = red_color
-        else:
+        if line.find("img_url: ") == -1:
             color = black_color
+        else:
+            color = red_color
         draw.text((10, 6 + line_height * c), line, font=font, fill=color)
         c += 1
     img_bytes = BytesIO()
     image.save(img_bytes, format="jpeg")
     return img_bytes
+
+
+def pixiv_reverse_proxy(img_url: str, resize: bool = True) -> str:
+    # pixiv图片缩小尺寸以及pixiv反代地址
+    if img_url.find("/img-original/img/") != -1:
+        img_url_group = img_url.replace("//", "").split("/")
+        img_url_group.pop(0)
+        img_url = plugin_config.tutu_pixiv_proxy + "/".join(img_url_group)
+        # 缩小图片大小
+        if resize:
+            img_url = img_url.replace("/img-original/img/", "/img-master/img/")
+            ext = img_url.split(".")[-1]
+            img_url = img_url.replace(f".{ext}", f"_master1200.jpg")
+    return img_url
 
 
 def url_diy_replace(img_url: str) -> str:
@@ -57,12 +114,10 @@ def url_diy_replace(img_url: str) -> str:
     # 没有协议头补上https
     if img_url.find("http") == -1:
         img_url = f"https:{img_url}"
-    img_url = img_url.replace("&amp;", "&")
     # 去掉反斜杠
     img_url = img_url.replace("\\", "")
-    # pixiv反代地址
-    img_url = img_url.replace("i.pximg.net", "a.jitsu.top")
-    img_url = img_url.replace("i.pixiv.re", "a.jitsu.top")
+    # pixiv反代
+    img_url = pixiv_reverse_proxy(img_url)
     # 微信图床反代地址
     if plugin_config.tutu_wx_img_proxy and img_url.find("https://mmbiz.qpic.cn") != -1:
         img_url = img_url.replace(
@@ -120,7 +175,26 @@ def fn_cache_sent_img(filename: str, img_url: str) -> int:
     return var.fn_sent_img_num
 
 
-async def send_error_msg(msg: str):
+def soutu_cache_data(params: dict, data: dict) -> int:
+    """
+    每执行编号，重启后重置，用于网页看图
+    """
+    while True:
+        soutu_num = randint(1, 9999)
+        if soutu_num not in var.soutu_data:
+            break
+    var.soutu_data[soutu_num] = (params, data)
+    return soutu_num
+
+
+def del_soutu_cache_data(data_num: int):
+    """
+    使网页浏览数据失效
+    """
+    var.soutu_data.pop(data_num)
+
+
+async def send_error_msg(msg: str | Message):
     bot = get_bot(plugin_config.tutu_bot_qqnum)
     if bot:
         await bot.send_private_msg(user_id=plugin_config.tutu_admin_qqnum, message=msg)
@@ -142,15 +216,15 @@ async def send_img_msg(matcher: Matcher, img_num: int, img_url: str):
 
 
 async def download_img(img_url: str) -> tuple[bool, BytesIO | str]:
-    # 微信图床反代地址
+    # 微信图床
     if plugin_config.tutu_wx_img_proxy and img_url.find("https://mmbiz.qpic.cn") != -1:
         headers = var.wx_headers
-    # B站图床反代地址
+    # B站图床
     elif (
         plugin_config.tutu_bili_img_proxy and img_url.find("https://i0.hdslb.com") != -1
     ):
         headers = var.bili_headers
-    # 新浪图床反代地址
+    # 新浪图床
     elif plugin_config.tutu_sina_img_proxy and img_url.find(".sinaimg.cn") != -1:
         headers = var.sina_headers
     else:
@@ -164,26 +238,67 @@ async def download_img(img_url: str) -> tuple[bool, BytesIO | str]:
         if plugin_config.tutu_http_proxy:
             http_proxy = plugin_config.tutu_http_proxy
 
-    async with AsyncClient(
-        headers=headers,
-        transport=socks5_proxy,
-        proxies=http_proxy,
-        timeout=var.http_timeout,
-        verify=False,
-    ) as c:
-        try:
-            rr = await c.get(url=img_url)
-        except Exception as e:
-            msg = f"{img_url}\n图片下载出错：{repr(e)}"
-            logger.error(msg)
-            bot = get_bot(plugin_config.tutu_bot_qqnum)
-            if bot:
-                await bot.send_private_msg(
-                    user_id=plugin_config.tutu_admin_qqnum, message=msg
-                )
-            return (False, msg)
+    async def _request_img(img_url: str) -> str | BytesIO:
+        async with AsyncClient(
+            headers=headers,
+            transport=socks5_proxy,
+            proxies=http_proxy,
+            timeout=var.http_timeout,
+            verify=False,
+        ) as c:
+            try:
+                res = await c.get(url=img_url)
+            except Exception as e:
+                return f"{img_url}\n图片下载出错：{repr(e)}"
+            else:
+                if res.status_code == 200:
+                    img_bytesio = BytesIO(res.content)
+                    img = Image.open(img_bytesio)
+                    try:
+                        img.width
+                    except Exception as e:
+                        return f"{img_url}\n图片解析出错：{repr(e)}"
+                    else:
+                        return img_bytesio
+                else:
+                    return f"{img_url}\n图片响应异常：状态码{res.status_code}"
+
+    result = await _request_img(img_url)
+
+    if isinstance(result, BytesIO):
+        return (True, result)
+    else:
+        logger.error(result)
+        await send_error_msg(result)
+        return (False, result)
+
+
+def extract_img_url(text: str) -> str | None:
+    # 判断有没有original关键字，有就找原图
+    if text.find("original") != -1:
+        original_exists = True
+    else:
+        original_exists = False
+
+    # 尝试反序列化，如果序列化成功再变带缩进的序列号字符串，方便正则找url
+    try:
+        tmp_data = dumps(loads(text), indent=4, ensure_ascii=False)
+        if original_exists:
+            img_url = search(
+                r"original.+(?P<MSG>(?:http)?s?:?\\?/\\?/[^\"]*)", tmp_data
+            )
         else:
-            return (True, BytesIO(rr.content))
+            img_url = search(r"(?P<MSG>(?:http)?s?:?\\?/\\?/[^\"]*)", tmp_data)
+    except:
+        img_url = search(r"(?P<MSG>(?:http)?s?:?\\?/\\?/[^\"]*)", text)
+
+    try:
+        if not img_url:
+            raise IndexError
+        else:
+            return img_url.group("MSG")
+    except IndexError:
+        return None
 
 
 async def get_img_url(
@@ -216,8 +331,8 @@ async def get_img_url(
                 return rr
             except Exception as e:
                 error_times += 1
-                if error_times < 3:
-                    await sleep(error_times)
+                if error_times < 2:
+                    await sleep(1)
                     return await _get_img_url(api_url)
                 else:
                     msg = f"{api_url}\n请求API出错：{repr(e)}"
@@ -230,31 +345,8 @@ async def get_img_url(
         return (False, rr, "")
 
     if rr.status_code == 200:
-        # 判断有没有original关键字，有就找原图
-        if rr.text.find("original") != -1:
-            original_exists = True
-        else:
-            original_exists = False
-
-        # 尝试反序列化，如果序列化成功再变带缩进的序列号字符串，方便正则找url
-        try:
-            tmp_data = dumps(loads(rr.text), indent=4, ensure_ascii=False)
-            if original_exists:
-                img_url = search(
-                    r"original.+(?P<MSG>(?:http)?s?:?\\?/\\?/[^\"]*)", tmp_data
-                )
-            else:
-                img_url = search(r"(?P<MSG>(?:http)?s?:?\\?/\\?/[^\"]*)", tmp_data)
-        except:
-            img_url = search(r"(?P<MSG>(?:http)?s?:?\\?/\\?/[^\"]*)", rr.text)
-
-        try:
-            if not img_url:
-                raise IndexError
-            else:
-                img_url = img_url.group("MSG")
-
-        except IndexError:
+        img_url = extract_img_url(rr.text)
+        if not img_url:
             msg = f"{api_url}\n找不到img_url\n响应码: {rr.status_code}\n响应内容: {rr.text}"
             logger.error(msg)
             await send_error_msg(msg)
@@ -266,6 +358,12 @@ async def get_img_url(
         logger.error(msg)
         await send_error_msg(msg)
         return (False, msg, "")
+
+    # 没有协议头补上https
+    if img_url.find("http") == -1:
+        img_url = f"https:{img_url}"
+    # 去掉反斜杠
+    img_url = img_url.replace("\\", "")
 
     if api_test == 0:
         if cache_data:
@@ -280,7 +378,7 @@ async def get_img_url(
 
     return (
         True,
-        url_diy_replace(img_url),
+        img_url,
         ext_msg,
     )
 
@@ -604,9 +702,7 @@ async def get_art_img_url(
             else:
                 img_url_msg_list.append(f"序号：{img_num}  {img_url}")
                 task_list.append(
-                    matcher.send(
-                        MS.text(f"序号：{img_num}") + MS.image(img_url, timeout=30)
-                    )
+                    matcher.send(f"序号：{img_num}" + MS.image(img_url, timeout=30))
                 )
 
         await matcher.send(
@@ -621,4 +717,131 @@ async def get_art_img_url(
             await gather(*task_list)
             await matcher.send(f"图片发送完毕")
     else:
-        await matcher.send(f"从文章中获取到图片{img_found}个\n没有收录新图片\n因重复过滤掉图片{filter_count}张")
+        await matcher.send(
+            f"从文章【{title}】中获取到图片{img_found}个\n没有收录新图片\n因重复过滤掉图片{filter_count}张"
+        )
+
+
+async def get_soutu_result(
+    query_mode: str,
+    tags: str = "",
+    match_mode: str = "",
+    order_mode: str = "",
+    rank_mode: str = "",
+    date: str = "",
+    id: int = 0,
+    page_num: int = 1,
+    in_params: dict = {},
+) -> str | int | dict:
+    """
+    获取搜图api返回结果
+    """
+
+    params = {
+        "search": {
+            "type": "search",
+            "word": tags,
+            "mode": match_mode,
+            "order": order_mode,
+            "page": page_num,
+        },
+        "rank": {
+            "type": "rank",
+            "mode": rank_mode,
+            "date": date,
+            "page": page_num,
+        },
+        "member_illust": {
+            "type": "member_illust",
+            "id": id,
+            "page": page_num,
+        },
+        "illust": {
+            "type": "illust",
+            "id": id,
+            "page": page_num,
+        },
+        "related": {
+            "type": "related",
+            "id": id,
+            "page": page_num,
+        },
+        "roll": in_params,
+    }
+
+    try:
+        async with AsyncClient(
+            headers=var.headers,
+            timeout=var.http_timeout,
+            verify=False,
+        ) as c:
+            res = await c.get(
+                "https://api.moedog.org/pixiv/v2/", params=params[query_mode]
+            )
+    except Exception as e:
+        msg = f"搜图请求出错：{repr(e)}"
+        logger.error(msg)
+        return msg
+
+    if res.status_code != 200:
+        msg = f"搜图请求出错：状态码{res.status_code}"
+        logger.error(msg)
+        return msg
+
+    aa = loads(res.text)
+
+    if params[query_mode]["type"] == "illust":
+        result_keyword = "illust"
+    else:
+        result_keyword = "illusts"
+
+    if result_keyword not in aa:
+        if query_mode == "roll":
+            return {}
+        else:
+            return 0
+
+    # 遍历插画
+    result_list = {}
+    if result_keyword == "illust":
+        pid = aa[result_keyword]["id"]
+        result_list[pid] = {
+            "title": aa[result_keyword]["title"],
+            "uname": aa[result_keyword]["user"]["name"],
+            "uid": aa[result_keyword]["user"]["id"],
+            "search": params[query_mode],
+            "url_list": [],
+        }
+        if aa[result_keyword]["meta_single_page"]:
+            url = aa[result_keyword]["meta_single_page"]["original_image_url"]
+            result_list[pid]["url_list"].append(url)
+        for cc in aa[result_keyword]["meta_pages"]:
+            url = cc["image_urls"]["original"]
+            result_list[pid]["url_list"].append(url)
+    else:
+        for bb in aa[result_keyword]:
+            pid = bb["id"]
+            result_list[pid] = {
+                "title": bb["title"],
+                "uname": bb["user"]["name"],
+                "uid": bb["user"]["id"],
+                "search": params[query_mode],
+                "url_list": [],
+            }
+            if bb["meta_single_page"]:
+                url = bb["meta_single_page"]["original_image_url"]
+                result_list[pid]["url_list"].append(url)
+            for cc in bb["meta_pages"]:
+                url = cc["image_urls"]["original"]
+                result_list[pid]["url_list"].append(url)
+
+    if query_mode == "roll":
+        return result_list
+    elif result_list:
+        data_num = soutu_cache_data(params[query_mode], result_list)
+        get_running_loop().call_later(
+            plugin_config.web_view_time * 60, del_soutu_cache_data, data_num
+        )
+        return data_num
+    else:
+        return 0

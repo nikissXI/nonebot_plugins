@@ -28,6 +28,10 @@ tutu_admin_qqnum = 114514
 # 非必填项
 # 图片下载模式，true则nonebot下载，false则协议端下载
 tutu_img_local_download = true
+# 图图命令CD时间（秒）
+tutu_cooldown = 3
+# 搜图结果链接有效时间（分钟）
+web_view_time = 10
 # R18类别的名称
 tutu_r18_name = R18
 # 本地图片库的路径
@@ -38,12 +42,16 @@ tutu_self_anime_lib =  self_anime
 tutu_self_cosplay_lib = self_cosplay
 # 插件数据文件名
 tutu_data_filename = tutu_data.json
-# socks5代理地址，如 socks5://127.0.0.1:1234
-tutu_socks5_proxy = None
+# 自定义字体文件路径（要填真实路径，这里只是举个例子）
+tutu_font_path = __file__/font/msyh.ttf
+# 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
+tutu_site_url = http://127.0.0.1:8080
+# pixiv图片反代地址 备选 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/ 、 https://c.jitsu.top/
+tutu_pixiv_proxy = https://i.pixiv.re/
 # http代理地址，如 http://127.0.0.1:1234
 tutu_http_proxy = None
-# 网页访问地址，不用网页浏览可不填，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
-tutu_site_url = None
+# socks5代理地址，如 socks5://127.0.0.1:1234
+tutu_socks5_proxy = None
 # 使用网页访问时，新浪图片反代地址，不用网页浏览可不填，如 http://img.example.top:514
 tutu_sina_img_proxy = None
 # 使用网页访问时，微信图片反代地址，不用网页浏览可不填，如 http://img.example.top:114
@@ -72,6 +80,7 @@ tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文
 |:-----:|:----:|
 | 图图 | 机器人出图（好友私聊，群聊要添加白名单） |
 | 图图帮助 | 查看图图命令的更多使用姿势 |
+| 搜图 | 查看搜图命令使用姿势（好友私聊，群聊要添加白名单） |
 | （下面都是管理员命令） | （发送命令有使用格式） |
 | 图图插件群管理 | 增删群白名单 |
 | 图图插件接口测试 | 测试接口连接情况和返回的数据 |
@@ -88,26 +97,25 @@ tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文
 
 ### 使用示例、导入api和图片库
 **二次元图片api**  
-https://api.lolicon.app/setu/v2  
-http://api.tangdouz.com/sjdmbz.php  
-https://api.dujin.org/pic/yuanshen/  
-https://api.mtyqx.cn/tapi/random.php  
-https://www.dmoe.cc/random.php  
-https://setu.yuban10703.xyz/setu  
-https://api.ixiaowai.cn/api/api.php  
-https://tuapi.eees.cc/api.php?category=dongman&type=302  
-https://api.yimian.xyz/img/  
-https://tenapi.cn/acg/  
-https://api.jiecs.top/lolicon/  
-https://api.vvhan.com/api/acgimg  
-http://api.iw233.cn/api.php?sort=random  
-https://image.anosu.top/pixiv/direct  
+http://api.tangdouz.com/sjdmbz.php
+https://api.dujin.org/pic/yuanshen/
+https://api.mtyqx.cn/tapi/random.php
+https://www.dmoe.cc/random.php
+https://setu.yuban10703.xyz/setu
+https://api.ixiaowai.cn/api/api.php
+https://tuapi.eees.cc/api.php?category=dongman&type=302
+https://api.yimian.xyz/img/
+http://api.iw233.cn/api.php?sort=random
+https://image.anosu.top/pixiv/direct
+https://api.lolicon.app/setu/v2
+https://moe.jitsu.top/api/?sort=setu
+https://moe.jitsu.top/api/?sort=pixiv
 
 **R18图片api**  
-https://api.lolicon.app/setu/v2?r18=1  
-https://setu.yuban10703.xyz/setu?r18=1  
-https://api.jiecs.top/lolicon/?r18=1  
-https://image.anosu.top/pixiv/direct?r18=1  
+https://setu.yuban10703.xyz/setu?r18=1
+https://image.anosu.top/pixiv/direct?r18=1
+https://api.lolicon.app/setu/v2?r18=1
+https://moe.jitsu.top/api/?sort=r18
 
 **三次元图片api**  
 没收集到好的，但是我爬了很多，在仓库的tutu_local_img_lib文件夹，下载放进去data/tutu_local_img_lib/里面
@@ -181,6 +189,10 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 然后给机器人私聊发送“开爬”就会自动爬取
 
 ## 更新
+### 2022/1/4 \[v1.4.0]
+
+* 增加搜图功能（需要公网服务器网页访问结果），优化图片下载状态判断
+
 ### 2022/1/4 \[v1.3.1]
 
 * 增加本地下图和远端下图配置，优化api请求逻辑

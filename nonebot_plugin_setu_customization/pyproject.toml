@@ -25,6 +25,7 @@ beautifulsoup4 = "^4.0.0"
 Pillow = "^9.0.0"
 ujson = "^5.0.0"
 starlette = "^0.19.0"
+apscheduler = "^3.7.0"
 
 [build-system]
 requires = ["poetry-core"]

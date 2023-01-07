@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from io import BytesIO
 from os import listdir
 from random import choice
+from re import search
 from urllib.parse import unquote
 from httpx import AsyncClient
 from httpx_socks import AsyncProxyTransport
@@ -13,26 +14,28 @@ from nonebot.adapters.onebot.v11 import PrivateMessageEvent, helpers
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 from nonebot.params import RegexGroup
-from nonebot.permission import Permission
 from nonebot.plugin import PluginMetadata
-from .config import load_local_api, plugin_config, save_data, var
+from PIL import Image
+from .config import load_local_api, plugin_config, save_data, soutu_options, var
 from .data_handle import (
+    download_img,
     get_art_img_url,
     get_img_url,
+    get_soutu_result,
+    handle_exception,
     load_crawler_files,
     send_img_msg,
+    text_to_img,
     to_node_msg,
     url_diy_replace,
-    text_to_img,
-    download_img,
 )
 from .web import app
 
 __plugin_meta__ = PluginMetadata(
     name="图图插件",
     description="如名",
-    usage=f"""发 图图 就有图辣
-图图帮助 看图图的详细命令格式
+    usage=f"""图图帮助 看图图的详细命令格式
+搜图 发一下就知道了
 图图插件群管理 增删群
 图图插件接口管理 增删API接口
 图图插件接口测试 测试API接口
@@ -46,10 +49,28 @@ __plugin_meta__ = PluginMetadata(
 )
 
 # 群判断
-async def group_check(event: GroupMessageEvent, bot: Bot) -> bool:
-    return (
-        event.group_id in var.group_list and bot.self_id == plugin_config.tutu_bot_qqnum
-    )
+async def permission_check(event: MessageEvent, bot: Bot) -> bool:
+    if isinstance(event, GroupMessageEvent):
+        return (
+            event.group_id in var.group_list
+            and bot.self_id == plugin_config.tutu_bot_qqnum
+        )
+    elif isinstance(event, PrivateMessageEvent):
+        return event.sub_type == "friend"
+    else:
+        return False
+
+
+async def permission_check_st(event: MessageEvent, bot: Bot) -> bool:
+    if isinstance(event, GroupMessageEvent):
+        return (
+            event.group_id in var.group_list_st
+            and bot.self_id == plugin_config.tutu_bot_qqnum
+        )
+    elif isinstance(event, PrivateMessageEvent):
+        return event.sub_type == "friend"
+    else:
+        return False
 
 
 # 管理员判断
@@ -60,8 +81,16 @@ async def admin_check(event: MessageEvent, bot: Bot) -> bool:
     )
 
 
-tutu = on_regex(r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$", rule=group_check)
-group_manage = on_regex(r"^图图插件群管理\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
+tutu = on_regex(
+    r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$",
+    permission=permission_check,
+)
+# 搜图 白丝，萝莉 排序1 匹配1 页数1
+soutu = on_regex(
+    r"^搜图\s*(\S+)?(.*)?",
+    permission=permission_check_st,
+)
+group_manage = on_regex(r"^(图图插件群管理|图图插件群管理搜图)\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
 api_manage = on_regex(
     r"^图图插件接口管理\s*((\S+)(\s+(\+|\-)?\s+([\s\S]*)?)?)?", rule=admin_check
 )
@@ -79,7 +108,12 @@ img_del = on_regex(r"^图片删除\s*((\S+)\s+(\S+)\s*(\S+)?)?", rule=admin_chec
 img_test = on_regex(r"^图片测试\s*(\S+)?$", rule=admin_check)
 
 
-@tutu.handle(parameterless=[helpers.Cooldown(cooldown=3, prompt="我知道你很急，但你先别急")])
+@tutu.handle(
+    parameterless=[
+        helpers.Cooldown(cooldown=plugin_config.tutu_cooldown, prompt="我知道你很急，但你先别急")
+    ]
+)
+@handle_exception("图图")
 async def handle_tutu(
     event: MessageEvent, matcher: Matcher, bot: Bot, matchgroup=RegexGroup()
 ):
@@ -101,17 +135,17 @@ async def handle_tutu(
         merge_send = False
 
     if not send_num:
-        send_num = 1
+        send_num = 3
     elif send_num == "帮助":
         await tutu.finish(
-            "图图 [数量] [类型] [合并]\n如以下格式发送（注意空格）：\n图图\n图图 10 合并\n图图 二次元 合并\n图图 3 三次元 合并"
+            "图图 [数量] [类型] [合并]\n如以下格式发送（注意空格）：\n图图\n图图 5 合并\n图图 二次元 合并\n图图 3 三次元 合并"
         )
     else:
         send_num = int(send_num)
-        if send_num > 10:
+        if send_num > 5:
             await tutu.finish("太多啦，顶不住！♀")
-        else:
-            await tutu.send("制作中，请稍后...♀")
+
+    await tutu.send("制作中，请稍后...♀")
 
     if isinstance(event, GroupMessageEvent):
         if api_type:
@@ -152,16 +186,17 @@ async def handle_tutu(
     gather_result = await gather(*task_list)
 
     for success, text, img_num in gather_result:
+        img_url = url_diy_replace(text)
         if isinstance(event, GroupMessageEvent) or merge_send:
             if not success:
                 msg_list.append(to_node_msg(MS.text(text)))
             else:
                 if plugin_config.tutu_img_local_download:
-                    ds, result = await download_img(text)
+                    ds, result = await download_img(img_url)
                     if ds:
                         msg_list.append(
                             to_node_msg(
-                                MS.text(f"No.{img_num}") + MS.image(result, timeout=30)
+                                MS.text(f"No.{img_num}") + MS.image(img_url, timeout=30)
                             )
                         )
                     else:
@@ -169,7 +204,7 @@ async def handle_tutu(
                 else:
                     msg_list.append(
                         to_node_msg(
-                            MS.text(f"No.{img_num}") + MS.image(text, timeout=30)
+                            MS.text(f"No.{img_num}") + MS.image(img_url, timeout=30)
                         )
                     )
 
@@ -177,7 +212,7 @@ async def handle_tutu(
             if not success:
                 msg_list.append(tutu.send(text))
             else:
-                msg_list.append(send_img_msg(matcher, img_num, text))
+                msg_list.append(send_img_msg(matcher, img_num, img_url))
 
     # 群聊
     if isinstance(event, GroupMessageEvent):
@@ -213,31 +248,156 @@ async def handle_tutu(
         await tutu.finish("发送完毕~如果还有图没出来可能在路上哦")
 
 
-@group_manage.handle()
-async def handle_group_manage(event: MessageEvent, matchgroup=RegexGroup()):
-    if not matchgroup[0]:
-        group_list = "\n".join([str(i) for i in var.group_list])
-        await group_manage.finish(f"图图插件群管理 +/-[群号]\n已启用的QQ群\n" + group_list)
+@soutu.handle(
+    parameterless=[
+        helpers.Cooldown(cooldown=plugin_config.tutu_cooldown, prompt="我知道你很急，但你先别急")
+    ]
+)
+@handle_exception("搜图")
+async def handle_soutu(matchgroup=RegexGroup()):
+    tags: str = matchgroup[0]
+    options: str = matchgroup[1]
+    if not tags:
+        text = "pixiv搜图命令介绍\n\n命令格式：搜图  [关键字]  [选项1]  [选项2]\n\n关键字：多个使用逗号分割，中英逗号都行\n屏蔽某个关键字就加“-”，如“-R-18”就是屏蔽掉r18的图\n因为屏蔽标签会影响单页出图数量，所以现在默认不屏蔽r18了\n如原神的图因为太多r18，屏蔽后可能会导致几页都没图\n\n选项不需要可不写\n\n页数：页数[数字]（默认第1页）\n页数选项全部都能带，网页里有翻页功能\n\n排序模式：排序[模式数字]\n1 热门度顺序（默认）\n2 受男性欢迎\n3 受女性欢迎\n4 由新到旧\n5 由旧到新\n\n关键字匹配匹配模式：匹配[模式数字]\n1 标签部分一致（默认）\n2 标签完全一致\n3 标题说明文\n\n使用例子（注意空格分割参数）：\nex1：搜图 白丝，萝莉\nex2：搜图 黑丝，御姐 匹配2 排序4 页数2\nex3：搜图 原神，可莉，-R-18\n\n搜指定id插画：\n搜图 找图[插画id] （找图和id间不能有空格）\n使用例子：搜图 找图114514\n\n搜相关插画：\n搜图 相关[插画id] （相关和id间不能有空格）\n使用例子：搜图 相关114514\n\n搜画师插画：\n搜图 画师[画师id] （画师和id间不能有空格）\n使用例子：搜图 画师114514\n\n排行榜搜索：\n搜图 [榜类]  [日期]\n榜类：日榜、周榜、新人周榜、男日榜、女日榜\n      R18日榜、R18男日榜、R18女日榜、R18周榜\n日期：格式XXXX-XX-XX，如2022-1-1，默认昨天\n使用例子：搜图 日榜 2023-1-1"
+        img_bytes = text_to_img(text)
+        await soutu.finish(MS.image(img_bytes))
+
+    uid = 0
+    pid = 0
+    pid_rl = 0
+    rank = ""
+    try:
+        if tags in soutu_options["rank"]:
+            rank = soutu_options["rank"][tags]
+        elif tags.find("找图") != -1:
+            pid = int(tags[2:])
+        elif tags.find("相关") != -1:
+            pid_rl = int(tags[2:])
+        elif tags.find("画师") != -1:
+            uid = int(tags[2:])
+        elif tags.find(",") != -1:
+            tags = " ".join(tags.split(","))
+        elif tags.find("，") != -1:
+            tags = " ".join(tags.split("，"))
+    except ValueError:
+        await soutu.finish("参数格式有误")
+
+    # if options.find("R18") == -1 and options.find("r18") == -1:
+    #     tags += " -R-18"
+
+    page_num = 1
+    order_mode = "popular_desc"
+    match_mode = "partial_match_for_tags"
+    date = ""
+
+    if rank:
+        aa = search(r"\d{4}-\d{1,2}-\d{1,2}", options)
+        if aa:
+            date = aa.group()
+
+    if options:
+        try:
+            o_list = options.split()
+            for o_i in o_list:
+                if o_i.find("页数") != -1:
+                    page_num = int(o_i[2:])
+                if o_i.find("排序") != -1:
+                    order_mode = soutu_options["order"][int(o_i[2:])]
+                if o_i.find("匹配") != -1:
+                    order_mode = soutu_options["match"][int(o_i[2:])]
+        except (ValueError, KeyError):
+            await soutu.finish("参数格式有误")
+
+    if uid:
+        result = await get_soutu_result(
+            "member_illust",
+            id=uid,
+            page_num=page_num,
+        )
+    elif pid:
+        result = await get_soutu_result(
+            "illust",
+            id=pid,
+            page_num=page_num,
+        )
+    elif pid_rl:
+        result = await get_soutu_result(
+            "related",
+            id=pid_rl,
+            page_num=page_num,
+        )
+    elif rank:
+        result = await get_soutu_result(
+            "rank", rank_mode=rank, date=date, page_num=page_num
+        )
     else:
-        choice = matchgroup[1]
-        if not matchgroup[2]:
+        result = await get_soutu_result(
+            "search",
+            tags=tags,
+            match_mode=match_mode,
+            order_mode=order_mode,
+            page_num=page_num,
+        )
+    if not isinstance(result, str):
+        if result != 0:
+            await soutu.finish(
+                f"打开链接查看，{plugin_config.web_view_time}分钟有效期\n{plugin_config.tutu_site_url}/sr?s={result}"
+            )
+        # elif page_num == 1:
+        #     # 如果第一页是空的，试试第二页
+        #     result = await get_soutu_result(
+        #         "search",
+        #         tags=tags,
+        #         match_mode=match_mode,
+        #         order_mode=order_mode,
+        #         page_num=page_num + 1,
+        #     )
+        #     if result != 0:
+        #         await soutu.finish(
+        #             f"打开链接查看，{plugin_config.web_view_time}分钟有效期\n{plugin_config.tutu_site_url}/sr?s={result}"
+        #         )
+        #     else:
+        #         await soutu.finish("没有搜到你要的图哦")
+        else:
+            await soutu.finish("没有搜到你要的图哦")
+    else:
+        await soutu.finish(f"{result}")
+
+
+@group_manage.handle()
+@handle_exception("图图插件群管理")
+async def handle_group_manage(event: MessageEvent, matchgroup=RegexGroup()):
+    if matchgroup[0] == "图图插件群管理":
+        op_group_list = var.group_list
+    else:
+        op_group_list = var.group_list_st
+    if not matchgroup[1]:
+        group_list = "\n".join([str(i) for i in var.group_list])
+        group_list_st = "\n".join([str(i) for i in var.group_list_st])
+        await group_manage.finish(
+            f"图图插件群管理[搜图] +/-[群号]\n图图已启用的QQ群\n{group_list if group_list else 'None'}\n搜图已启用的QQ群\n{group_list_st if group_list_st else 'None'}"
+        )
+    else:
+        choice = matchgroup[2]
+        group_id = matchgroup[3]
+        if not group_id:
             if isinstance(event, GroupMessageEvent):
                 group = event.group_id
             else:
                 await group_manage.finish("缺少群号")
         else:
-            group = int(matchgroup[2])
+            group = int(group_id)
 
     if choice == "+":
-        if group not in var.group_list:
-            var.group_list.add(group)
+        if group not in op_group_list:
+            op_group_list.add(group)
             save_data()
             await group_manage.finish("添加成功")
         else:
             await group_manage.finish("已经添加过了")
     else:
-        if group in var.group_list:
-            var.group_list.discard(group)
+        if group in op_group_list:
+            op_group_list.discard(group)
             save_data()
             await group_manage.finish("删除成功")
         else:
@@ -245,7 +405,8 @@ async def handle_group_manage(event: MessageEvent, matchgroup=RegexGroup()):
 
 
 @api_manage.handle()
-async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
+@handle_exception("图图插件接口管理")
+async def handle_api_manage(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         api_list_online_text = "\n".join(
             [
@@ -344,6 +505,7 @@ async def handle_api_manage(bot: Bot, matchgroup=RegexGroup()):
 
 
 @api_test.handle()
+@handle_exception("图图插件接口测试")
 async def handle_api_test(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         await api_test.finish(f"图图插件接口测试 [接口url/all]")
@@ -368,10 +530,9 @@ async def handle_api_test(matchgroup=RegexGroup()):
                 else:
                     msg_list.append(f"API: {api_url}\nimg_url: {text}")
             text = "\n".join(msg_list)
-            await api_test.finish(text)
 
-            # img_bytes = text_to_img(text)
-            # await api_test.finish(MS.image(img_bytes))
+            img_bytes = text_to_img(text)
+            await api_test.finish(MS.image(img_bytes))
 
         else:
             success, text, ext_msg = await get_img_url(api_url, api_test=1)
@@ -381,6 +542,7 @@ async def handle_api_test(matchgroup=RegexGroup()):
 
 
 @tutu_kaipa.handle()
+@handle_exception("开爬")
 async def handle_tutu_kaipa(
     event: PrivateMessageEvent, matcher: Matcher, bot: Bot, matchgroup=RegexGroup()
 ):
@@ -414,6 +576,7 @@ async def handle_tutu_kaipa(
 
 
 @art_paqu.handle()
+@handle_exception("爬url")
 async def handle_wx_paqu(
     event: PrivateMessageEvent, matcher: Matcher, bot: Bot, matchgroup=RegexGroup()
 ):
@@ -440,6 +603,7 @@ async def handle_wx_paqu(
 
 
 @recall_paqu.handle()
+@handle_exception("撤销图片")
 async def handle_recall_paqu(matchgroup=RegexGroup()):
     if not var.tmp_data:
         await recall_paqu.finish("没有爬取记录呢")
@@ -466,6 +630,7 @@ async def handle_recall_paqu(matchgroup=RegexGroup()):
 
 
 @paqu_hebing.handle()
+@handle_exception("爬取合并")
 async def handle_miaobixitong(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         await paqu_hebing.finish("爬取合并打开/关闭")
@@ -482,6 +647,7 @@ async def handle_miaobixitong(matchgroup=RegexGroup()):
 
 
 @paqu_resend.handle()
+@handle_exception("爬取重放")
 async def handle_paqu_resend(bot: Bot, event: PrivateMessageEvent):
     if not var.tmp_data:
         await paqu_resend.finish("没有爬取数据呢")
@@ -514,6 +680,7 @@ async def handle_paqu_resend(bot: Bot, event: PrivateMessageEvent):
 
 
 @img_no.handle()
+@handle_exception("图片序号")
 async def handle_img_no(matchgroup=RegexGroup()):
     fn = matchgroup[1]
     img_num = matchgroup[2]
@@ -540,6 +707,7 @@ async def handle_img_no(matchgroup=RegexGroup()):
 
 
 @img_del.handle()
+@handle_exception("图片删除")
 async def handle_img_del(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         await img_del.finish(
@@ -615,11 +783,13 @@ async def handle_img_del(matchgroup=RegexGroup()):
 
 
 @img_test.handle()
+@handle_exception("图片测试")
 async def handle_img_test(matchgroup=RegexGroup()):
     img_url = matchgroup[0]
     if not img_url:
         await img_test.finish("图片测试 [url]")
     else:
+        img_url = img_url.replace("&amp;", "&")
         img_url = url_diy_replace(img_url)
         if plugin_config.tutu_socks5_proxy:
             socks5_proxy = AsyncProxyTransport.from_url(plugin_config.tutu_socks5_proxy)
@@ -629,6 +799,7 @@ async def handle_img_test(matchgroup=RegexGroup()):
             http_proxy = plugin_config.tutu_http_proxy
         else:
             http_proxy = None
+        await img_test.send("图片下载中")
         async with AsyncClient(
             headers=var.headers,
             transport=socks5_proxy,
@@ -643,4 +814,11 @@ async def handle_img_test(matchgroup=RegexGroup()):
                 logger.error(msg)
                 await img_test.finish(msg)
         img_bytes = BytesIO(rr.content)
-        await img_test.finish(MS.image(img_bytes, timeout=30))
+        try:
+            img = Image.open(img_bytes)
+            img.width
+        except Exception as e:
+            msg = f"图片解析失败：{repr(e)}"
+            await img_test.finish(msg)
+        else:
+            await img_test.finish(MS.image(img_bytes, timeout=20))
