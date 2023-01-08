@@ -577,27 +577,6 @@ async def get_art_img_url(
                 res = await c.get(img_url)
                 img = Image.open(BytesIO(res.content))
                 return (img.width, img.height, img_url)
-        # except UnidentifiedImageError:
-        #     get_img_size_error += 1
-        #     if get_img_size_error < 10:
-        #         await sleep(1)
-        #         return await _get_img_size(img_url)
-        #     else:
-        #         error_msg = format_exc()
-        #         msg = f"文章：{title}\n{url}\n获取图片尺寸请求出错\n{img_url}\n错误追踪："
-        #         logger.error(msg + f"\n{error_msg}")
-        #         await matcher.send(msg + MS.image(write_error_msg_img(error_msg)))
-        #         return (-1, -1, "")
-        # except RemoteProtocolError:
-        #     remote_error += 1
-        #     if remote_error < 20:
-        #         await sleep(remote_error)
-        #         return await _get_img_size(img_url)
-        #     else:
-        #         msg = f"文章：{title}\n{url}\n获取图片尺寸请求出错\n{img_url}\n错误信息\n{format_exc()}"
-        #         logger.error(msg)
-        #         await matcher.send(msg)
-        #         return (-1, -1, "")
         except Exception as e:
             error_times += 1
             if error_times < 10:

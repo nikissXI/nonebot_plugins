@@ -1,0 +1,99 @@
+a {
+    text-decoration: none;
+    color: white;
+}
+
+p {
+    min-height: 50vh;
+}
+
+img {
+    min-height: 100px;
+    background-color: antiquewhite;
+}
+
+/*定义竖屏 css*/
+@media screen and (orientation:portrait) {
+    img {
+        max-width: 80vw;
+        margin: 0 0 10pt 0;
+    }
+}
+
+/*定义横屏 css*/
+@media screen and (orientation:landscape) {
+    img {
+        max-height: 80vh;
+        margin: 0 0 10pt 0;
+    }
+}
+
+body {
+    background-color: rgba(0, 149, 249, 0.6);
+    color: white;
+    font-size: 18px;
+    text-align: center;
+}
+
+select {
+    width: 260px;
+    height: 36px;
+    padding: 0 9px !important;
+    font-size: 16px !important;
+    background: #fafdfe;
+    line-height: 28px;
+    border: 1px solid #9bc0dd;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    border-radius: 4px;
+}
+
+button {
+    width: 260px;
+    height: 36px;
+    border: none;
+    color: white;
+    background-color: #409eff;
+    font-size: 18px;
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all .2;
+}
+
+button:active {
+    background-color: #ff6294;
+}
+
+input {
+    outline: none;
+    border: none;
+    height: 36px;
+    border: 1px solid #d9d9d9;
+    color: #000;
+    padding: 0 12px;
+    width: 260px;
+    font-size: inherit;
+    border-radius: 4px;
+    transition: all .3s;
+    display: inline-block;
+    box-sizing: border-box;
+    background-color: white;
+}
+
+input:focus {
+    color: #595959;
+    box-shadow: 0 0 0 2px #e2f0ff;
+    border-color: #ff6294;
+}
+
+input::placeholder {
+    color: #b7b7b7;
+    font-size: 12px;
+}
+
+form {
+    white-space: nowrap;
+    margin: 0 auto;
+    padding: 10px;
+}

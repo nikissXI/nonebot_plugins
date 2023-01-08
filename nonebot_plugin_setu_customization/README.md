@@ -53,7 +53,7 @@ tutu_http_proxy = None
 # socks5代理地址，如 socks5://127.0.0.1:1234
 tutu_socks5_proxy = None
 # 使用网页访问时，新浪图片反代地址，不用网页浏览可不填，如 http://img.example.top:514
-tutu_sina_img_proxy = None
+tutu_sina_img_proxy = https://i0.wp.com/tvax1.sinaimg.cn/
 # 使用网页访问时，微信图片反代地址，不用网页浏览可不填，如 http://img.example.top:114
 tutu_wx_img_proxy = None
 # 使用网页访问时，B站图片反代地址，不用网页浏览可不填，如 http://img.example.top:514
@@ -189,9 +189,10 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 然后给机器人私聊发送“开爬”就会自动爬取
 
 ## 更新
-### 2022/1/8 \[v1.4.0]
+### 2022/1/8 \[v1.4.1]
 
 * 增加P站搜图功能（需要公网服务器网页访问结果），优化图片下载状态判断
+* P站搜图功能基础上增加网页预览 http://127.0.0.1:8080/soutu （具体域名和端口看你nb绑定的地址）
 
 ### 2022/1/4 \[v1.3.1]
 

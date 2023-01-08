@@ -3,38 +3,11 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>搜图结果</title>
+    <link rel="stylesheet" href="{{ style }}" />
 </head>
 
-
-<style>
-    a {
-        text-decoration: none;
-        color: white;
-    }
-
-    div {
-        min-height: 30vw;
-    }
-
-    /*定义竖屏 css*/
-    @media screen and (orientation:portrait) {
-        img {
-            max-width: 80vw;
-            margin: 0 0 10pt 0;
-        }
-    }
-
-    /*定义横屏 css*/
-    @media screen and (orientation:landscape) {
-        img {
-            max-height: 80vh;
-            margin: 0 0 10pt 0;
-        }
-    }
-
-</style>
-
-<body style="text-align:center;font-size:18px;background-color:rgba(0, 149, 249, 0.6);">
+<body>
     <h3>{{ title | safe }}</h3>
     {{ out_text | safe }}
     <br />

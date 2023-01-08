@@ -5,6 +5,7 @@ from nonebot import get_asgi
 from nonebot.log import logger
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
+from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from .config import plugin_config, soutu_options, var
 from .data_handle import (
@@ -16,6 +17,9 @@ from .data_handle import (
 )
 
 app = get_asgi()
+app.mount(
+    "/static", StaticFiles(directory=f"{Path(__file__).parent}/html"), name="static"
+)
 templates = Jinja2Templates(directory=f"{Path(__file__).parent}/html")
 
 
@@ -47,6 +51,7 @@ async def img_api(
                 "show_info.html",
                 {
                     "request": request,
+                    "style": f"{plugin_config.tutu_site_url}/static/style.css",
                     "msg": msg,
                 },
             )
@@ -69,6 +74,7 @@ async def img_api(
                 "show_info.html",
                 {
                     "request": request,
+                    "style": f"{plugin_config.tutu_site_url}/static/style.css",
                     "msg": "没有加入任何API哦，无图图",
                 },
             )
@@ -106,6 +112,7 @@ async def img_api(
                 "show_info.html",
                 {
                     "request": request,
+                    "style": f"{plugin_config.tutu_site_url}/static/style.css",
                     "msg": "没有这个类型的图片鸭！",
                 },
             )
@@ -132,15 +139,16 @@ async def img_api(
             if success:
                 img_url = url_diy_replace(img_url)
                 #  onerror="this.src=\'{img_url}\'"
-                img_list += f'<span>No.{img_num}</span><br /><div><img alt="img" src="{img_url}" onclick="this.src=this.src+\'?\'" loading="lazy"></div><br />'
+                img_list += f'<span>No.{img_num}</span><br /><p><img alt="点我重新加载试试" src="{img_url}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><br />'
             else:
                 img_list += (
                     f"<span>No.{img_num}</span><br /><span>{img_url}</span><br />"
                 )
         return templates.TemplateResponse(
-            "img.html",
+            "tutu.html",
             {
                 "request": request,
+                "style": f"{plugin_config.tutu_site_url}/static/style.css",
                 "img_type": mode,
                 "img_num": c,
                 "img_api_url_num": img_api_url[: img_api_url.find("&c=")],
@@ -151,6 +159,19 @@ async def img_api(
                 "img_api_url_random": f"{plugin_config.tutu_site_url}/img_api?mode=随机&c={c}",
             },
         )
+
+
+@app.get("/soutu")
+async def soutu(
+    request: Request,
+):
+    return templates.TemplateResponse(
+        "soutu.html",
+        {
+            "request": request,
+            "style": f"{plugin_config.tutu_site_url}/static/style.css",
+        },
+    )
 
 
 @app.get("/sr")
@@ -171,6 +192,7 @@ async def search_result(
             "show_info.html",
             {
                 "request": request,
+                "style": f"{plugin_config.tutu_site_url}/static/style.css",
                 "msg": "？",
             },
         )
@@ -179,6 +201,7 @@ async def search_result(
             "show_info.html",
             {
                 "request": request,
+                "style": f"{plugin_config.tutu_site_url}/static/style.css",
                 "msg": "失效链接",
             },
         )
@@ -195,7 +218,7 @@ async def search_result(
             data = result_list[pid]
             out_text += f"<span>插画 {data['title']}&emsp13;id {pid}</span><br/><span>画师 {data['uname']}&emsp13;id {data['uid']}</span><br/>"
             for img_url in data["url_list"]:
-                out_text += f'<div><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="img" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></div><br/>'
+                out_text += f'<p><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><br/>'
     # 翻页
     else:
         params = {
@@ -237,7 +260,7 @@ async def search_result(
                     data = result_list[pid]
                     out_text += f"<span>插画 {data['title']}&emsp13;id {pid}</span><br/><span>画师 {data['uname']}&emsp13;id {data['uid']}</span><br/>"
                     for img_url in data["url_list"]:
-                        out_text += f'<div><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="img" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></div><br/>'
+                        out_text += f'<p><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><br/>'
             else:
                 out_text = "<h1>空空的</h1>"
         else:
@@ -280,6 +303,7 @@ async def search_result(
         "soutu_result.html",
         {
             "request": request,
+            "style": f"{plugin_config.tutu_site_url}/static/style.css",
             "title": title,
             "out_text": out_text,
             "last_page": last_page,

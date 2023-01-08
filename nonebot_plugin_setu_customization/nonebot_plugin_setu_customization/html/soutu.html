@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pixiv网页搜图</title>
+    <link rel="stylesheet" href="{{ style }}" />
+</head>
+
+<body>
+    <br />
+    <h2>Pixiv网页搜图</h2>
+
+    <form action="http://nya.nikiss.top/sr">
+        <input name="r" value="1" style="display: none;" />
+        搜索模式&ensp;<select id="op_type" name="query_type">
+            <option value="search">关键字搜索</option>
+            <option value="rank">排行榜</option>
+            <option value="member_illust">画家作品</option>
+            <option value="illust">插画详情</option>
+            <option value="related">相关插画</option>
+        </select>
+        <br />
+
+        <div id="input_form">
+
+            关&ensp;键&ensp;字&ensp;<input name="word" placeholder="填关键字，多个关键字空格分割" value="" />
+            <br />
+            匹配模式&ensp;<select name="mode">
+                <option value="partial_match_for_tags">标签部分一致</option>
+                <option value="exact_match_for_tags">标签完全一致</option>
+                <option value="title_and_caption">标题说明文</option>
+            </select>
+            <br />
+            图片排序&ensp;<select name="order">
+                <option value="popular_desc">热门度顺序</option>
+                <option value="popular_male_desc">受男性欢迎</option>
+                <option value="popular_female_desc">受女性欢迎</option>
+                <option value="date_desc">由新到旧</option>
+                <option value="date_asc">由旧到新</option>
+            </select>
+            <br />
+            页&emsp;&emsp;数&ensp;<input name="page" placeholder="默认第1页" value="1" />
+
+        </div>
+
+        &emsp;&emsp;&emsp;&emsp;&thinsp;
+        <button type="submit">提交</button>
+    </form>
+
+</body>
+<script src="http://cdn.nikiss.top/cdn/js/jquery.min.js"></script>
+<script src="http://cdn.nikiss.top/cdn/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+
+    $(document).on("change", "#op_type", function () {
+        $("#input_form").empty();
+        selected = $("#op_type option:selected").val()
+        switch (selected) {
+            case 'search':
+                $('#input_form').append('关&ensp;键&ensp;字&ensp;<input name="word" placeholder="填关键字，多个关键字空格分割" value="" /><br />匹配模式&ensp;<select name="mode"><option value="partial_match_for_tags">标签部分一致</option><option value="exact_match_for_tags">标签完全一致</option><option value="title_and_caption">标题说明文</option></select><br />图片排序&ensp;<select name="order"><option value="popular_desc">热门度顺序</option><option value="popular_male_desc">受男性欢迎</option><option value="popular_female_desc">受女性欢迎</option><option value="date_desc">由新到旧</option><option value="date_asc">由旧到新</option></select><br />页&emsp;&emsp;数&ensp;<input name="page" placeholder="默认第1页" value="1" />');
+                break;
+            case 'rank':
+                $('#input_form').append('排行类型&ensp;<select name="mode"><option value="day">日榜</option><option value="week">周榜</option><option value="week_rookie">新人周榜</option><option value="day_male">男日榜</option><option value="day_female">女日榜</option><option value="day_r18">R18日榜</option><option value="day_male_r18">R18男日榜</option><option value="day_female_r18">R18女日榜</option><option value="week_r18">R18周榜</option></select><br />指定日期&ensp;<input name="date" placeholder="格式XXXX-XX-XX，默认最新" value="" /><br />页&emsp;&emsp;数&ensp;<input name="page" placeholder="默认第1页" value="1" />');
+                break;
+            case 'member_illust':
+                $('#input_form').append('画&nbsp;家&nbsp;&thinsp;i&nbsp;d&ensp;<input name="id" placeholder="填写画家id" value="" /><br />页&emsp;&emsp;数&ensp;<input name="page" placeholder="默认第1页" value="1" />');
+                break;
+            default:
+                $("#input_form").append('插&nbsp;画&nbsp;&thinsp;i&nbsp;d&ensp;<input name="id" placeholder="填写插画id" value="" /><br />页&emsp;&emsp;数&ensp;<input name="page" placeholder="默认第1页" value="1" />');
+                break;
+        }
+    });
+
+</script>
+
+</html>

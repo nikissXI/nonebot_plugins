@@ -29,7 +29,7 @@ class Config(BaseModel, extra=Extra.ignore):
     tutu_self_cosplay_lib: str = "self_cosplay"
     # 插件数据文件名
     tutu_data_filename: str = "tutu_data.json"
-    # 自定义字体文件路径（要填真实路径，这里只是举个例子）
+    # 字体文件路径
     tutu_font_path: str = f"{Path(__file__).parent}/font/msyh.ttf"
     # 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
     port: int = 8080
@@ -41,7 +41,7 @@ class Config(BaseModel, extra=Extra.ignore):
     # socks5代理地址，如 socks5://127.0.0.1:1234
     tutu_socks5_proxy: str | None = None
     # 新浪图片反代地址，如 http://img.example.top:514
-    tutu_sina_img_proxy: str | None = None
+    tutu_sina_img_proxy: str | None = "https://i0.wp.com/tvax1.sinaimg.cn/"
     # 微信图片反代地址，如 http://img.example.top:114
     tutu_wx_img_proxy: str | None = None
     # B站图片反代地址，如 http://img.example.top:514
@@ -224,7 +224,3 @@ async def clear():
     tmp = deepcopy(var.soutu_data)
     var.soutu_data.clear()
     var.soutu_data = tmp
-
-
-# http://nya.nikiss.top/sr?r=1&query_type=search&word=%E7%8D%A3%E8%80%B3&mode=partial_match_for_tags&order=popular_desc&page=1
-# https://api.moedog.org/pixiv/v2/?type=search&order=popular_desc&word=獣耳 ロリ&page=1
