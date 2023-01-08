@@ -170,6 +170,7 @@ async def soutu(
         {
             "request": request,
             "style": f"{plugin_config.tutu_site_url}/static/style.css",
+            "site_url": plugin_config.tutu_site_url,
         },
     )
 
@@ -251,7 +252,6 @@ async def search_result(
                 "page": page,
             },
         }
-        # http://nya.nikiss.top/sr?r=1&query_type=search&word=%E5%8E%9F%E7%A5%9E%20-R-18&mode=partial_match_for_tags&order=popular_desc&page=1
         out_text = ""
         result_list = await get_soutu_result("roll", in_params=params[query_type])
         if isinstance(result_list, dict):

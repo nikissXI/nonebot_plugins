@@ -13,7 +13,7 @@
     <br />
     <h2>Pixiv网页搜图</h2>
 
-    <form action="http://nya.nikiss.top/sr">
+    <form action="{{ site_url }}/sr">
         <input name="r" value="1" style="display: none;" />
         搜索模式&ensp;<select id="op_type" name="query_type">
             <option value="search">关键字搜索</option>
@@ -51,8 +51,7 @@
     </form>
 
 </body>
-<script src="http://cdn.nikiss.top/cdn/js/jquery.min.js"></script>
-<script src="http://cdn.nikiss.top/cdn/js/bootstrap.min.js"></script>
+<script src="https://cdn.staticfile.org/jquery/3.6.3/jquery.min.js"></script>
 <script type="text/javascript">
 
     $(document).on("change", "#op_type", function () {
