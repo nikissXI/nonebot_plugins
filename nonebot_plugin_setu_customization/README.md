@@ -118,7 +118,7 @@ https://api.lolicon.app/setu/v2?r18=1
 https://moe.jitsu.top/api/?sort=r18  
 
 **三次元图片api**  
-没收集到好的，但是我爬了很多，在仓库的tutu_local_img_lib文件夹，下载放进去data/tutu_local_img_lib/里面
+没收集到好的，但是我爬了很多，在仓库的tutu_local_img_lib文件夹，下载放进去data/tutu_local_img_lib/里面，没事来看看有没有更新
 
 **本地图片库**  
 即data/tutu_local_img_lib/中的图片，放入图片url文件后，使用命令“图图插件接口管理 刷新本地”进行导入  
