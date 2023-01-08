@@ -149,6 +149,7 @@ async def img_api(
             {
                 "request": request,
                 "style": f"{plugin_config.tutu_site_url}/static/style.css",
+                "site_url": plugin_config.tutu_site_url,
                 "img_type": mode,
                 "img_num": c,
                 "img_api_url_num": img_api_url[: img_api_url.find("&c=")],
@@ -304,6 +305,7 @@ async def search_result(
         {
             "request": request,
             "style": f"{plugin_config.tutu_site_url}/static/style.css",
+            "site_url": plugin_config.tutu_site_url,
             "title": title,
             "out_text": out_text,
             "last_page": last_page,
