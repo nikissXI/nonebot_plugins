@@ -11,7 +11,7 @@ nb plugin install nonebot_plugin_setu_customization
 ```
 
 或者  
-直接把插件clone下来放进去plugins文件夹
+直接把插件clone下来，把nonebot_plugin_setu_customization文件夹放进去plugins目录
 
 ### 配置
 在bot对应的.env文件修改
