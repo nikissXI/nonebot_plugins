@@ -46,7 +46,7 @@ tutu_data_filename = tutu_data.json
 tutu_font_path = __file__/font/msyh.ttf
 # 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
 tutu_site_url = http://127.0.0.1:8080
-# pixiv图片反代地址 备选 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/ 、 https://c.jitsu.top/
+# pixiv图片反代地址，自己可以看看哪个快用哪个 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/ 、 https://c.jitsu.top/
 tutu_pixiv_proxy = https://i.pixiv.re/
 # http代理地址，如 http://127.0.0.1:1234
 tutu_http_proxy = None
@@ -97,25 +97,25 @@ tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文
 
 ### 使用示例、导入api和图片库
 **二次元图片api**  
-http://api.tangdouz.com/sjdmbz.php
-https://api.dujin.org/pic/yuanshen/
-https://api.mtyqx.cn/tapi/random.php
-https://www.dmoe.cc/random.php
-https://setu.yuban10703.xyz/setu
-https://api.ixiaowai.cn/api/api.php
-https://tuapi.eees.cc/api.php?category=dongman&type=302
-https://api.yimian.xyz/img/
-http://api.iw233.cn/api.php?sort=random
-https://image.anosu.top/pixiv/direct
-https://api.lolicon.app/setu/v2
-https://moe.jitsu.top/api/?sort=setu
-https://moe.jitsu.top/api/?sort=pixiv
+http://api.tangdouz.com/sjdmbz.php  
+https://api.dujin.org/pic/yuanshen/  
+https://api.mtyqx.cn/tapi/random.php  
+https://www.dmoe.cc/random.php  
+https://setu.yuban10703.xyz/setu  
+https://api.ixiaowai.cn/api/api.php  
+https://tuapi.eees.cc/api.php?category=dongman&type=302  
+https://api.yimian.xyz/img/  
+http://api.iw233.cn/api.php?sort=random  
+https://image.anosu.top/pixiv/direct  
+https://api.lolicon.app/setu/v2  
+https://moe.jitsu.top/api/?sort=setu  
+https://moe.jitsu.top/api/?sort=pixiv  
 
 **R18图片api**  
-https://setu.yuban10703.xyz/setu?r18=1
-https://image.anosu.top/pixiv/direct?r18=1
-https://api.lolicon.app/setu/v2?r18=1
-https://moe.jitsu.top/api/?sort=r18
+https://setu.yuban10703.xyz/setu?r18=1  
+https://image.anosu.top/pixiv/direct?r18=1  
+https://api.lolicon.app/setu/v2?r18=1  
+https://moe.jitsu.top/api/?sort=r18  
 
 **三次元图片api**  
 没收集到好的，但是我爬了很多，在仓库的tutu_local_img_lib文件夹，下载放进去data/tutu_local_img_lib/里面
