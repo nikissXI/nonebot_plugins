@@ -309,7 +309,7 @@ async def search_result(
             "title": title,
             "out_text": out_text,
             "last_page": last_page,
-            "page": c_page,
+            "c_page": c_page,
             "next_page": next_page,
         },
     )
