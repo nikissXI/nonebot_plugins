@@ -7,6 +7,7 @@ Nonebot2 可动态管理API并带网页浏览的setu插件
 
 使用nb-cli安装
 ```bash
+# 如果没找到这个插件，使用nb plugin list 刷新缓存
 nb plugin install nonebot_plugin_setu_customization
 ```
 
