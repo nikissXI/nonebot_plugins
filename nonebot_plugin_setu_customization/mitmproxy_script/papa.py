@@ -64,8 +64,9 @@ class SelfAddon:
                     lines = r.readlines()
 
                 for line in lines:
-                    tt, uu = line.split(" *** ")
-                    self.history_url[nickname].append(uu.strip())
+                    if line:
+                        tt, uu = line.split(" *** ")
+                        self.history_url[nickname].append(uu.strip())
                 print(f"读取【{nickname}】历史数据{len(self.history_url[nickname])}条")
 
     def response(self, flow: HTTPFlow):
@@ -278,11 +279,11 @@ class SelfAddon:
                 )
 
         for title, url in tmp_art_list:
-            title = title.replace("\n", "")
+            title = title.replace("\n", "").replace("<em>", "").replace("</em>", "")
             url = url.replace("http://", "https://")
             if tt != 2:
                 url = url[: url.find("&chksm=")]
-            if url not in self.history_url[nickname]:
+            if url not in self.history_url[nickname] and title and url:
                 self.new_data_nickname.add(nickname)
                 msg = f"{title} *** {url}\n"
                 with open(
