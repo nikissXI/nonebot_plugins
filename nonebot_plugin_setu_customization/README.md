@@ -97,6 +97,9 @@ tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文
 | 图片删除 | 删除本地库的某张图片 |
 | 开爬 | 上传指定格式的文件让nb爬，详情看readme的《文章图片爬取》 |
 
+### 网页搜图（需要公网）
+http://127.0.0.1:8080/soutu （具体域名和端口看你nb绑定的地址）  
+
 ### 自定义图片url关键字替换
 在data_handle.py文件里面的 url_diy_replace 函数，如果有其他更好的反代地址或其他需求可以自行调整
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/url_diy_replace.jpg"/>
