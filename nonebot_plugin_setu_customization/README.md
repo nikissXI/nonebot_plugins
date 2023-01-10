@@ -117,17 +117,17 @@ https://api.yimian.xyz/img/
 http://api.iw233.cn/api.php?sort=random  
 https://image.anosu.top/pixiv/direct  
 https://api.lolicon.app/setu/v2  
-https://moe.jitsu.top/api/?sort=setu  
-https://moe.jitsu.top/api/?sort=pixiv  
+https://moe.anosu.top/img/?sort=pixiv  
+https://moe.anosu.top/img/?sort=setu  
 
 **R18图片api**  
 https://setu.yuban10703.xyz/setu?r18=1  
 https://image.anosu.top/pixiv/direct?r18=1  
 https://api.lolicon.app/setu/v2?r18=1  
-https://moe.jitsu.top/api/?sort=r18  
+https://moe.anosu.top/img/?sort=r18  
 
 **三次元图片api**  
-没收集到好的，但是我爬了很多，在仓库的tutu_local_img_lib文件夹，下载放进去data/tutu_local_img_lib/里面，没事来看看有没有更新
+没收集到好的，但是我爬了很多，在仓库的tutu_local_img_lib文件夹，下载放进去data/tutu_local_img_lib/里面，没事来看看有没有更新，里面也有二次元的
 
 **本地图片库**  
 即data/tutu_local_img_lib/中的图片，放入图片url文件后，使用命令“图图插件接口管理 刷新本地”进行导入  
