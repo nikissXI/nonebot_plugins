@@ -34,6 +34,9 @@ mc_status_admin_qqnum = 114514
 | 删除服务器|字面意思，bot超级管理员用|
 | 信息数据|查看已添加的群和服务器信息，bot超级管理员用|
 
+### 使用截图
+<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_mc_server_status/readme_img/xinxi.jpg"/>
+
 ### 定制
 
 自己看代码改啦！
