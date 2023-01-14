@@ -2,8 +2,8 @@
 [![nonebot2](https://img.shields.io/static/v1?label=nonebot&message=v2rc1%2B&color=green)](https://v2.nonebot.dev/)[![python](https://img.shields.io/static/v1?label=python+&message=3.9%2B&color=blue)](https://img.shields.io/static/v1?label=python+&message=3.7%2B&color=blue)[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Nonebot2查询MC服务器在线信息插件  
-支持Java和Bedrock服务器
-test
+支持Java和Bedrock服务器  
+
 ### 安装
 
 使用nb-cli安装
