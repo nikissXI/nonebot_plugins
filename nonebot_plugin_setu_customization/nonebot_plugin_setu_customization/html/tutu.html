@@ -4,17 +4,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>图图</title>
-    <link rel="stylesheet" href="{{ style }}" />
+    <link rel="shortcut icon" type="image/x-icon" href="tutu/favicon.ico" />
+    <link rel="stylesheet" href="tutu/style.css" />
 </head>
 
 <body>
-    <a href="{{ site_url }}/soutu" target="_blank">
-        Pixiv搜图
-    </a>&emsp13;
-    <a href="{{ img_api_url_num }}&c=3">三连发</a>
-    <a href="{{ img_api_url_num }}&c=5">五连发</a>
-    <a href="{{ img_api_url_num }}&c=10">十连发</a>
-    <br />
+    <a href="soutu" target="_blank">Pixiv搜图</a>&emsp13;
+    <a href="{{ img_3 }}">三连发</a>&emsp13;
+    <a href="{{ img_10 }}">十连发</a><br />
 
     {{ type_urls | safe }}
     <a href="{{ img_api_url_fn }}">个人库</a>
@@ -26,7 +23,7 @@
 
     {{ img_list | safe }}
 
-    <a href="{{ img_api_url }}">不够看？点击下一批</a>
+    <a href="{{ next_group }}">不够看？点击下一批</a>
     <br /><br /><br />
 </body>
 

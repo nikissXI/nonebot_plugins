@@ -1,34 +1,39 @@
 from asyncio import gather, sleep
 from datetime import datetime, timedelta
 from io import BytesIO
-from os import listdir
+from os import listdir, makedirs
 from random import choice
 from re import search
 from urllib.parse import unquote
+from zipfile import ZipFile
+
 from httpx import AsyncClient
 from httpx_socks import AsyncProxyTransport
-from nonebot import on_fullmatch, on_regex
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageEvent
+from nonebot import on_fullmatch, on_notice, on_regex
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.adapters.onebot.v11 import PrivateMessageEvent, helpers
 from nonebot.log import logger
 from nonebot.matcher import Matcher
-from nonebot.params import RegexGroup
+from nonebot.params import ArgPlainText, RegexGroup
 from nonebot.plugin import PluginMetadata
+from nonebot.typing import T_State
 from PIL import Image
+
 from .config import load_local_api, plugin_config, save_data, soutu_options, var
 from .data_handle import (
     download_img,
     get_art_img_url,
+    handle_exception,
     get_img_url,
     get_soutu_result,
-    handle_exception,
     load_crawler_files,
     send_img_msg,
     text_to_img,
     to_node_msg,
     url_diy_replace,
 )
+from .Offline_patch import OfflineUploadNoticeEvent
 from .web import app
 
 __plugin_meta__ = PluginMetadata(
@@ -36,9 +41,9 @@ __plugin_meta__ = PluginMetadata(
     description="如名",
     usage=f"""图图帮助 看图图的详细命令格式
 搜图 发一下就知道了
-图图插件群管理 增删群
-图图插件接口管理 增删API接口
-图图插件接口测试 测试API接口
+图图群管理 增删群
+图图接口管理 增删API接口
+图图接口测试 测试API接口
 开爬 上传指定格式的文件让nb爬
 文章爬取 直接发文章url就行
 爬取合并 是否将爬取结果合并发送（默认合并）
@@ -81,6 +86,13 @@ async def admin_check(event: MessageEvent, bot: Bot) -> bool:
     )
 
 
+async def admin_upload_check(event: OfflineUploadNoticeEvent, bot: Bot) -> bool:
+    return (
+        event.user_id == plugin_config.tutu_admin_qqnum
+        and bot.self_id == plugin_config.tutu_bot_qqnum
+    )
+
+
 tutu = on_regex(
     r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$",
     permission=permission_check,
@@ -90,11 +102,11 @@ soutu = on_regex(
     r"^搜图\s*(\S+)?(.*)?",
     permission=permission_check_st,
 )
-group_manage = on_regex(r"^(图图插件群管理|图图插件群管理搜图)\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
+group_manage = on_regex(r"^(图图群管理|图图群管理搜图)\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
 api_manage = on_regex(
-    r"^图图插件接口管理\s*((\S+)(\s+(\+|\-)?\s+([\s\S]*)?)?)?", rule=admin_check
+    r"^图图接口管理\s*((\S+)(\s+(\+|\-)?\s+([\s\S]*)?)?)?", rule=admin_check
 )
-api_test = on_regex(r"^图图插件接口测试\s*(\S+)?", rule=admin_check)
+api_test = on_regex(r"^图图接口测试\s*(\S+)?", rule=admin_check)
 tutu_kaipa = on_regex(r"^开爬\s*(停止|暂停|终止)?", rule=admin_check)
 art_paqu = on_regex(
     r"^(文章爬取|https://mp.weixin.qq.com/s\S+|https://www.bilibili.com/read/cv\S+)\s*(\S+)?",
@@ -106,6 +118,7 @@ paqu_resend = on_fullmatch("爬取重放", rule=admin_check)
 img_no = on_regex(r"^图片序号\s*((fn)?(\d+))?$", rule=admin_check)
 img_del = on_regex(r"^图片删除\s*((\S+)\s+(\S+)\s*(\S+)?)?", rule=admin_check)
 img_test = on_regex(r"^图片测试\s*(\S+)?$", rule=admin_check)
+upload_file = on_notice(rule=admin_upload_check)
 
 
 @tutu.handle(
@@ -365,9 +378,9 @@ async def handle_soutu(matchgroup=RegexGroup()):
 
 
 @group_manage.handle()
-@handle_exception("图图插件群管理")
+@handle_exception("图图群管理")
 async def handle_group_manage(event: MessageEvent, matchgroup=RegexGroup()):
-    if matchgroup[0] == "图图插件群管理":
+    if matchgroup[0] == "图图群管理":
         op_group_list = var.group_list
     else:
         op_group_list = var.group_list_st
@@ -375,7 +388,7 @@ async def handle_group_manage(event: MessageEvent, matchgroup=RegexGroup()):
         group_list = "\n".join([str(i) for i in var.group_list])
         group_list_st = "\n".join([str(i) for i in var.group_list_st])
         await group_manage.finish(
-            f"图图插件群管理[搜图] +/-[群号]\n图图已启用的QQ群\n{group_list if group_list else 'None'}\n搜图已启用的QQ群\n{group_list_st if group_list_st else 'None'}"
+            f"图图群管理[搜图] +/-[群号]\n图图已启用的QQ群\n{group_list if group_list else 'None'}\n搜图已启用的QQ群\n{group_list_st if group_list_st else 'None'}"
         )
     else:
         choice = matchgroup[2]
@@ -405,7 +418,7 @@ async def handle_group_manage(event: MessageEvent, matchgroup=RegexGroup()):
 
 
 @api_manage.handle()
-@handle_exception("图图插件接口管理")
+@handle_exception("图图接口管理")
 async def handle_api_manage(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         api_list_online_text = "\n".join(
@@ -428,7 +441,7 @@ async def handle_api_manage(matchgroup=RegexGroup()):
         else:
             show_api_type_text = ""
         await api_manage.finish(
-            f"图图插件接口管理 {show_api_type_text}新类型/刷新本地 +/- [接口url/本地图库<文件名>]\n{api_list_online_text}\n【本地图片库】\n{api_list_local_text}"
+            f"图图接口管理 {show_api_type_text}新类型/刷新本地 +/- [接口url/本地图库<文件名>]\n{api_list_online_text}\n【本地图片库】\n{api_list_local_text}"
         )
     else:
         api_type: str = matchgroup[1]
@@ -478,7 +491,7 @@ async def handle_api_manage(matchgroup=RegexGroup()):
                 filename = todo_api_url[4:]
                 if filename not in var.api_list_local:
                     await api_manage.send(
-                        f"不存在名为【{filename}】的本地图库，如未加载请使用“图图插件接口管理 刷新本地”"
+                        f"不存在名为【{filename}】的本地图库，如未加载请使用“图图接口管理 刷新本地”"
                     )
                     continue
                 else:
@@ -505,10 +518,10 @@ async def handle_api_manage(matchgroup=RegexGroup()):
 
 
 @api_test.handle()
-@handle_exception("图图插件接口测试")
+@handle_exception("图图接口测试")
 async def handle_api_test(matchgroup=RegexGroup()):
     if not matchgroup[0]:
-        await api_test.finish(f"图图插件接口测试 [接口url/all]")
+        await api_test.finish(f"图图接口测试 [接口url/all]")
     else:
         api_url = matchgroup[0]
         api_url = api_url.replace("&amp;", "&").replace("\\", "")
@@ -822,3 +835,72 @@ async def handle_img_test(matchgroup=RegexGroup()):
             await img_test.finish(msg)
         else:
             await img_test.finish(MS.image(img_bytes, timeout=20))
+
+
+@upload_file.handle()
+@handle_exception("文件上传")
+async def handle_upload_file(event: OfflineUploadNoticeEvent, state: T_State):
+    filename = event.file.name
+    fileurl = event.file.url
+    if filename.find(".zip") != -1 and event.user_id == plugin_config.tutu_admin_qqnum:
+        # 用户输入的玩意
+        state["confirm"] = Message()
+        state["name"] = filename
+        state["url"] = fileurl
+    else:
+        await upload_file.finish()
+
+
+@upload_file.got("confirm")
+@handle_exception("文件上传2")
+async def upload_file_second_receive(
+    # event: OfflineUploadNoticeEvent,
+    state: T_State,
+    confirm: str = ArgPlainText("confirm"),
+):
+    # await send_error_msg("触发了文件上传2")
+
+    # 用户输入的内容
+    filename = state["name"]
+    lib_name, ext = filename.split(".")
+    fileurl = state["url"]
+
+    if not confirm:
+        await upload_file.reject(f"{filename}是否为tutu爬虫url文件，是则发送“确认”")
+    elif confirm != "确认":
+        await upload_file.finish("已忽略")
+
+    try:
+        async with AsyncClient(verify=False) as client:
+            res = await client.get(url=fileurl)
+    except Exception as e:
+        await upload_file.finish(f"文件下载失败 {repr(e)}")
+
+    extra_file = []
+
+    with ZipFile(file=BytesIO(res.content), mode="r") as zf:
+        # 解压到指定目录,首先创建一个解压目录
+        makedirs(f"tutu_crawler/{lib_name}")
+        for old_name in zf.namelist():
+            # 获取文件大小，目的是区分文件夹还是文件，如果是空文件应该不好用。
+            file_size = zf.getinfo(old_name).file_size
+            # 由于源码遇到中文是cp437方式，所以解码成gbk，windows即可正常
+            new_name = old_name.encode("cp437").decode("gbk")
+            logger.error(new_name)
+            # 拼接文件的保存路径
+            new_path = f"tutu_crawler/{lib_name}/{new_name}"
+            # 判断文件是文件夹还是文件
+            if file_size > 0:
+                extra_file.append(new_name)
+                # 是文件，通过open创建文件，写入数据
+                with open(file=new_path, mode="wb") as w:
+                    # zf.read 是读取压缩包里的文件内容
+                    w.write(zf.read(old_name))
+            else:
+                # 是文件夹，就创建
+                makedirs(new_path)
+
+    file_list = "\n".join(extra_file)
+    await upload_file.finish(
+        f"文件已解压并保存到目录 tutu_crawler/{lib_name}\n已解压文件：\n{file_list}"
+    )

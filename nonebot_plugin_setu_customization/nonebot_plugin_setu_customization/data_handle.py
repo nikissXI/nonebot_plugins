@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from io import BytesIO
 from os import listdir, remove, rename, rmdir
-from random import randint
+from random import randint, choice
 from re import findall, search
 from traceback import format_exc
 from urllib.parse import unquote
@@ -14,7 +14,7 @@ from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import ActionFailed, Bot, Message, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.adapters.onebot.v11 import NetworkError
-from nonebot.exception import FinishedException
+from nonebot.exception import FinishedException, RejectedException
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 from PIL import Image, ImageDraw, ImageFont
@@ -43,7 +43,7 @@ def handle_exception(name: str):
                 msg = f"{time_str}\n{name} 处理器信息发送超时！"
                 logger.error(msg)
                 await send_error_msg(msg)
-            except FinishedException:
+            except (FinishedException, RejectedException):
                 raise
             except Exception:
                 # 代码本身出问题
@@ -98,7 +98,11 @@ def pixiv_reverse_proxy(img_url: str, resize: bool = True) -> str:
     if img_url.find("/img-original/img/") != -1:
         img_url_group = img_url.replace("//", "").split("/")
         img_url_group.pop(0)
-        img_url = plugin_config.tutu_pixiv_proxy + "/".join(img_url_group)
+        if plugin_config.tutu_pixiv_proxy:
+            img_url = plugin_config.tutu_pixiv_proxy + "/".join(img_url_group)
+        else:
+            img_url = f"https://{choice('abcdgi')}.jitsu.top/" + "/".join(img_url_group)
+
         # 缩小图片大小
         if resize:
             img_url = img_url.replace("/img-original/img/", "/img-master/img/")
@@ -118,6 +122,15 @@ def url_diy_replace(img_url: str) -> str:
     img_url = img_url.replace("\\", "")
     # pixiv反代
     img_url = pixiv_reverse_proxy(img_url)
+    # 反代地址
+    if img_url.find("https://hefollo.com") != -1:
+        img_url = img_url.replace("https://hefollo.com", "http://mc.nikiss.top:9896")
+    # 新浪图床反代地址
+    if plugin_config.tutu_sina_img_proxy and img_url.find(".sinaimg.cn") != -1:
+        img_url = img_url.replace(
+            img_url[: img_url.find(".sinaimg.cn") + 11],
+            plugin_config.tutu_sina_img_proxy,
+        )
     # 微信图床反代地址
     if plugin_config.tutu_wx_img_proxy and img_url.find("https://mmbiz.qpic.cn") != -1:
         img_url = img_url.replace(
@@ -127,12 +140,6 @@ def url_diy_replace(img_url: str) -> str:
     if plugin_config.tutu_bili_img_proxy and img_url.find("https://i0.hdslb.com") != -1:
         img_url = img_url.replace(
             "https://i0.hdslb.com", plugin_config.tutu_bili_img_proxy
-        )
-    # 新浪图床反代地址
-    if plugin_config.tutu_sina_img_proxy and img_url.find(".sinaimg.cn") != -1:
-        img_url = img_url.replace(
-            img_url[: img_url.find(".sinaimg.cn") + 11],
-            plugin_config.tutu_sina_img_proxy,
         )
     return unquote(img_url)
 
@@ -275,7 +282,7 @@ async def download_img(img_url: str) -> tuple[bool, BytesIO | str]:
 
 def extract_img_url(text: str) -> str | None:
     # 判断有没有original关键字，有就找原图
-    if text.find("original") != -1:
+    if text.find('"original"') != -1:
         original_exists = True
     else:
         original_exists = False
@@ -577,6 +584,27 @@ async def get_art_img_url(
                 res = await c.get(img_url)
                 img = Image.open(BytesIO(res.content))
                 return (img.width, img.height, img_url)
+        # except UnidentifiedImageError:
+        #     get_img_size_error += 1
+        #     if get_img_size_error < 10:
+        #         await sleep(1)
+        #         return await _get_img_size(img_url)
+        #     else:
+        #         error_msg = format_exc()
+        #         msg = f"文章：{title}\n{url}\n获取图片尺寸请求出错\n{img_url}\n错误追踪："
+        #         logger.error(msg + f"\n{error_msg}")
+        #         await matcher.send(msg + MS.image(write_error_msg_img(error_msg)))
+        #         return (-1, -1, "")
+        # except RemoteProtocolError:
+        #     remote_error += 1
+        #     if remote_error < 20:
+        #         await sleep(remote_error)
+        #         return await _get_img_size(img_url)
+        #     else:
+        #         msg = f"文章：{title}\n{url}\n获取图片尺寸请求出错\n{img_url}\n错误信息\n{format_exc()}"
+        #         logger.error(msg)
+        #         await matcher.send(msg)
+        #         return (-1, -1, "")
         except Exception as e:
             error_times += 1
             if error_times < 10:

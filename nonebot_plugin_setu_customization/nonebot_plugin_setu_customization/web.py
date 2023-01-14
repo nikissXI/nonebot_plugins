@@ -17,9 +17,7 @@ from .data_handle import (
 )
 
 app = get_asgi()
-app.mount(
-    "/static", StaticFiles(directory=f"{Path(__file__).parent}/html"), name="static"
-)
+app.mount("/tutu", StaticFiles(directory=f"{Path(__file__).parent}/html"), name="tutu")
 templates = Jinja2Templates(directory=f"{Path(__file__).parent}/html")
 
 
@@ -38,20 +36,22 @@ async def img_api(
     if fw:
         c = 1
 
+    if not fn and c > 10:
+        return
+
     if fn:
         file_name = fn
         if file_name not in var.api_list_local:
             msg = "可用fn参数，点击可直接跳转<br />"
             if var.api_list_local:
                 for ff in var.api_list_local:
-                    msg += f'<a href="{plugin_config.tutu_site_url}/img_api?fn={ff}&c={c}">{ff} 数量: {len(var.api_list_local[ff])}</a><br />'
+                    msg += f'<a href="img_api?c={c}&fn={ff}">{ff} 数量: {len(var.api_list_local[ff])}</a><br />'
             else:
                 msg += "无可用"
             return templates.TemplateResponse(
                 "show_info.html",
                 {
                     "request": request,
-                    "style": f"{plugin_config.tutu_site_url}/static/style.css",
                     "msg": msg,
                 },
             )
@@ -74,7 +74,6 @@ async def img_api(
                 "show_info.html",
                 {
                     "request": request,
-                    "style": f"{plugin_config.tutu_site_url}/static/style.css",
                     "msg": "没有加入任何API哦，无图图",
                 },
             )
@@ -112,7 +111,6 @@ async def img_api(
                 "show_info.html",
                 {
                     "request": request,
-                    "style": f"{plugin_config.tutu_site_url}/static/style.css",
                     "msg": "没有这个类型的图片鸭！",
                 },
             )
@@ -126,20 +124,24 @@ async def img_api(
         return RedirectResponse(url=img_url_list[0][1])
     else:
         if fn:
-            img_api_url = f"{plugin_config.tutu_site_url}/img_api?fn={fn}&c={c}"
+            img_api_url = f"img_api?c={c}&fn={fn}"
+            img_3 = f"img_api?c=3&fn={fn}"
+            img_10 = f"img_api?c=10&fn={fn}"
         elif api:
-            img_api_url = f"{plugin_config.tutu_site_url}/img_api?api={api}&c={c}"
+            img_api_url = f"img_api?c={c}&api={api}"
+            img_3 = f"img_api?c=3&api={api}"
+            img_10 = f"img_api?c=10&api={api}"
         else:
-            img_api_url = f"{plugin_config.tutu_site_url}/img_api?mode={mode}&c={c}"
+            img_api_url = f"img_api?c={c}&mode={mode}"
+            img_3 = f"img_api?c=3&mode={mode}"
+            img_10 = f"img_api?c=10&mode={mode}"
         type_urls = ""
         img_list = ""
         for m in var.api_list_online:
-            type_urls += f'<a href="{plugin_config.tutu_site_url}/img_api?mode={m}&c={c}">{"." if m == plugin_config.tutu_r18_name else m}</a> &emsp13;'
+            type_urls += f'<a href="img_api?c={c}&mode={m}">{"." if m == plugin_config.tutu_r18_name else m}</a> &emsp13;'
         for success, img_url, img_num in img_url_list:
             if success:
-                img_url = url_diy_replace(img_url)
-                #  onerror="this.src=\'{img_url}\'"
-                img_list += f'<span>No.{img_num}</span><br /><p><img alt="点我重新加载试试" src="{img_url}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><br />'
+                img_list += f'<span>No.{img_num}</span><br /><p><a href="{img_url}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{url_diy_replace(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><br />'
             else:
                 img_list += (
                     f"<span>No.{img_num}</span><br /><span>{img_url}</span><br />"
@@ -148,16 +150,15 @@ async def img_api(
             "tutu.html",
             {
                 "request": request,
-                "style": f"{plugin_config.tutu_site_url}/static/style.css",
-                "site_url": plugin_config.tutu_site_url,
+                "img_3": img_3,
+                "img_10": img_10,
                 "img_type": mode,
-                "img_num": c,
-                "img_api_url_num": img_api_url[: img_api_url.find("&c=")],
-                "img_api_url": img_api_url,
-                "img_list": img_list,
                 "type_urls": type_urls,
-                "img_api_url_fn": f"{plugin_config.tutu_site_url}/img_api?fn=?&c={c}",
-                "img_api_url_random": f"{plugin_config.tutu_site_url}/img_api?mode=随机&c={c}",
+                "img_api_url_fn": f"img_api?c={c}&fn=.",
+                "img_api_url_random": f"img_api?c={c}&mode=随机",
+                "img_num": c,
+                "img_list": img_list,
+                "next_group": img_api_url,
             },
         )
 
@@ -170,8 +171,6 @@ async def soutu(
         "soutu.html",
         {
             "request": request,
-            "style": f"{plugin_config.tutu_site_url}/static/style.css",
-            "site_url": plugin_config.tutu_site_url,
         },
     )
 
@@ -194,7 +193,6 @@ async def search_result(
             "show_info.html",
             {
                 "request": request,
-                "style": f"{plugin_config.tutu_site_url}/static/style.css",
                 "msg": "？",
             },
         )
@@ -203,7 +201,6 @@ async def search_result(
             "show_info.html",
             {
                 "request": request,
-                "style": f"{plugin_config.tutu_site_url}/static/style.css",
                 "msg": "失效链接",
             },
         )
@@ -280,7 +277,7 @@ async def search_result(
     else:
         title = f"插画id{params[query_type]['id']}相关插画"
 
-    new_url = f"{plugin_config.tutu_site_url}/sr?r=1"
+    new_url = f"sr?r=1"
     # 拼接参数
     for k, v in params[query_type].items():
         if k == "type":
@@ -304,8 +301,6 @@ async def search_result(
         "soutu_result.html",
         {
             "request": request,
-            "style": f"{plugin_config.tutu_site_url}/static/style.css",
-            "site_url": plugin_config.tutu_site_url,
             "title": title,
             "out_text": out_text,
             "last_page": last_page,

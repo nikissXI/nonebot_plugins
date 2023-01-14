@@ -4,16 +4,18 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>搜图结果</title>
-    <link rel="stylesheet" href="{{ style }}" />
+    <link rel="shortcut icon" type="image/x-icon" href="tutu/favicon.ico" />
+    <link rel="stylesheet" href="tutu/style.css" />
 </head>
 
 <body>
-    <a href="{{ site_url }}/soutu">返回搜图首页</a>
+    <a href="soutu">返回搜图首页</a>
     <br />
     <h3>{{ title | safe }}</h3>
+
     {{ out_text | safe }}
     <br />
-    <a href="{{ site_url }}/soutu">返回搜图首页</a>
+    <a href="soutu">返回搜图首页</a>
     <br />
     {{ last_page | safe }}
     &emsp13;&emsp13;&emsp13;{{ c_page }}&emsp13;&emsp13;&emsp13;

@@ -5,7 +5,7 @@ from pathlib import Path
 from nonebot import get_driver
 from nonebot.log import logger
 from pydantic import BaseModel, Extra
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from core_plugins.core.scheduler import scheduler
 
 
 class Config(BaseModel, extra=Extra.ignore):
@@ -34,8 +34,8 @@ class Config(BaseModel, extra=Extra.ignore):
     # 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
     port: int = 8080
     tutu_site_url: str = f"http://127.0.0.1:{port}"
-    # pixiv图片反代地址 备选 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/ 、 https://c.jitsu.top/
-    tutu_pixiv_proxy: str = "https://i.pixiv.re/"
+    # pixiv图片反代地址 备选 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/ 、 pimg.rem.asia 、 https://c.jitsu.top/
+    tutu_pixiv_proxy: str | None = None
     # http代理地址，如 http://127.0.0.1:1234
     tutu_http_proxy: str | None = None
     # socks5代理地址，如 socks5://127.0.0.1:1234
@@ -52,7 +52,18 @@ class Config(BaseModel, extra=Extra.ignore):
     # 自动爬取功能，文章url文件放置路径
     tutu_crawler_file_path: str = "tutu_crawler/"
     # 自动爬取功能，检测文章标题，含有其中关键字则忽略爬取
-    tutu_crawler_keyword: list[str] = ["删", "薪", "敏感", "暂停", "停更", "图包", "资源", "债"]
+    tutu_crawler_keyword: list[str] = [
+        "删",
+        "薪",
+        "敏感",
+        "暂停",
+        "停更",
+        "图包",
+        "资源",
+        "债",
+        "工资",
+        "月入",
+    ]
 
 
 class Global_var:
@@ -113,7 +124,6 @@ driver = get_driver()
 global_config = driver.config
 plugin_config = Config.parse_obj(global_config)
 var = Global_var()
-scheduler = AsyncIOScheduler(timezone="Asia/Shanghai")
 
 
 def read_data():
@@ -176,7 +186,6 @@ async def on_startup():
         read_data()
 
     load_local_api()
-    scheduler.start()
 
 
 soutu_options = {

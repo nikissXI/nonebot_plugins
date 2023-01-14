@@ -8,6 +8,7 @@ from asyncio import create_task, sleep
 import sys
 from httpx import AsyncClient
 from traceback import format_exc
+from random import randint
 
 """
 代理服务器模块
@@ -17,13 +18,16 @@ from mitmproxy.tools.dump import DumpMaster
 from asyncio import run
 
 
-class SelfAddon:
+class PAPA:
     result_path = "result"
     history_url: dict[str, list[str]] = dict()
     biz_nickname_dict: dict[str, str] = dict()
     new_data_nickname: set[str] = set()
+    # 是否保存html数据到本地
     html_data_save = False
     bilibili_list: set[str] = set()
+    token = ""
+    cookie = ""
 
     def __init__(self):
         # 创建结果输出目录
@@ -70,113 +74,17 @@ class SelfAddon:
                 print(f"读取【{nickname}】历史数据{len(self.history_url[nickname])}条")
 
     def response(self, flow: HTTPFlow):
-        req_url = flow.request.url
         if flow.response and flow.response.text:
-            # 微信查看历史文章首次进入
-            if (
-                req_url.find("https://mp.weixin.qq.com/mp/profile_ext?action=home&")
-                != -1
-            ):
-                # 获取公众号biz和名称
-                biz = req_url[
-                    req_url.find("&__biz=") + 7 : req_url.find("&__biz=") + 23
-                ]
-                nickname = search(
-                    '.*var nickname = "(?P<MSG>[^"]*)', flow.response.text
-                )
-                if nickname:
-                    nickname = nickname.group("MSG")
-                    # 如果目录不存在就创建，并保存biz
-                    if not path.exists(f"{self.result_path}/{nickname}"):
-                        makedirs(f"{self.result_path}/{nickname}")
-                        self.history_url[nickname] = []
-                        self.biz_nickname_dict[biz] = nickname
-                        with open(
-                            f"{self.result_path}/{nickname}/biz_{nickname}",
-                            "w",
-                            encoding="utf-8",
-                        ) as w:
-                            w.write(biz)
-                        with open(
-                            f"{self.result_path}/{nickname}/history_data_{nickname}",
-                            "w",
-                            encoding="utf-8",
-                        ) as w:
-                            w.write("")
-                else:
-                    exit("没匹配到公众号名称")
+            self.filter_data(flow.request.url, flow.response.text)
 
-                # 首次进入的页面数据
-                if self.html_data_save:
-                    with open(
-                        f"{self.result_path}/{nickname}/first.html",
-                        "w",
-                        encoding="utf-8",
-                    ) as w:
-                        w.write(f"{req_url}\n\n" + flow.response.text)
-
-                aa = search(".*var msgList = '(?P<MSG>[^']*)", flow.response.text)
-                if not aa:
-                    exit("首次进入没找到mglist数据")
-                bb = loads(unescape(unescape(aa.group("MSG"))))
-                self.get_art_url(bb["list"], nickname, 0)
-
-            # 历史文章后续滚动
-            if (
-                req_url.find("https://mp.weixin.qq.com/mp/profile_ext?action=getmsg&")
-                != -1
-            ):
-                # 获取公众号biz
-                biz = req_url[
-                    req_url.find("&__biz=") + 7 : req_url.find("&__biz=") + 23
-                ]
-                nickname = self.biz_nickname_dict[biz]
-
-                if not path.exists(f"{self.result_path}/{nickname}"):
-                    exit("目录不存在")
-
-                # 后续进入的页面数据
-                if self.html_data_save:
-                    with open(
-                        f"{self.result_path}/{nickname}/second.html",
-                        "w",
-                        encoding="utf-8",
-                    ) as w:
-                        w.write(f"{req_url}\n\n" + flow.response.text)
-
-                aa = loads(flow.response.text)["general_msg_list"]
-                bb = loads(unescape(aa))
-                self.get_art_url(bb["list"], nickname, 0)
-
-            # 微信公众号平台爬取缓存biz和昵称
-            if (
-                req_url.find(
-                    "https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&"
-                )
-                != -1
-            ):
-                aa = loads(flow.response.text)
-                if aa["list"]:
-                    for i in aa["list"]:
-                        biz = i["fakeid"]
-                        nickname = i["nickname"]
-                        self.biz_nickname_dict[biz] = nickname
-                else:
-                    exit("公众号平台爬取缓存biz和昵称获取list数据失败")
-
-            # 微信公众号平台爬取
-            if (
-                req_url.find("https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&")
-                != -1
-            ):
-                # 获取公众号biz
-                biz = req_url[
-                    req_url.find("&fakeid=") + 8 : req_url.find("&fakeid=") + 24
-                ]
-                if biz not in self.biz_nickname_dict:
-                    exit(f"{biz}没在biz_nickname_dict中")
-
-                nickname = self.biz_nickname_dict[biz]
+    def filter_data(self, req_url: str, response_text: str):
+        # 微信查看历史文章首次进入
+        if req_url.find("https://mp.weixin.qq.com/mp/profile_ext?action=home&") != -1:
+            # 获取公众号biz和名称
+            biz = req_url[req_url.find("&__biz=") + 7 : req_url.find("&__biz=") + 23]
+            nickname = search('.*var nickname = "(?P<MSG>[^"]*)', response_text)
+            if nickname:
+                nickname = nickname.group("MSG")
                 # 如果目录不存在就创建，并保存biz
                 if not path.exists(f"{self.result_path}/{nickname}"):
                     makedirs(f"{self.result_path}/{nickname}")
@@ -194,56 +102,145 @@ class SelfAddon:
                         encoding="utf-8",
                     ) as w:
                         w.write("")
+            else:
+                exit("没匹配到公众号名称")
 
-                # 首次进入的页面数据
-                if self.html_data_save:
+            # 首次进入的页面数据
+            if self.html_data_save:
+                with open(
+                    f"{self.result_path}/{nickname}/first.html",
+                    "w",
+                    encoding="utf-8",
+                ) as w:
+                    w.write(f"{req_url}\n\n" + response_text)
+
+            aa = search(".*var msgList = '(?P<MSG>[^']*)", response_text)
+            if not aa:
+                exit("首次进入没找到mglist数据")
+            bb = loads(unescape(unescape(aa.group("MSG"))))
+            self.get_art_url(bb["list"], nickname, 0)
+
+        # 历史文章后续滚动
+        if req_url.find("https://mp.weixin.qq.com/mp/profile_ext?action=getmsg&") != -1:
+            # 获取公众号biz
+            biz = req_url[req_url.find("&__biz=") + 7 : req_url.find("&__biz=") + 23]
+            nickname = self.biz_nickname_dict[biz]
+
+            if not path.exists(f"{self.result_path}/{nickname}"):
+                exit("目录不存在")
+
+            # 后续进入的页面数据
+            if self.html_data_save:
+                with open(
+                    f"{self.result_path}/{nickname}/second.html",
+                    "w",
+                    encoding="utf-8",
+                ) as w:
+                    w.write(f"{req_url}\n\n" + response_text)
+
+            aa = loads(response_text)["general_msg_list"]
+            bb = loads(unescape(aa))
+            self.get_art_url(bb["list"], nickname, 0)
+
+        # 微信公众号平台爬取缓存biz和昵称
+        if (
+            req_url.find(
+                "https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&"
+            )
+            != -1
+        ):
+            aa = loads(response_text)
+            if aa["list"]:
+                for i in aa["list"]:
+                    biz = i["fakeid"]
+                    nickname = i["nickname"]
+                    self.biz_nickname_dict[biz] = nickname
+            else:
+                exit("公众号平台爬取缓存biz和昵称获取list数据失败")
+
+        # 微信公众号平台爬取
+        if (
+            req_url.find("https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&")
+            != -1
+        ):
+            # 获取公众号biz
+            biz = req_url[req_url.find("&fakeid=") + 8 : req_url.find("&fakeid=") + 24]
+            if biz not in self.biz_nickname_dict:
+                exit(f"{biz}没在biz_nickname_dict中")
+
+            nickname = self.biz_nickname_dict[biz]
+            # 如果目录不存在就创建，并保存biz
+            if not path.exists(f"{self.result_path}/{nickname}"):
+                makedirs(f"{self.result_path}/{nickname}")
+                self.history_url[nickname] = []
+                self.biz_nickname_dict[biz] = nickname
+                with open(
+                    f"{self.result_path}/{nickname}/biz_{nickname}",
+                    "w",
+                    encoding="utf-8",
+                ) as w:
+                    w.write(biz)
+                with open(
+                    f"{self.result_path}/{nickname}/history_data_{nickname}",
+                    "w",
+                    encoding="utf-8",
+                ) as w:
+                    w.write("")
+
+            # 首次进入的页面数据
+            if self.html_data_save:
+                with open(
+                    f"{self.result_path}/{nickname}/first.html",
+                    "w",
+                    encoding="utf-8",
+                ) as w:
+                    w.write(f"{req_url}\n\n" + response_text)
+
+            aa = loads(response_text)
+            try:
+                aa["app_msg_list"]
+            except:
+                if papa.new_data_nickname:
+                    msg = "\n".join([i for i in papa.new_data_nickname])
+                    msg = f"以下文件夹有新数据\n{msg}"
+                else:
+                    msg = ""
+                exit(f"没找到app_msg_list数据，被封了吧\n{msg}")
+
+            self.get_art_url(aa["app_msg_list"], nickname, 1)
+
+        # B站专栏爬取
+        if (
+            req_url.find("https://api.bilibili.com/x/space/wbi/article?") != -1
+            and req_url.find("&sort=publish_time&") != -1
+        ):
+            aa = loads(response_text)
+            bb = aa["data"]["articles"]
+            author = ""
+            for i in bb:
+                author = "B站_" + i["author"]["name"]
+                break
+            if not author:
+                exit("B站专栏没有找到作者")
+
+            if author not in self.bilibili_list:
+                self.bilibili_list.add(author)
+
+                # 如果目录不存在就创建
+                if not path.exists(f"{self.result_path}/{author}"):
+                    makedirs(f"{self.result_path}/{author}")
+                    self.history_url[author] = []
+
                     with open(
-                        f"{self.result_path}/{nickname}/first.html",
+                        f"{self.result_path}/{author}/history_data_{author}",
                         "w",
                         encoding="utf-8",
                     ) as w:
-                        w.write(f"{req_url}\n\n" + flow.response.text)
+                        w.write("")
 
-                aa = loads(flow.response.text)
-                try:
-                    aa["app_msg_list"]
-                except:
-                    exit("没找到app_msg_list数据，被封了吧")
+                create_task(self.bilibili(req_url, author))
 
-                self.get_art_url(aa["app_msg_list"], nickname, 1)
-
-            # B站专栏爬取
-            if (
-                req_url.find("https://api.bilibili.com/x/space/wbi/article?") != -1
-                and req_url.find("&sort=publish_time&") != -1
-            ):
-                aa = loads(flow.response.text)
-                bb = aa["data"]["articles"]
-                author = ""
-                for i in bb:
-                    author = "B站_" + i["author"]["name"]
-                    break
-                if not author:
-                    exit("B站专栏没有找到作者")
-
-                if author not in self.bilibili_list:
-                    self.bilibili_list.add(author)
-
-                    # 如果目录不存在就创建
-                    if not path.exists(f"{self.result_path}/{author}"):
-                        makedirs(f"{self.result_path}/{author}")
-                        self.history_url[author] = []
-
-                        with open(
-                            f"{self.result_path}/{author}/history_data_{author}",
-                            "w",
-                            encoding="utf-8",
-                        ) as w:
-                            w.write("")
-
-                    create_task(self.bilibili(req_url, author))
-
-    def get_art_url(self, dict_data, nickname, tt: int):
+    def get_art_url(self, dict_data, nickname, tt: int) -> bool:
         # 获取数据
         tmp_art_list = []
         end = False
@@ -297,6 +294,47 @@ class SelfAddon:
                 end = True
         return end
 
+    async def update_wx_art(self):
+        for biz, nickname in self.biz_nickname_dict.items():
+            print(f"开始更新公众号：{nickname}")
+            begin_count = 0
+            while True:
+                await sleep(randint(10, 20))
+                url = f"https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={begin_count}&count=5&fakeid={biz}&type=9&query=&token={self.token}&lang=zh_CN&f=json&ajax=1"
+                try:
+                    async with AsyncClient(
+                        headers={
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54",
+                            "cookie": self.cookie,
+                        },
+                        timeout=10,
+                        verify=False,
+                    ) as c:
+                        res = await c.get(url)
+                except:
+                    exit(f"{url}\n请求出错\n{format_exc()}")
+
+                aa = loads(res.text)
+                try:
+                    aa["app_msg_list"]
+                except:
+                    if papa.new_data_nickname:
+                        msg = "\n".join([i for i in papa.new_data_nickname])
+                        msg = f"以下文件夹有新数据\n{msg}"
+                    else:
+                        msg = ""
+                    exit(f"没找到app_msg_list数据，被封了或token失效\n{msg}")
+
+                end = self.get_art_url(aa["app_msg_list"], nickname, 1)
+                if end:
+                    break
+                else:
+                    begin_count += 5
+            if nickname in papa.new_data_nickname:
+                print(f"Done! Got new data!\n")
+            else:
+                print("No new data~")
+
     async def bilibili(self, url: str, author: str):
         tou = url[: url.find("&pn=") + 4]
         wei = url[url.find("&ps=") :]
@@ -349,27 +387,60 @@ class SelfAddon:
                 break
 
 
-addon = SelfAddon()
+papa = PAPA()
+
+
+async def start_update():
+    await papa.update_wx_art()
+    print(f"******\n全部公众号更新完毕\n******")
 
 
 async def start_proxy(port):
     opts = options.Options(listen_host="0.0.0.0", listen_port=port)
     m = DumpMaster(opts)
-    m.addons.add(addon)
+    m.addons.add(papa)
     await m.run()
 
 
 if __name__ == "__main__":
-    try:
-        port = 8080
-        for i in sys.argv[1:]:
-            if i.find("-p") != -1:
-                port = int(i[2:])
-        print(f"开始监听{port}端口")
-        run(start_proxy(port))
-    except KeyboardInterrupt:
-        if addon.new_data_nickname:
-            msg = "\n".join([i for i in addon.new_data_nickname])
-            print(f"停止，以下文件夹有新数据\n{msg}")
-        else:
-            print(f"停止，没有新数据")
+    port = 8080
+    token = ""
+    cookie = ""
+    params = sys.argv[1:]
+    for i in params:
+        if i.find("-p") != -1:
+            pos = params.index("-p")
+            port = int(params[pos + 1])
+        if i.find("-t") != -1:
+            pos = params.index("-t")
+            token = params[pos + 1]
+        if i.find("-c") != -1:
+            pos = params.index("-c")
+            cookie = params[pos + 1]
+
+    if token and cookie:
+        try:
+            print(f"开始更新现有公众号文章链接")
+            papa.token = token
+            papa.cookie = cookie
+            print(f"token：{papa.token}")
+            print(f"cookie：{papa.cookie}")
+            print()
+            run(start_update())
+        except KeyboardInterrupt:
+            if papa.new_data_nickname:
+                msg = "\n".join([i for i in papa.new_data_nickname])
+                print(f"停止，以下文件夹有新数据\n{msg}")
+            else:
+                print(f"停止，没有新数据")
+
+    else:
+        try:
+            print(f"开始监听{port}端口")
+            run(start_proxy(port))
+        except KeyboardInterrupt:
+            if papa.new_data_nickname:
+                msg = "\n".join([i for i in papa.new_data_nickname])
+                print(f"停止，以下文件夹有新数据\n{msg}")
+            else:
+                print(f"停止，没有新数据")

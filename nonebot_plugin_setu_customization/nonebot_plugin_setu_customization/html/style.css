@@ -9,7 +9,7 @@ p {
 
 img {
     min-height: 100px;
-    background-color: antiquewhite;
+    background-color: rgb(255, 0, 0);
 }
 
 /*定义竖屏 css*/
@@ -33,6 +33,8 @@ body {
     color: white;
     font-size: 18px;
     text-align: center;
+    margin: 0px;
+    padding: 0px;
 }
 
 select {
