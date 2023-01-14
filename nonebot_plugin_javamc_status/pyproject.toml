@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "nonebot_plugin_javamc_status"
-version = "0.1.3"
-description = "Nonebot2查询JAVA MC服务器在线信息插件"
+name = "nonebot_plugin_mc_server_status"
+version = "0.2.0"
+description = "Nonebot2查询MC服务器在线信息插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "nonebot_plugin_javamc_status"}]
-homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_javamc_status"
-repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_javamc_status"
-documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_javamc_status#README.md"
+packages = [{include = "nonebot_plugin_mc_server_status"}]
+homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_server_status"
+repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_server_status"
+documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_server_status#README.md"
 
 [[tool.poetry.source]]
 name = "tsinghua"
@@ -19,6 +19,7 @@ default = true
 python = "^3.9"
 nonebot2 = "^2.0.0-rc.1"
 nonebot-adapter-onebot = "^2.0.0"
+mcstatus = "^10.0.0"
 
 [build-system]
 requires = ["poetry-core"]
