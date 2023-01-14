@@ -3,7 +3,7 @@
 
 Nonebot2查询MC服务器在线信息插件  
 支持Java和Bedrock服务器
-
+test
 ### 安装
 
 使用nb-cli安装
