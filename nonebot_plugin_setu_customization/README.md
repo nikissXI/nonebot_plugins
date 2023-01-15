@@ -183,7 +183,7 @@ https://mp.weixin.qq.com/s/IHeYqZTu8xYLv7nDkRwxUQ 2
 # 安装mitmproxy
 pip install mitmproxy
 # 运行papa.py，8080的监听端口，可以自己改
-python papa.py -p8080
+python papa.py -p 8080
 # 手机或电脑设置好代理后，用浏览器访问以下网站，如果看到证书选择那就是代理对了，然后看说明安装证书
 mitm.it
 # 然后根据下面的方法爬取，结果输出在result文件夹中
