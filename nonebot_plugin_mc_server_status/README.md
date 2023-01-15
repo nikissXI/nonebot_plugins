@@ -1,10 +1,32 @@
+<p align="center">
+  <a href="https://v2.nonebot.dev/store">
+  <img src="https://user-images.githubusercontent.com/44545625/209862575-acdc9feb-3c76-471d-ad89-cc78927e5875.png" width="180" height="180" alt="NoneBotPluginLogo"></a>
+</p>
+
+<div align="center">
+
 # nonebot_plugin_mc_server_status
-[![nonebot2](https://img.shields.io/static/v1?label=nonebot&message=v2rc1%2B&color=green)](https://v2.nonebot.dev/)[![python](https://img.shields.io/static/v1?label=python+&message=3.9%2B&color=blue)](https://img.shields.io/static/v1?label=python+&message=3.7%2B&color=blue)[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Nonebot2查询MC服务器在线信息插件  
-支持Java和Bedrock服务器  
+_✨ Nonebot2查询MC服务器在线信息插件 ✨_
 
-### 安装
+</div>
+
+<p align="center">
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="license">
+  </a>
+  <a href="https://v2.nonebot.dev/">
+    <img src="https://img.shields.io/static/v1?label=nonebot&message=v2rc1%2B&color=green" alt="nonebot2">
+  </a>
+  <img src="https://img.shields.io/static/v1?label=python+&message=3.9%2B&color=blue" alt="python">
+</p>
+
+## 简介
+使用mcstatus库，支持Java和Bedrock服务器的服务器查询。   
+
+<img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_mc_server_status/readme_img/xinxi.jpg"/>
+
+## 安装
 
 使用nb-cli安装
 ```bash
@@ -14,7 +36,7 @@ nb plugin install nonebot_plugin_mc_server_status
 或者  
 直接把插件clone下来放进去plugins文件夹，记得把依赖装上 pip install mcstatus  
 
-### 使用
+## 使用
 
 添加了服务器信息后，会在bot根目录下的data目录创建一个mc_status_data.json文件，用于存储插件信息  
 在bot对应的.env文件修改
@@ -26,7 +48,7 @@ mc_status_bot_qqnum = 114514
 mc_status_admin_qqnum = 114514
 ```
 
-### 插件命令  
+## 插件命令  
 | 指令 | 说明 |
 |:-----:|:----:|
 | 信息|所有人都能使用，查看当前群添加的服务器状态|
@@ -34,9 +56,6 @@ mc_status_admin_qqnum = 114514
 | 删除服务器|字面意思，bot超级管理员用|
 | 信息数据|查看已添加的群和服务器信息，bot超级管理员用|
 
-### 使用截图
-<img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_mc_server_status/readme_img/xinxi.jpg"/>
-
-### 定制
+## 定制
 
 自己看代码改啦！
