@@ -42,10 +42,13 @@ nb plugin install nonebot_plugin_mc_server_status
 在bot对应的.env文件修改
 
 ```bash
-# 机器人的QQ号（由于开发者多gocq连接，所以有这个设置）
-mc_status_bot_qqnum = 114514
 # 管理员的QQ号（别问我为什么要另外写）
 mc_status_admin_qqnum = 114514
+
+# 可选配置
+# 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
+# 如果不填该配置则由第一个连上的bot响应
+tutu_bot_qqnum_list = ['1234','5678','6666']
 ```
 
 ## 插件命令  
@@ -57,6 +60,10 @@ mc_status_admin_qqnum = 114514
 | 信息数据|查看已添加的群和服务器信息，bot超级管理员用|
 
 ## 更新日志
+### 2023/1/15 \[v0.2.2]
+
+* 优化多bot逻辑，机器人qq号配置改为可选
+
 ### 2023/1/15 \[v0.2.1]
 
 * 插件重构
