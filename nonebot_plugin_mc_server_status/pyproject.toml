@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_mc_server_status"
-version = "0.2.0"
+version = "0.2.1"
 description = "Nonebot2查询MC服务器在线信息插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
