@@ -45,16 +45,19 @@ nb plugin install nonebot_plugin_setu_customization
 # 必填项
 # api超时，这个时间建议设置一分钟以上，否则发图多的时候容易超时报错
 api_timeout=60
-# 机器人的QQ号（由于开发者多gocq连接，所以有这个设置）
-tutu_bot_qqnum = 114514
 # 管理员的QQ号（别问我为什么要另外写）
 tutu_admin_qqnum = 114514
 
 # 非必填项
+# 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
+# 如果不填该配置则由第一个连上的bot响应
+tutu_bot_qqnum_list = ['1234','5678','6666']
 # 图片下载模式，true则nonebot下载，false则协议端下载
 tutu_img_local_download = true
 # 图图命令CD时间（秒）
 tutu_cooldown = 3
+# 一次最多发多少张图
+once_send = 5
 # 搜图结果链接有效时间（分钟）
 web_view_time = 10
 # R18类别的名称
@@ -217,9 +220,11 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 然后给机器人私聊发送“开爬”就会自动爬取
 
 ## 更新日志
-### 2023/1/15 \[v1.4.6]
+### 2023/1/15 \[v1.4.7]
 
 * 依赖错误修复
+* 增加单次图片发送数量设置
+* 优化多bot逻辑，机器人qq号配置改为可选
 
 ### 2023/1/14 \[v1.4.5]
 

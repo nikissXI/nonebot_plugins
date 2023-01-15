@@ -5,18 +5,22 @@ from pathlib import Path
 from nonebot import get_driver
 from nonebot.log import logger
 from pydantic import BaseModel, Extra
-from core_plugins.core.scheduler import scheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from nonebot.adapters import Bot
 
 
 class Config(BaseModel, extra=Extra.ignore):
-    # 机器人的QQ号（由于开发者多gocq连接，所以有这个设置）
-    tutu_bot_qqnum: str = "0"  # 必填
     # 管理员的QQ号（别问我为什么）
     tutu_admin_qqnum: int = 0  # 必填
+
+    # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） ['1234','5678','6666']
+    tutu_bot_qqnum_list: list[str] = []
     # 图片下载模式，真则nonebot下载，假则协议端下载
     tutu_img_local_download: bool = True
     # 图图命令CD时间（秒）
     tutu_cooldown: int = 3
+    # 一次最多发多少张图
+    once_send: int = 5
     # 搜图结果链接有效时间（分钟）
     web_view_time: int = 10
     # R18类别的名称
@@ -124,7 +128,8 @@ driver = get_driver()
 global_config = driver.config
 plugin_config = Config.parse_obj(global_config)
 var = Global_var()
-
+handle_bot: None | Bot = None
+scheduler = AsyncIOScheduler(timezone="Asia/Shanghai")
 
 def read_data():
     """

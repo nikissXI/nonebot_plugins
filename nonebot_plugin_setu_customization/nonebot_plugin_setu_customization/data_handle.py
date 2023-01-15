@@ -19,7 +19,7 @@ from nonebot.log import logger
 from nonebot.matcher import Matcher
 from PIL import Image, ImageDraw, ImageFont
 from ujson import dumps, loads
-from .config import plugin_config, var
+from .config import plugin_config, var, handle_bot
 
 
 ###################################
@@ -202,9 +202,10 @@ def del_soutu_cache_data(data_num: int):
 
 
 async def send_error_msg(msg: str | Message):
-    bot = get_bot(plugin_config.tutu_bot_qqnum)
-    if bot:
-        await bot.send_private_msg(user_id=plugin_config.tutu_admin_qqnum, message=msg)
+    if handle_bot:
+        await handle_bot.send_private_msg(
+            user_id=plugin_config.tutu_admin_qqnum, message=msg
+        )
 
 
 async def send_img_msg(matcher: Matcher, img_num: int, img_url: str):

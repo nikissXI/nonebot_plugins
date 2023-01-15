@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 from httpx import AsyncClient
 from httpx_socks import AsyncProxyTransport
-from nonebot import on_fullmatch, on_notice, on_regex
+from nonebot import on_fullmatch, on_notice, on_regex, get_driver, get_bot, get_bots
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.adapters.onebot.v11 import PrivateMessageEvent, helpers
@@ -19,8 +19,14 @@ from nonebot.params import ArgPlainText, RegexGroup
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 from PIL import Image
-
-from .config import load_local_api, plugin_config, save_data, soutu_options, var
+from .config import (
+    load_local_api,
+    plugin_config as pc,
+    save_data,
+    soutu_options,
+    var,
+    handle_bot,
+)
 from .data_handle import (
     download_img,
     get_art_img_url,
@@ -53,13 +59,72 @@ __plugin_meta__ = PluginMetadata(
 """,
 )
 
+
+driver = get_driver()
+
+# qq机器人连接时执行
+@driver.on_bot_connect
+async def on_bot_connect(bot: Bot):
+    global handle_bot
+    # 是否有写bot qq，如果写了只处理bot qq在列表里的
+    if pc.tutu_bot_qqnum_list and bot.self_id in pc.tutu_bot_qqnum_list:
+        # 如果已经有bot连了
+        if handle_bot:
+            # 当前bot qq 下标
+            handle_bot_id_index = pc.tutu_bot_qqnum_list.index(handle_bot.self_id)
+            # 连过俩的bot qq 下标
+            new_bot_id_index = pc.tutu_bot_qqnum_list.index(bot.self_id)
+            # 判断优先级，下标越低优先级越高
+            if new_bot_id_index < handle_bot_id_index:
+                handle_bot = bot
+
+        # 没bot连就直接给
+        else:
+            handle_bot = bot
+
+    # 不写就给第一个连的
+    elif not handle_bot:
+        handle_bot = bot
+
+
+# qq机器人断开时执行
+@driver.on_bot_disconnect
+async def on_bot_disconnect(bot: Bot):
+    global handle_bot
+    # 判断掉线的是否为handle bot
+    if bot == handle_bot:
+        # 如果有写bot qq列表
+        if pc.tutu_bot_qqnum_list:
+            # 获取当前连着的bot列表(需要bot是在bot qq列表里)
+            available_bot_id_list = [
+                bot_id for bot_id in get_bots() if bot_id in pc.tutu_bot_qqnum_list
+            ]
+            if available_bot_id_list:
+                # 打擂台排序？
+                new_bot_index = pc.tutu_bot_qqnum_list.index(available_bot_id_list[0])
+                for bot_id in available_bot_id_list:
+                    now_bot_index = pc.tutu_bot_qqnum_list.index(bot_id)
+                    if now_bot_index < new_bot_index:
+                        new_bot_index = now_bot_index
+                # 取下标在qq列表里最小的bot qq为新的handle bot
+                handle_bot = get_bot(pc.tutu_bot_qqnum_list[new_bot_index])
+
+            else:
+                handle_bot = None
+
+        # 不写就随便给一个连着的(如果有)
+        elif handle_bot:
+            try:
+                new_bot = get_bot()
+                handle_bot = new_bot
+            except ValueError:
+                handle_bot = None
+
+
 # 群判断
 async def permission_check(event: MessageEvent, bot: Bot) -> bool:
     if isinstance(event, GroupMessageEvent):
-        return (
-            event.group_id in var.group_list
-            and bot.self_id == plugin_config.tutu_bot_qqnum
-        )
+        return event.group_id in var.group_list and bot == handle_bot
     elif isinstance(event, PrivateMessageEvent):
         return event.sub_type == "friend"
     else:
@@ -68,10 +133,7 @@ async def permission_check(event: MessageEvent, bot: Bot) -> bool:
 
 async def permission_check_st(event: MessageEvent, bot: Bot) -> bool:
     if isinstance(event, GroupMessageEvent):
-        return (
-            event.group_id in var.group_list_st
-            and bot.self_id == plugin_config.tutu_bot_qqnum
-        )
+        return event.group_id in var.group_list_st and bot == handle_bot
     elif isinstance(event, PrivateMessageEvent):
         return event.sub_type == "friend"
     else:
@@ -80,17 +142,11 @@ async def permission_check_st(event: MessageEvent, bot: Bot) -> bool:
 
 # 管理员判断
 async def admin_check(event: MessageEvent, bot: Bot) -> bool:
-    return (
-        event.user_id == plugin_config.tutu_admin_qqnum
-        and bot.self_id == plugin_config.tutu_bot_qqnum
-    )
+    return event.user_id == pc.tutu_admin_qqnum and bot == handle_bot
 
 
 async def admin_upload_check(event: OfflineUploadNoticeEvent, bot: Bot) -> bool:
-    return (
-        event.user_id == plugin_config.tutu_admin_qqnum
-        and bot.self_id == plugin_config.tutu_bot_qqnum
-    )
+    return event.user_id == pc.tutu_admin_qqnum and bot == handle_bot
 
 
 tutu = on_regex(
@@ -122,9 +178,7 @@ upload_file = on_notice(rule=admin_upload_check)
 
 
 @tutu.handle(
-    parameterless=[
-        helpers.Cooldown(cooldown=plugin_config.tutu_cooldown, prompt="我知道你很急，但你先别急")
-    ]
+    parameterless=[helpers.Cooldown(cooldown=pc.tutu_cooldown, prompt="我知道你很急，但你先别急")]
 )
 @handle_exception("图图")
 async def handle_tutu(
@@ -155,7 +209,7 @@ async def handle_tutu(
         )
     else:
         send_num = int(send_num)
-        if send_num > 5:
+        if send_num > pc.once_send:
             await tutu.finish("太多啦，顶不住！♀")
 
     await tutu.send("制作中，请稍后...♀")
@@ -165,14 +219,14 @@ async def handle_tutu(
             api_type = api_type.strip()
             if api_type not in var.api_list_online:
                 await tutu.finish(f"【{api_type}】类型不存在，支持的类型{list(var.api_list_online)}")
-            elif api_type == plugin_config.tutu_r18_name:
+            elif api_type == pc.tutu_r18_name:
                 await tutu.finish(f"群聊不能用这个类型！")
             else:
                 api_type = [api_type]
         else:
             api_type = list(var.api_list_online)
-            if plugin_config.tutu_r18_name in api_type:
-                api_type.remove(plugin_config.tutu_r18_name)
+            if pc.tutu_r18_name in api_type:
+                api_type.remove(pc.tutu_r18_name)
         var.group_cooldown.add(event.group_id)
     else:
         if api_type:
@@ -183,8 +237,8 @@ async def handle_tutu(
                 api_type = [api_type]
         else:
             api_type = list(var.api_list_online)
-            if plugin_config.tutu_r18_name in api_type:
-                api_type.remove(plugin_config.tutu_r18_name)
+            if pc.tutu_r18_name in api_type:
+                api_type.remove(pc.tutu_r18_name)
         var.user_cooldown.add(event.user_id)
 
     msg_list = []
@@ -204,7 +258,7 @@ async def handle_tutu(
             if not success:
                 msg_list.append(to_node_msg(MS.text(text)))
             else:
-                if plugin_config.tutu_img_local_download:
+                if pc.tutu_img_local_download:
                     ds, result = await download_img(img_url)
                     if ds:
                         msg_list.append(
@@ -262,9 +316,7 @@ async def handle_tutu(
 
 
 @soutu.handle(
-    parameterless=[
-        helpers.Cooldown(cooldown=plugin_config.tutu_cooldown, prompt="我知道你很急，但你先别急")
-    ]
+    parameterless=[helpers.Cooldown(cooldown=pc.tutu_cooldown, prompt="我知道你很急，但你先别急")]
 )
 @handle_exception("搜图")
 async def handle_soutu(matchgroup=RegexGroup()):
@@ -279,6 +331,7 @@ async def handle_soutu(matchgroup=RegexGroup()):
     pid = 0
     pid_rl = 0
     rank = ""
+    tags = tags.replace("，", ",").replace("、", ",")
     try:
         if tags in soutu_options["rank"]:
             rank = soutu_options["rank"][tags]
@@ -290,8 +343,6 @@ async def handle_soutu(matchgroup=RegexGroup()):
             uid = int(tags[2:])
         elif tags.find(",") != -1:
             tags = " ".join(tags.split(","))
-        elif tags.find("，") != -1:
-            tags = " ".join(tags.split("，"))
     except ValueError:
         await soutu.finish("参数格式有误")
 
@@ -354,7 +405,7 @@ async def handle_soutu(matchgroup=RegexGroup()):
     if not isinstance(result, str):
         if result != 0:
             await soutu.finish(
-                f"打开链接查看，{plugin_config.web_view_time}分钟有效期\n{plugin_config.tutu_site_url}/sr?s={result}"
+                f"打开链接查看，{pc.web_view_time}分钟有效期\n{pc.tutu_site_url}/sr?s={result}"
             )
         # elif page_num == 1:
         #     # 如果第一页是空的，试试第二页
@@ -367,7 +418,7 @@ async def handle_soutu(matchgroup=RegexGroup()):
         #     )
         #     if result != 0:
         #         await soutu.finish(
-        #             f"打开链接查看，{plugin_config.web_view_time}分钟有效期\n{plugin_config.tutu_site_url}/sr?s={result}"
+        #             f"打开链接查看，{pc.web_view_time}分钟有效期\n{pc.tutu_site_url}/sr?s={result}"
         #         )
         #     else:
         #         await soutu.finish("没有搜到你要的图哦")
@@ -470,7 +521,9 @@ async def handle_api_manage(matchgroup=RegexGroup()):
             else:
                 if todo_api_url.find("本地图库") != -1:
                     filename = todo_api_url[4:]
-                    todo_api_url = f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
+                    todo_api_url = (
+                        f"http://127.0.0.1:{pc.port}/img_api?fw=1&fn={filename}"
+                    )
                 if todo_api_url in var.api_list_online[api_type]:
                     var.api_list_online[api_type].remove(todo_api_url)
                     if not var.api_list_online[api_type]:
@@ -495,7 +548,9 @@ async def handle_api_manage(matchgroup=RegexGroup()):
                     )
                     continue
                 else:
-                    todo_api_url = f"http://127.0.0.1:{plugin_config.port}/img_api?fw=1&fn={filename}"
+                    todo_api_url = (
+                        f"http://127.0.0.1:{pc.port}/img_api?fw=1&fn={filename}"
+                    )
 
             if api_type in var.api_list_online:
                 if todo_api_url not in var.api_list_online[api_type]:
@@ -573,11 +628,11 @@ async def handle_tutu_kaipa(
             f"当前任务信息\n文件名：{var.crawler_current_msg[0]}\n爬取进度：{var.crawler_current_msg[2]}/{var.crawler_current_msg[1]}\n已收录图片：{var.crawler_current_msg[3]}张\n入库文件名：{var.crawler_current_msg[4]}\n预计完成时间：{finish_time}\n\n发送 开爬停止 可停止任务"
         )
 
-    if not listdir(plugin_config.tutu_crawler_file_path):
-        await tutu_kaipa.finish(f"{plugin_config.tutu_crawler_file_path}里没有任何文件夹")
+    if not listdir(pc.tutu_crawler_file_path):
+        await tutu_kaipa.finish(f"{pc.tutu_crawler_file_path}里没有任何文件夹")
 
     while True:
-        path_name = listdir(plugin_config.tutu_crawler_file_path)
+        path_name = listdir(pc.tutu_crawler_file_path)
         if path_name:
             await load_crawler_files(path_name[0], matcher, event, bot)
         else:
@@ -594,7 +649,7 @@ async def handle_wx_paqu(
     event: PrivateMessageEvent, matcher: Matcher, bot: Bot, matchgroup=RegexGroup()
 ):
     # if not matchgroup[0]:
-    #     await matcher.finish(f"微信文章爬取 [url] （添加到本地api {plugin_config.tutu_self_cosplay_lib}）")
+    #     await matcher.finish(f"微信文章爬取 [url] （添加到本地api {pc.tutu_self_cosplay_lib}）")
     # else:
     img_url = matchgroup[0]
     if img_url == "文章爬取":
@@ -604,12 +659,12 @@ async def handle_wx_paqu(
     filename = matchgroup[1]
     if not filename:
         await art_paqu.finish(
-            f"请给出本地库名称\n快捷名称：2是{plugin_config.tutu_self_anime_lib}，3是{plugin_config.tutu_self_cosplay_lib}"
+            f"请给出本地库名称\n快捷名称：2是{pc.tutu_self_anime_lib}，3是{pc.tutu_self_cosplay_lib}"
         )
     elif filename == "2":
-        filename = plugin_config.tutu_self_anime_lib
+        filename = pc.tutu_self_anime_lib
     elif filename == "3":
-        filename = plugin_config.tutu_self_cosplay_lib
+        filename = pc.tutu_self_cosplay_lib
 
     img_url = img_url.replace("&amp;", "&").replace("\\", "")
     await get_art_img_url(img_url, filename, matcher, event, bot)
@@ -633,7 +688,7 @@ async def handle_recall_paqu(matchgroup=RegexGroup()):
     var.tmp_data.pop(img_num)
     var.api_list_local[filename].remove(img_url)
     with open(
-        f"{plugin_config.tutu_local_api_path}/{filename}",
+        f"{pc.tutu_local_api_path}/{filename}",
         "w",
         encoding="utf-8",
     ) as w:
@@ -724,7 +779,7 @@ async def handle_img_no(matchgroup=RegexGroup()):
 async def handle_img_del(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         await img_del.finish(
-            f"图片删除 [本地库] [url]\n本地库快捷名称：2是{plugin_config.tutu_self_anime_lib}，3是{plugin_config.tutu_self_cosplay_lib}，fn是根据fn序号删\nurl快捷名称 序号[数字]"
+            f"图片删除 [本地库] [url]\n本地库快捷名称：2是{pc.tutu_self_anime_lib}，3是{pc.tutu_self_cosplay_lib}，fn是根据fn序号删\nurl快捷名称 序号[数字]"
         )
     else:
         api_type = matchgroup[1]
@@ -734,9 +789,9 @@ async def handle_img_del(matchgroup=RegexGroup()):
         async def replace_apt_type_text(xx: str):
             nonlocal img_url
             if xx == "2":
-                return plugin_config.tutu_self_anime_lib
+                return pc.tutu_self_anime_lib
             elif xx == "3":
-                return plugin_config.tutu_self_cosplay_lib
+                return pc.tutu_self_cosplay_lib
             elif xx == "fn":
                 try:
                     xx = var.fn_sent_img_filename_data[int(img_url)]
@@ -746,7 +801,7 @@ async def handle_img_del(matchgroup=RegexGroup()):
                     await img_del.finish("请在url参数位置直接写数字")
             elif xx not in var.api_list_local:
                 await img_del.finish(
-                    f"不存在本地库{xx}\n快捷名称：2是{plugin_config.tutu_self_anime_lib}，3是{plugin_config.tutu_self_cosplay_lib}，fn是根据fn序号删"
+                    f"不存在本地库{xx}\n快捷名称：2是{pc.tutu_self_anime_lib}，3是{pc.tutu_self_cosplay_lib}，fn是根据fn序号删"
                 )
             else:
                 return xx
@@ -773,7 +828,7 @@ async def handle_img_del(matchgroup=RegexGroup()):
             if img_url not in var.api_list_local[new_api_type]:
                 var.api_list_local[new_api_type].append(img_url)
                 with open(
-                    f"{plugin_config.tutu_local_api_path}/{new_api_type}",
+                    f"{pc.tutu_local_api_path}/{new_api_type}",
                     "a",
                     encoding="utf-8",
                 ) as a:
@@ -785,7 +840,7 @@ async def handle_img_del(matchgroup=RegexGroup()):
         if img_url in var.api_list_local[api_type]:
             var.api_list_local[api_type].remove(img_url)
             with open(
-                f"{plugin_config.tutu_local_api_path}/{api_type}",
+                f"{pc.tutu_local_api_path}/{api_type}",
                 "w",
                 encoding="utf-8",
             ) as w:
@@ -804,12 +859,12 @@ async def handle_img_test(matchgroup=RegexGroup()):
     else:
         img_url = img_url.replace("&amp;", "&")
         img_url = url_diy_replace(img_url)
-        if plugin_config.tutu_socks5_proxy:
-            socks5_proxy = AsyncProxyTransport.from_url(plugin_config.tutu_socks5_proxy)
+        if pc.tutu_socks5_proxy:
+            socks5_proxy = AsyncProxyTransport.from_url(pc.tutu_socks5_proxy)
         else:
             socks5_proxy = None
-        if plugin_config.tutu_http_proxy:
-            http_proxy = plugin_config.tutu_http_proxy
+        if pc.tutu_http_proxy:
+            http_proxy = pc.tutu_http_proxy
         else:
             http_proxy = None
         await img_test.send("图片下载中")
@@ -842,7 +897,7 @@ async def handle_img_test(matchgroup=RegexGroup()):
 async def handle_upload_file(event: OfflineUploadNoticeEvent, state: T_State):
     filename = event.file.name
     fileurl = event.file.url
-    if filename.find(".zip") != -1 and event.user_id == plugin_config.tutu_admin_qqnum:
+    if filename.find(".zip") != -1 and event.user_id == pc.tutu_admin_qqnum:
         # 用户输入的玩意
         state["confirm"] = Message()
         state["name"] = filename
