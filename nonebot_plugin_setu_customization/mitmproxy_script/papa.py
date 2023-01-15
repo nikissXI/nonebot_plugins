@@ -201,8 +201,8 @@ class PAPA:
                 aa["app_msg_list"]
             except:
                 if papa.new_data_nickname:
-                    msg = "\n".join([i for i in papa.new_data_nickname])
-                    msg = f"以下文件夹有新数据\n{msg}"
+                    msg = "\n".join(["* " + i for i in papa.new_data_nickname])
+                    msg = f"以下公众号有新链接\n{msg}"
                 else:
                     msg = ""
                 exit(f"没找到app_msg_list数据，被封了吧\n{msg}")
@@ -294,47 +294,6 @@ class PAPA:
                 end = True
         return end
 
-    async def update_wx_art(self):
-        for biz, nickname in self.biz_nickname_dict.items():
-            print(f"开始更新公众号：{nickname}")
-            begin_count = 0
-            while True:
-                await sleep(randint(10, 20))
-                url = f"https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={begin_count}&count=5&fakeid={biz}&type=9&query=&token={self.token}&lang=zh_CN&f=json&ajax=1"
-                try:
-                    async with AsyncClient(
-                        headers={
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54",
-                            "cookie": self.cookie,
-                        },
-                        timeout=10,
-                        verify=False,
-                    ) as c:
-                        res = await c.get(url)
-                except:
-                    exit(f"{url}\n请求出错\n{format_exc()}")
-
-                aa = loads(res.text)
-                try:
-                    aa["app_msg_list"]
-                except:
-                    if papa.new_data_nickname:
-                        msg = "\n".join([i for i in papa.new_data_nickname])
-                        msg = f"以下文件夹有新数据\n{msg}"
-                    else:
-                        msg = ""
-                    exit(f"没找到app_msg_list数据，被封了或token失效\n{msg}")
-
-                end = self.get_art_url(aa["app_msg_list"], nickname, 1)
-                if end:
-                    break
-                else:
-                    begin_count += 5
-            if nickname in papa.new_data_nickname:
-                print(f"Done! Got new data!\n")
-            else:
-                print("No new data~")
-
     async def bilibili(self, url: str, author: str):
         tou = url[: url.find("&pn=") + 4]
         wei = url[url.find("&ps=") :]
@@ -386,13 +345,88 @@ class PAPA:
                     w.write("")
                 break
 
+    async def wx_single(self, nickname: str, biz: str, page_num: int = 1):
+        print(f"开始更新公众号：{nickname}")
+        if path.exists(f"{self.result_path}/{nickname}/last_fail_page_num"):
+            with open(
+                f"{self.result_path}/{nickname}/last_fail_page_num",
+                "r",
+                encoding="utf-8",
+            ) as r:
+                page_num = int(r.read())
+            remove(f"{self.result_path}/{nickname}/last_fail_page_num")
+            print(f"发现上次失败页数，已从page{page_num}开始爬取")
+
+        while True:
+            print(f"当前page: {page_num}")
+            url = f"https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={(page_num-1) * 5}&count=5&fakeid={biz}&type=9&query=&token={self.token}&lang=zh_CN&f=json&ajax=1"
+            try:
+                async with AsyncClient(
+                    headers={
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54",
+                        "cookie": self.cookie,
+                    },
+                    timeout=10,
+                    verify=False,
+                ) as c:
+                    res = await c.get(url)
+            except:
+                exit(f"{url}\n请求出错\n{format_exc()}")
+
+            aa = loads(res.text)
+            try:
+                aa["app_msg_list"]
+            except:
+                if papa.new_data_nickname:
+                    msg = "\n".join(["* " + i for i in papa.new_data_nickname])
+                    msg = f"以下公众号有新链接\n{msg}"
+                else:
+                    msg = ""
+
+                if nickname in papa.new_data_nickname:
+                    with open(
+                        f"{self.result_path}/{nickname}/last_fail_page_num",
+                        "w",
+                        encoding="utf-8",
+                    ) as w:
+                        w.write(f"{page_num}")
+
+                exit(
+                    f"没找到app_msg_list数据，被封了或token失效\n{nickname} 爬到page {page_num}\n\n{msg}"
+                )
+
+            end = self.get_art_url(aa["app_msg_list"], nickname, 1)
+
+            await sleep(randint(9, 11))
+            if end:
+                break
+            else:
+                page_num += 1
+
+        if nickname in papa.new_data_nickname:
+            print(f"Done! Got new data!\n")
+        else:
+            print("No new data~")
+
 
 papa = PAPA()
 
 
 async def start_update():
-    await papa.update_wx_art()
+    for biz, nickname in papa.biz_nickname_dict.items():
+        await papa.wx_single(nickname, biz)
     print(f"******\n全部公众号更新完毕\n******")
+    if papa.new_data_nickname:
+        msg = "\n".join(["* " + i for i in papa.new_data_nickname])
+        msg = f"以下公众号有新链接\n{msg}"
+    else:
+        msg = "没爬到新链接"
+    print(msg)
+
+
+async def fuck_one(biz: str, page: int):
+    nickname = papa.biz_nickname_dict[biz]
+    await papa.wx_single(nickname, biz, page)
 
 
 async def start_proxy(port):
@@ -403,44 +437,49 @@ async def start_proxy(port):
 
 
 if __name__ == "__main__":
+    # 在线浏览抓
     port = 8080
+
+    # 更新现有和单独爬
     token = ""
     cookie = ""
+
+    # 单独爬某个公众号
+    page = -1
+    biz = ""
+
     params = sys.argv[1:]
     for i in params:
         if i.find("-p") != -1:
             pos = params.index("-p")
             port = int(params[pos + 1])
-        if i.find("-t") != -1:
-            pos = params.index("-t")
-            token = params[pos + 1]
-        if i.find("-c") != -1:
-            pos = params.index("-c")
-            cookie = params[pos + 1]
 
     if token and cookie:
         try:
-            print(f"开始更新现有公众号文章链接")
             papa.token = token
             papa.cookie = cookie
             print(f"token：{papa.token}")
             print(f"cookie：{papa.cookie}")
             print()
-            run(start_update())
+            if page != -1 and biz:
+                run(fuck_one(biz, page))
+
+            else:
+                run(start_update())
+
         except KeyboardInterrupt:
             if papa.new_data_nickname:
-                msg = "\n".join([i for i in papa.new_data_nickname])
-                print(f"停止，以下文件夹有新数据\n{msg}")
+                msg = "\n".join(["* " + i for i in papa.new_data_nickname])
+                print(f"停止，以下公众号有新链接\n{msg}")
             else:
                 print(f"停止，没有新数据")
-
     else:
         try:
             print(f"开始监听{port}端口")
             run(start_proxy(port))
         except KeyboardInterrupt:
             if papa.new_data_nickname:
-                msg = "\n".join([i for i in papa.new_data_nickname])
-                print(f"停止，以下文件夹有新数据\n{msg}")
+                msg = "\n".join(["* " + i for i in papa.new_data_nickname])
+                print(f"停止，以下公众号有新链接\n{msg}")
             else:
                 print(f"停止，没有新数据")

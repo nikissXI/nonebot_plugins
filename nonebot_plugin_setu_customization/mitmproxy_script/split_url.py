@@ -4,7 +4,6 @@ in_path = "result"
 out_path = "wait_for_upload"
 if not path.exists(out_path):
     makedirs(out_path)
-    exit(f"{out_path}目录不存在，已创建")
 
 # 遍历文件夹
 path_one = listdir(in_path)
@@ -20,9 +19,6 @@ for nickname in path_one:
         lines = r.readlines()
     # 历史数据去重
     for line in lines:
-        # if line:
-        # print(line)
-        # exit()
         try:
             tt, uu = line.split(" *** ")
             history_data[uu.strip()] = line.strip()
