@@ -1,6 +1,5 @@
 from json import dump, load
 from os import makedirs, path
-
 from pathlib import Path
 from nonebot import get_driver
 from nonebot.log import logger
@@ -8,8 +7,10 @@ from pydantic import BaseModel, Extra
 
 
 class Config(BaseModel, extra=Extra.ignore):
-    # 使用用户qq号
-    nya_cook_user_list: list[int] = [1299577815, 569778891]
+    # 使用用户qq号 [1234, 5678]
+    nya_cook_user_list: list[int] = []
+    # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） ['1234','5678','6666']
+    nya_cook_bot_qqnum_list: list[str] = []  # 可选
     # 插件数据文件名
     nya_cook_data_filename: str = "nya_cook_data.json"
     # 字体文件路径

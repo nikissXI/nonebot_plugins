@@ -7,7 +7,7 @@
 
 # nonebot_plugin_nya_cook_menu
 
-_✨ Nonebot2 简单易用谷歌翻译插件，免key！ ✨_
+_✨ Nonebot2 喵喵自记菜谱 ✨_
 
 </div>
 <p align="center">

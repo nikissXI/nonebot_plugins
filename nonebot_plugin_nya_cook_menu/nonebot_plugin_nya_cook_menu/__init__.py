@@ -7,7 +7,7 @@ from nonebot.params import Arg
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 from .config import pc, var
-from .data_handle import add_menu, del_menu, text_to_img
+from .data_handle import add_menu, del_menu, text_to_img, handle_bot
 
 __plugin_meta__ = PluginMetadata(
     name="喵喵菜谱",
@@ -19,21 +19,19 @@ __plugin_meta__ = PluginMetadata(
 
 # 管理员判断
 async def rule_check(event: MessageEvent, bot: Bot) -> bool:
-    return event.user_id in pc.nya_cook_user_list and bot == bd.admin_bot
+    return event.user_id in pc.nya_cook_user_list and bot == handle_bot
 
 
 caipu = on_regex(r"^菜谱$", permission=rule_check)
 
 
 @caipu.handle()
-@handle_exception("菜谱")
 async def handle_caipu(state: T_State):
     await caipu.send("欢迎使用喵喵菜谱！进入菜谱交互模式~\n发送“帮助”查看命令说明")
     state["content"] = Message("菜谱")
 
 
 @caipu.got("content")
-@handle_exception("菜谱")
 async def handle_caipu_got(state: T_State, content: Message = Arg()):
     text = content.extract_plain_text().strip()
 
