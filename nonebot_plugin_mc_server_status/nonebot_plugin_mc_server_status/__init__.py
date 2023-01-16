@@ -1,13 +1,13 @@
 from re import findall
 from mcstatus import BedrockServer, JavaServer
-from nonebot import on_fullmatch, on_regex, get_driver, get_bot, get_bots
-from nonebot.adapters import Bot
-from nonebot.adapters.onebot.v11 import MessageSegment as MS
+from nonebot import on_fullmatch, on_regex
+from nonebot.adapters.onebot.v11 import MessageSegment as MS, Bot
 from nonebot.adapters.onebot.v11.event import GroupMessageEvent, MessageEvent
 from nonebot.log import logger
 from nonebot.params import RegexGroup
 from nonebot.plugin import PluginMetadata
-from .config import group_list, plugin_config as pc, save_file
+from core_plugins.core.utils import handle_exception
+from .config import var, pc, save_file
 from asyncio import gather
 
 __plugin_meta__ = PluginMetadata(
@@ -21,77 +21,13 @@ __plugin_meta__ = PluginMetadata(
 """,
 )
 
-handle_bot: None | Bot = None
-
-
-driver = get_driver()
-
-# qq机器人连接时执行
-@driver.on_bot_connect
-async def on_bot_connect(bot: Bot):
-    global handle_bot
-    # 是否有写bot qq，如果写了只处理bot qq在列表里的
-    if pc.mc_status_bot_qqnum_list and bot.self_id in pc.mc_status_bot_qqnum_list:
-        # 如果已经有bot连了
-        if handle_bot:
-            # 当前bot qq 下标
-            handle_bot_id_index = pc.mc_status_bot_qqnum_list.index(handle_bot.self_id)
-            # 连过俩的bot qq 下标
-            new_bot_id_index = pc.mc_status_bot_qqnum_list.index(bot.self_id)
-            # 判断优先级，下标越低优先级越高
-            if new_bot_id_index < handle_bot_id_index:
-                handle_bot = bot
-
-        # 没bot连就直接给
-        else:
-            handle_bot = bot
-
-    # 不写就给第一个连的
-    elif not handle_bot:
-        handle_bot = bot
-
-
-# qq机器人断开时执行
-@driver.on_bot_disconnect
-async def on_bot_disconnect(bot: Bot):
-    global handle_bot
-    # 判断掉线的是否为handle bot
-    if bot == handle_bot:
-        # 如果有写bot qq列表
-        if pc.mc_status_bot_qqnum_list:
-            # 获取当前连着的bot列表(需要bot是在bot qq列表里)
-            available_bot_id_list = [
-                bot_id for bot_id in get_bots() if bot_id in pc.mc_status_bot_qqnum_list
-            ]
-            if available_bot_id_list:
-                # 打擂台排序？
-                new_bot_index = pc.mc_status_bot_qqnum_list.index(
-                    available_bot_id_list[0]
-                )
-                for bot_id in available_bot_id_list:
-                    now_bot_index = pc.mc_status_bot_qqnum_list.index(bot_id)
-                    if now_bot_index < new_bot_index:
-                        new_bot_index = now_bot_index
-                # 取下标在qq列表里最小的bot qq为新的handle bot
-                handle_bot = get_bot(pc.mc_status_bot_qqnum_list[new_bot_index])
-            else:
-                handle_bot = None
-
-        # 不写就随便给一个连着的(如果有)
-        elif handle_bot:
-            try:
-                new_bot = get_bot()
-                handle_bot = new_bot
-            except ValueError:
-                handle_bot = None
-
 
 async def group_check(event: GroupMessageEvent, bot: Bot) -> bool:
-    return event.group_id in group_list and bot == handle_bot
+    return event.group_id in var.group_list and bot == var.handle_bot
 
 
 async def admin_check(event: MessageEvent, bot: Bot) -> bool:
-    return bot == handle_bot and event.user_id == pc.mc_status_admin_qqnum
+    return bot == var.handle_bot and event.user_id == pc.mc_status_admin_qqnum
 
 
 xinxi = on_fullmatch("信息", rule=group_check)
@@ -101,12 +37,13 @@ list_all = on_fullmatch("信息数据", rule=admin_check)
 
 
 @xinxi.handle()
+@handle_exception("MC信息")
 async def handle_xinxi(event: GroupMessageEvent):
     group = event.group_id
     task_list = []
-    for server_name in group_list[group]:
-        server_host = group_list[group][server_name][0]
-        server_type = group_list[group][server_name][1]
+    for server_name in var.group_list[group]:
+        server_host = var.group_list[group][server_name][0]
+        server_type = var.group_list[group][server_name][1]
         task_list.append(
             check_mc_status(
                 server_name,
@@ -126,6 +63,7 @@ async def handle_xinxi(event: GroupMessageEvent):
 
 
 @add_server.handle()
+@handle_exception("添加服务器")
 async def handle_add_server(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         await add_server.finish(
@@ -140,18 +78,19 @@ async def handle_add_server(matchgroup=RegexGroup()):
     if server_type not in ["js", "bds"]:
         await add_server.finish("类型请填js或bds")
 
-    if group not in group_list:
-        group_list[group] = {new_server_name: [server_host, server_type]}
+    if group not in var.group_list:
+        var.group_list[group] = {new_server_name: [server_host, server_type]}
     else:
-        for server_name in group_list[group]:
+        for server_name in var.group_list[group]:
             if new_server_name == server_name:
                 await add_server.finish("有同名服务器啦！")
-        group_list[group][new_server_name] = [server_host, server_type]
+        var.group_list[group][new_server_name] = [server_host, server_type]
     save_file()
     await add_server.finish("添加成功")
 
 
 @del_server.handle()
+@handle_exception("删除服务器")
 async def handle_del_server(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         await del_server.finish(f"删除服务器 [群号] [名称]")
@@ -159,13 +98,13 @@ async def handle_del_server(matchgroup=RegexGroup()):
         group = int(matchgroup[1])
         name = matchgroup[2]
 
-    if group not in group_list:
+    if group not in var.group_list:
         await del_server.finish("这个群没有添加服务器")
     else:
-        if name in group_list[group]:
-            group_list[group].pop(name)
-            if not group_list[group]:
-                group_list.pop(group)
+        if name in var.group_list[group]:
+            var.group_list[group].pop(name)
+            if not var.group_list[group]:
+                var.group_list.pop(group)
             save_file()
             await del_server.finish("删除成功")
         else:
@@ -173,12 +112,13 @@ async def handle_del_server(matchgroup=RegexGroup()):
 
 
 @list_all.handle()
+@handle_exception("列出所有")
 async def handle_list_all():
     msg = ""
-    for group_id in group_list:
+    for group_id in var.group_list:
         msg += f"群{group_id}服务器列表\n"
-        for server_name in group_list[group_id]:
-            server_host, server_type = group_list[group_id][server_name]
+        for server_name in var.group_list[group_id]:
+            server_host, server_type = var.group_list[group_id][server_name]
             msg += f"{server_name} {server_host} {server_type}\n"
         msg += "\n"
     if not msg:
