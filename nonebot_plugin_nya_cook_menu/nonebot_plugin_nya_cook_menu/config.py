@@ -17,7 +17,8 @@ class Config(BaseModel, extra=Extra.ignore):
     nya_cook_data_filename: str = "nya_cook_data.json"
     # 字体文件路径
     nya_cook_menu_font_path: str = f"{Path(__file__).parent}/font/HYWenHei-85W.ttf"
-
+    # 字体大小
+    nya_cook_menu_font_size: int = 18
 
 class Global_var:
     # 菜谱数据  {id : tuple[菜名，内容]}

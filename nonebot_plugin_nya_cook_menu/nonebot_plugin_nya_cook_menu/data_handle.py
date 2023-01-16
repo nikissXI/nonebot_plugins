@@ -12,7 +12,7 @@ def text_to_img(text: str, font_path: str = pc.nya_cook_menu_font_path) -> Bytes
     lines = text.splitlines()
     line_count = len(lines)
     # 读取字体
-    font = ImageFont.truetype(font_path, 16)
+    font = ImageFont.truetype(font_path, pc.nya_cook_menu_font_size)
     # 获取字体的行高
     left, top, width, line_height = font.getbbox("a")
     # 增加行距
