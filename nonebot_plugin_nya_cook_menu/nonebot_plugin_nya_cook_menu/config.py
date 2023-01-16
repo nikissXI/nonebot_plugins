@@ -4,6 +4,7 @@ from pathlib import Path
 from nonebot import get_driver
 from nonebot.log import logger
 from pydantic import BaseModel, Extra
+from nonebot.adapters import Bot
 
 
 class Config(BaseModel, extra=Extra.ignore):
@@ -26,6 +27,7 @@ driver = get_driver()
 global_config = driver.config
 pc = Config.parse_obj(global_config)
 var = Global_var()
+handle_bot: None | Bot = None
 
 
 def read_data():

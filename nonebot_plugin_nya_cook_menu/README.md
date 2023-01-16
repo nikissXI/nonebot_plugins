@@ -21,10 +21,8 @@ _✨ Nonebot2 喵喵自记菜谱 ✨_
 </p>
 
 ## 简介
-使用了sena-nana大佬给的接口，他的仓库
-<a href="https://github.com/sena-nana/nonebot-plugin-novelai/blob/main/nonebot_plugin_novelai/extension/translation.py">sena-nana/nonebot-plugin-novelai</a>，不需要使用梯子和api key就能使用的翻译插件
-
-<img width="500" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_nya_cook_menu/readme_img/fanyi.jpg"/>
+我和老婆经常做菜忘记以前某个菜咋做，于是就整了这个插件记录一下我们的菜谱，顺便发到商店，嘿嘿~  
+<img width="500" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_nya_cook_menu/readme_img/caipu.jpg"/>
 
 ## 安装
 
@@ -36,21 +34,24 @@ nb plugin install nonebot_plugin_nya_cook_menu
 或者  
 直接把插件clone下来放进去plugins文件夹
 
-## 可选配置
+## 配置
 在bot对应的.env文件修改
 
 ```bash
-# 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
+# 使用用户qq号，必填
+nya_cook_user_list: list[int] = [1234, 5678]
+# 机器人的QQ号列表，选填
+# 如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
 # 如果不填该配置则由第一个连上的bot响应
-easy_translate_bot_qqnum_list = ['1234','5678','6666']
+nya_cook_bot_qqnum_list = ['1234','5678','6666']
 ```
 
 ## 插件命令  
 | 指令 | 说明 |
 |:-----:|:----:|
-| 翻译 | 你发一下就知道啦 |
+| 菜谱 | 你发一下就知道啦 |
 
 ## 更新日志
-### 2023/1/15 \[v0.1.2]
+### 2023/1/16 \[v0.1.0]
 
 * 发布插件
