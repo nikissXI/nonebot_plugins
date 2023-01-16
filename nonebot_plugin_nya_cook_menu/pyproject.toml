@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "nonebot_plugin_nya_cook_menu"
+version = "0.1.0"
+description = "Nonebot2 喵喵自记菜谱"
+authors = ["nikissXI <1299577815@qq.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "nonebot_plugin_nya_cook_menu"}]
+homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_nya_cook_menu"
+repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_nya_cook_menu"
+documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_nya_cook_menu#README.md"
+
+[[tool.poetry.source]]
+name = "tsinghua"
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
+default = true
+
+[tool.poetry.dependencies]
+python = "^3.9"
+nonebot2 = "^2.0.0rc1"
+nonebot-adapter-onebot = "^2.0.0"
+httpx = "^0.22.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
