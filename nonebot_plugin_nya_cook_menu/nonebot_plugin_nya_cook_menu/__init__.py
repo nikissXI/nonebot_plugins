@@ -6,9 +6,8 @@ from nonebot.log import logger
 from nonebot.params import Arg
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
-from .config import pc, var, handle_bot
+from .config import pc, var
 from .data_handle import add_menu, del_menu, text_to_img
-from nonebot import get_bot, get_bots, get_driver
 
 __plugin_meta__ = PluginMetadata(
     name="喵喵自记菜谱",
@@ -19,71 +18,9 @@ __plugin_meta__ = PluginMetadata(
 )
 
 
-driver = get_driver()
-
-# qq机器人连接时执行
-@driver.on_bot_connect
-async def on_bot_connect(bot: Bot):
-    global handle_bot
-    # 是否有写bot qq，如果写了只处理bot qq在列表里的
-    if pc.nya_cook_bot_qqnum_list and bot.self_id in pc.nya_cook_bot_qqnum_list:
-        # 如果已经有bot连了
-        if handle_bot:
-            # 当前bot qq 下标
-            handle_bot_id_index = pc.nya_cook_bot_qqnum_list.index(handle_bot.self_id)
-            # 连过俩的bot qq 下标
-            new_bot_id_index = pc.nya_cook_bot_qqnum_list.index(bot.self_id)
-            # 判断优先级，下标越低优先级越高
-            if new_bot_id_index < handle_bot_id_index:
-                handle_bot = bot
-
-        # 没bot连就直接给
-        else:
-            handle_bot = bot
-
-    # 不写就给第一个连的
-    elif not handle_bot:
-        handle_bot = bot
-
-
-# qq机器人断开时执行
-@driver.on_bot_disconnect
-async def on_bot_disconnect(bot: Bot):
-    global handle_bot
-    # 判断掉线的是否为handle bot
-    if bot == handle_bot:
-        # 如果有写bot qq列表
-        if pc.nya_cook_bot_qqnum_list:
-            # 获取当前连着的bot列表(需要bot是在bot qq列表里)
-            available_bot_id_list = [
-                bot_id for bot_id in get_bots() if bot_id in pc.nya_cook_bot_qqnum_list
-            ]
-            if available_bot_id_list:
-                # 打擂台排序？
-                new_bot_index = pc.nya_cook_bot_qqnum_list.index(
-                    available_bot_id_list[0]
-                )
-                for bot_id in available_bot_id_list:
-                    now_bot_index = pc.nya_cook_bot_qqnum_list.index(bot_id)
-                    if now_bot_index < new_bot_index:
-                        new_bot_index = now_bot_index
-                # 取下标在qq列表里最小的bot qq为新的handle bot
-                handle_bot = get_bot(pc.nya_cook_bot_qqnum_list[new_bot_index])
-            else:
-                handle_bot = None
-
-        # 不写就随便给一个连着的(如果有)
-        elif handle_bot:
-            try:
-                new_bot = get_bot()
-                handle_bot = new_bot
-            except ValueError:
-                handle_bot = None
-
-
 # 管理员判断
 async def rule_check(event: MessageEvent, bot: Bot) -> bool:
-    return event.user_id in pc.nya_cook_user_list and bot == handle_bot
+    return event.user_id in pc.nya_cook_user_list and bot == var.handle_bot
 
 
 caipu = on_regex(r"^菜谱$", permission=rule_check)
@@ -98,7 +35,6 @@ async def handle_caipu(state: T_State):
 @caipu.got("content")
 async def handle_caipu_got(content: Message = Arg()):
     text = content.extract_plain_text().strip()
-
     if text == "0":
         await caipu.finish("ByeBye~")
 
@@ -122,7 +58,10 @@ async def handle_caipu_got(content: Message = Arg()):
 
     if text[:2] == "增加":
         text = text[2:].strip()
-        blank_pos = text.strip().find(" ")
+        if text.splitlines()[0].find(" ") != -1:
+            blank_pos = text.strip().find(" ")
+        else:
+            blank_pos = text.strip().find("\n")
         menu_name = text[:blank_pos].strip()
         menu_recipe = text[blank_pos:].strip()
         id = add_menu(menu_name, menu_recipe)
