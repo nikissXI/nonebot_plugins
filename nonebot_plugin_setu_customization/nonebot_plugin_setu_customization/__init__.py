@@ -6,10 +6,9 @@ from random import choice
 from re import search
 from urllib.parse import unquote
 from zipfile import ZipFile
-
 from httpx import AsyncClient
 from httpx_socks import AsyncProxyTransport
-from nonebot import on_fullmatch, on_notice, on_regex, get_driver, get_bot, get_bots
+from nonebot import on_fullmatch, on_notice, on_regex
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.adapters.onebot.v11 import PrivateMessageEvent, helpers
@@ -21,11 +20,10 @@ from nonebot.typing import T_State
 from PIL import Image
 from .config import (
     load_local_api,
-    plugin_config as pc,
+    pc,
     save_data,
     soutu_options,
     var,
-    handle_bot,
 )
 from .data_handle import (
     download_img,
@@ -60,71 +58,10 @@ __plugin_meta__ = PluginMetadata(
 )
 
 
-driver = get_driver()
-
-# qq机器人连接时执行
-@driver.on_bot_connect
-async def on_bot_connect(bot: Bot):
-    global handle_bot
-    # 是否有写bot qq，如果写了只处理bot qq在列表里的
-    if pc.tutu_bot_qqnum_list and bot.self_id in pc.tutu_bot_qqnum_list:
-        # 如果已经有bot连了
-        if handle_bot:
-            # 当前bot qq 下标
-            handle_bot_id_index = pc.tutu_bot_qqnum_list.index(handle_bot.self_id)
-            # 连过俩的bot qq 下标
-            new_bot_id_index = pc.tutu_bot_qqnum_list.index(bot.self_id)
-            # 判断优先级，下标越低优先级越高
-            if new_bot_id_index < handle_bot_id_index:
-                handle_bot = bot
-
-        # 没bot连就直接给
-        else:
-            handle_bot = bot
-
-    # 不写就给第一个连的
-    elif not handle_bot:
-        handle_bot = bot
-
-
-# qq机器人断开时执行
-@driver.on_bot_disconnect
-async def on_bot_disconnect(bot: Bot):
-    global handle_bot
-    # 判断掉线的是否为handle bot
-    if bot == handle_bot:
-        # 如果有写bot qq列表
-        if pc.tutu_bot_qqnum_list:
-            # 获取当前连着的bot列表(需要bot是在bot qq列表里)
-            available_bot_id_list = [
-                bot_id for bot_id in get_bots() if bot_id in pc.tutu_bot_qqnum_list
-            ]
-            if available_bot_id_list:
-                # 打擂台排序？
-                new_bot_index = pc.tutu_bot_qqnum_list.index(available_bot_id_list[0])
-                for bot_id in available_bot_id_list:
-                    now_bot_index = pc.tutu_bot_qqnum_list.index(bot_id)
-                    if now_bot_index < new_bot_index:
-                        new_bot_index = now_bot_index
-                # 取下标在qq列表里最小的bot qq为新的handle bot
-                handle_bot = get_bot(pc.tutu_bot_qqnum_list[new_bot_index])
-
-            else:
-                handle_bot = None
-
-        # 不写就随便给一个连着的(如果有)
-        elif handle_bot:
-            try:
-                new_bot = get_bot()
-                handle_bot = new_bot
-            except ValueError:
-                handle_bot = None
-
-
 # 群判断
 async def permission_check(event: MessageEvent, bot: Bot) -> bool:
     if isinstance(event, GroupMessageEvent):
-        return event.group_id in var.group_list and bot == handle_bot
+        return event.group_id in var.group_list and bot == var.handle_bot
     elif isinstance(event, PrivateMessageEvent):
         return event.sub_type == "friend"
     else:
@@ -133,7 +70,7 @@ async def permission_check(event: MessageEvent, bot: Bot) -> bool:
 
 async def permission_check_st(event: MessageEvent, bot: Bot) -> bool:
     if isinstance(event, GroupMessageEvent):
-        return event.group_id in var.group_list_st and bot == handle_bot
+        return event.group_id in var.group_list_st and bot == var.handle_bot
     elif isinstance(event, PrivateMessageEvent):
         return event.sub_type == "friend"
     else:
@@ -142,11 +79,11 @@ async def permission_check_st(event: MessageEvent, bot: Bot) -> bool:
 
 # 管理员判断
 async def admin_check(event: MessageEvent, bot: Bot) -> bool:
-    return event.user_id == pc.tutu_admin_qqnum and bot == handle_bot
+    return event.user_id == pc.tutu_admin_qqnum and bot == var.handle_bot
 
 
 async def admin_upload_check(event: OfflineUploadNoticeEvent, bot: Bot) -> bool:
-    return event.user_id == pc.tutu_admin_qqnum and bot == handle_bot
+    return event.user_id == pc.tutu_admin_qqnum and bot == var.handle_bot
 
 
 tutu = on_regex(

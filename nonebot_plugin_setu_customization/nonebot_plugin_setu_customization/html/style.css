@@ -15,7 +15,7 @@ img {
 /*定义竖屏 css*/
 @media screen and (orientation:portrait) {
     img {
-        max-width: 80vw;
+        max-width: 99vw;
         margin: 0 0 10pt 0;
     }
 }

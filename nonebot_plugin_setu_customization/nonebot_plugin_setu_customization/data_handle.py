@@ -3,14 +3,14 @@ from datetime import datetime, timedelta
 from functools import wraps
 from io import BytesIO
 from os import listdir, remove, rename, rmdir
-from random import randint, choice
+from random import choice, randint
 from re import findall, search
 from traceback import format_exc
+from typing import Optional, Tuple, Union
 from urllib.parse import unquote
 from bs4 import BeautifulSoup
 from httpx import AsyncClient, Response
 from httpx_socks import AsyncProxyTransport
-from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import ActionFailed, Bot, Message, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.adapters.onebot.v11 import NetworkError
@@ -19,7 +19,7 @@ from nonebot.log import logger
 from nonebot.matcher import Matcher
 from PIL import Image, ImageDraw, ImageFont
 from ujson import dumps, loads
-from .config import plugin_config, var, handle_bot
+from .config import pc, var
 
 
 ###################################
@@ -57,14 +57,14 @@ def handle_exception(name: str):
     return wrapper
 
 
-def text_to_img(text: str, font_path: str = plugin_config.tutu_font_path) -> BytesIO:
+def text_to_img(text: str, font_path: str = pc.tutu_font_path) -> BytesIO:
     """
     字转图片
     """
     lines = text.splitlines()
     line_count = len(lines)
     # 读取字体
-    font = ImageFont.truetype(font_path, 16)
+    font = ImageFont.truetype(font_path, pc.tutu_font_size)
     # 获取字体的行高
     left, top, width, line_height = font.getbbox("a")
     # 增加行距
@@ -98,8 +98,8 @@ def pixiv_reverse_proxy(img_url: str, resize: bool = True) -> str:
     if img_url.find("/img-original/img/") != -1:
         img_url_group = img_url.replace("//", "").split("/")
         img_url_group.pop(0)
-        if plugin_config.tutu_pixiv_proxy:
-            img_url = plugin_config.tutu_pixiv_proxy + "/".join(img_url_group)
+        if pc.tutu_pixiv_proxy:
+            img_url = pc.tutu_pixiv_proxy + "/".join(img_url_group)
         else:
             img_url = f"https://{choice('abcdgi')}.jitsu.top/" + "/".join(img_url_group)
 
@@ -126,21 +126,17 @@ def url_diy_replace(img_url: str) -> str:
     if img_url.find("https://hefollo.com") != -1:
         img_url = img_url.replace("https://hefollo.com", "http://mc.nikiss.top:9896")
     # 新浪图床反代地址
-    if plugin_config.tutu_sina_img_proxy and img_url.find(".sinaimg.cn") != -1:
+    if pc.tutu_sina_img_proxy and img_url.find(".sinaimg.cn") != -1:
         img_url = img_url.replace(
             img_url[: img_url.find(".sinaimg.cn") + 11],
-            plugin_config.tutu_sina_img_proxy,
+            pc.tutu_sina_img_proxy,
         )
     # 微信图床反代地址
-    if plugin_config.tutu_wx_img_proxy and img_url.find("https://mmbiz.qpic.cn") != -1:
-        img_url = img_url.replace(
-            "https://mmbiz.qpic.cn", plugin_config.tutu_wx_img_proxy
-        )
+    if pc.tutu_wx_img_proxy and img_url.find("https://mmbiz.qpic.cn") != -1:
+        img_url = img_url.replace("https://mmbiz.qpic.cn", pc.tutu_wx_img_proxy)
     # B站图床反代地址
-    if plugin_config.tutu_bili_img_proxy and img_url.find("https://i0.hdslb.com") != -1:
-        img_url = img_url.replace(
-            "https://i0.hdslb.com", plugin_config.tutu_bili_img_proxy
-        )
+    if pc.tutu_bili_img_proxy and img_url.find("https://i0.hdslb.com") != -1:
+        img_url = img_url.replace("https://i0.hdslb.com", pc.tutu_bili_img_proxy)
     return unquote(img_url)
 
 
@@ -201,16 +197,14 @@ def del_soutu_cache_data(data_num: int):
     var.soutu_data.pop(data_num)
 
 
-async def send_error_msg(msg: str | Message):
-    if handle_bot:
-        await handle_bot.send_private_msg(
-            user_id=plugin_config.tutu_admin_qqnum, message=msg
-        )
+async def send_error_msg(msg: Union[str, Message]):
+    if var.handle_bot:
+        await var.handle_bot.send_private_msg(user_id=pc.tutu_admin_qqnum, message=msg)
 
 
 async def send_img_msg(matcher: Matcher, img_num: int, img_url: str):
     try:
-        if plugin_config.tutu_img_local_download:
+        if pc.tutu_img_local_download:
             ds, result = await download_img(img_url)
             if ds:
                 await matcher.send(f"No.{img_num}" + MS.image(result, timeout=30))
@@ -223,17 +217,15 @@ async def send_img_msg(matcher: Matcher, img_num: int, img_url: str):
         await matcher.send(f"No.{img_num}  {img_url}\n发送失败 {repr(e)}")
 
 
-async def download_img(img_url: str) -> tuple[bool, BytesIO | str]:
+async def download_img(img_url: str) -> Tuple[bool, Union[BytesIO, str]]:
     # 微信图床
-    if plugin_config.tutu_wx_img_proxy and img_url.find("https://mmbiz.qpic.cn") != -1:
+    if pc.tutu_wx_img_proxy and img_url.find("https://mmbiz.qpic.cn") != -1:
         headers = var.wx_headers
     # B站图床
-    elif (
-        plugin_config.tutu_bili_img_proxy and img_url.find("https://i0.hdslb.com") != -1
-    ):
+    elif pc.tutu_bili_img_proxy and img_url.find("https://i0.hdslb.com") != -1:
         headers = var.bili_headers
     # 新浪图床
-    elif plugin_config.tutu_sina_img_proxy and img_url.find(".sinaimg.cn") != -1:
+    elif pc.tutu_sina_img_proxy and img_url.find(".sinaimg.cn") != -1:
         headers = var.sina_headers
     else:
         headers = var.headers
@@ -241,12 +233,12 @@ async def download_img(img_url: str) -> tuple[bool, BytesIO | str]:
     socks5_proxy = None
     http_proxy = None
     if img_url.find("127.0.0.1") == -1:
-        if plugin_config.tutu_socks5_proxy:
-            socks5_proxy = AsyncProxyTransport.from_url(plugin_config.tutu_socks5_proxy)
-        if plugin_config.tutu_http_proxy:
-            http_proxy = plugin_config.tutu_http_proxy
+        if pc.tutu_socks5_proxy:
+            socks5_proxy = AsyncProxyTransport.from_url(pc.tutu_socks5_proxy)
+        if pc.tutu_http_proxy:
+            http_proxy = pc.tutu_http_proxy
 
-    async def _request_img(img_url: str) -> str | BytesIO:
+    async def _request_img(img_url: str) -> Union[str, BytesIO]:
         async with AsyncClient(
             headers=headers,
             transport=socks5_proxy,
@@ -281,7 +273,7 @@ async def download_img(img_url: str) -> tuple[bool, BytesIO | str]:
         return (False, result)
 
 
-def extract_img_url(text: str) -> str | None:
+def extract_img_url(text: str) -> Optional[str]:
     # 判断有没有original关键字，有就找原图
     if text.find('"original"') != -1:
         original_exists = True
@@ -311,21 +303,21 @@ def extract_img_url(text: str) -> str | None:
 
 async def get_img_url(
     api_url: str, cache_data: bool = False, api_test: int = 0
-) -> tuple[bool, str, str]:
+) -> Tuple[bool, str, str]:
     """
     向API发起请求，获取返回的图片url
     """
     socks5_proxy = None
     http_proxy = None
     if api_url.find("127.0.0.1") == -1:
-        if plugin_config.tutu_socks5_proxy:
-            socks5_proxy = AsyncProxyTransport.from_url(plugin_config.tutu_socks5_proxy)
-        if plugin_config.tutu_http_proxy:
-            http_proxy = plugin_config.tutu_http_proxy
+        if pc.tutu_socks5_proxy:
+            socks5_proxy = AsyncProxyTransport.from_url(pc.tutu_socks5_proxy)
+        if pc.tutu_http_proxy:
+            http_proxy = pc.tutu_http_proxy
 
     error_times = 0
 
-    async def _get_img_url(api_url: str) -> Response | str:
+    async def _get_img_url(api_url: str) -> Union[Response, str]:
         nonlocal error_times
         async with AsyncClient(
             headers=var.headers,
@@ -400,38 +392,36 @@ async def load_crawler_files(
     """
     读取待爬取的文章url文件
     """
-    if not listdir(f"{plugin_config.tutu_crawler_file_path}/{local_api_filename}"):
-        rmdir(f"{plugin_config.tutu_crawler_file_path}/{local_api_filename}")
-        await matcher.send(
-            f"{plugin_config.tutu_crawler_file_path}/{local_api_filename}是空文件夹，已删除"
-        )
+    if not listdir(f"{pc.tutu_crawler_file_path}/{local_api_filename}"):
+        rmdir(f"{pc.tutu_crawler_file_path}/{local_api_filename}")
+        await matcher.send(f"{pc.tutu_crawler_file_path}/{local_api_filename}是空文件夹，已删除")
         return
 
     async def _rename(new_fn) -> str:
-        old_pathname = f"{plugin_config.tutu_crawler_file_path}{local_api_filename}"
-        new_pathname = f"{plugin_config.tutu_crawler_file_path}{new_fn}"
+        old_pathname = f"{pc.tutu_crawler_file_path}{local_api_filename}"
+        new_pathname = f"{pc.tutu_crawler_file_path}{new_fn}"
         rename(old_pathname, new_pathname)
         await matcher.send(f"[{old_pathname}]已重命名为[{new_pathname}]")
         return new_fn
 
     if local_api_filename == "2":
-        local_api_filename = await _rename(plugin_config.tutu_self_anime_lib)
+        local_api_filename = await _rename(pc.tutu_self_anime_lib)
     elif local_api_filename == "3":
-        local_api_filename = await _rename(plugin_config.tutu_self_cosplay_lib)
+        local_api_filename = await _rename(pc.tutu_self_cosplay_lib)
 
     var.crawler_task = True
 
     while True:
-        files = listdir(f"{plugin_config.tutu_crawler_file_path}/{local_api_filename}")
+        files = listdir(f"{pc.tutu_crawler_file_path}/{local_api_filename}")
         if not files:
-            rmdir(f"{plugin_config.tutu_crawler_file_path}/{local_api_filename}")
-            await matcher.send(f"文件夹{local_api_filename}中的文件均爬取完成，文件夹已自动删除")
+            rmdir(f"{pc.tutu_crawler_file_path}/{local_api_filename}")
+            # await matcher.send(f"文件夹{local_api_filename}中的文件均爬取完成，文件夹已自动删除")
             break
         else:
             file = files[0]
 
         with open(
-            f"{plugin_config.tutu_crawler_file_path}/{local_api_filename}/{file}",
+            f"{pc.tutu_crawler_file_path}/{local_api_filename}/{file}",
             "r",
             encoding="utf-8",
         ) as r:
@@ -448,12 +438,12 @@ async def load_crawler_files(
             )
             finish_time = f"{now.hour:02d}:{now.minute:02d}:{now.second:02d}"
             await matcher.send(
-                f"开始提取{file}的数据开始爬取\nurl数量：{var.crawler_current_msg[1]}\n入库文件名：{var.crawler_current_msg[4]}\n预计完成时间：{finish_time}"
+                f"开始爬取 {file}\nurl数量：{var.crawler_current_msg[1]}\n入库文件名：{var.crawler_current_msg[4]}\n预计完成时间：{finish_time}"
             )
 
         def _save_data():
             with open(
-                f"{plugin_config.tutu_crawler_file_path}/{local_api_filename}/{file}",
+                f"{pc.tutu_crawler_file_path}/{local_api_filename}/{file}",
                 "w",
                 encoding="utf-8",
             ) as w:
@@ -491,10 +481,10 @@ async def load_crawler_files(
                 lines.remove(line)
                 await sleep(var.paqu_cooldown)
 
-        remove(f"{plugin_config.tutu_crawler_file_path}/{local_api_filename}/{file}")
+        remove(f"{pc.tutu_crawler_file_path}/{local_api_filename}/{file}")
 
         await matcher.send(
-            f"文件{file}中的数据全部爬取完成，该文件已删除\n爬取url：{var.crawler_current_msg[2]}个\n{local_api_filename}收录新图片：{var.crawler_current_msg[3]}张"
+            f"{file} 数据爬取完成\n{local_api_filename}收录新图片：{var.crawler_current_msg[3]}张"
         )
 
 
@@ -505,7 +495,7 @@ async def get_art_img_url(
     event: MessageEvent,
     bot: Bot,
     crawler: bool = False,
-) -> int | None:
+) -> Optional[int]:
     """
     爬取文章中的图片url
     """
@@ -564,12 +554,12 @@ async def get_art_img_url(
 
     # 自动爬取
     if crawler:
-        for k in plugin_config.tutu_crawler_keyword:
+        for k in pc.tutu_crawler_keyword:
             if title.find(k) != -1:
                 await matcher.send(f"文章：{title}\n{url}\n标题发现关键字【{k}】，忽略该文章")
                 return 0
 
-    async def _get_img_size(img_url) -> tuple[int, int, str]:
+    async def _get_img_size(img_url) -> Tuple[int, int, str]:
         nonlocal error_times
         try:
             # if art_type == "wx":
@@ -668,10 +658,7 @@ async def get_art_img_url(
     for width, height, img_url in gather_result:
         if width == -1:
             await matcher.finish(f"获取图片尺寸出错，终止爬取\n{img_url}")
-        elif (
-            width < plugin_config.tutu_crawler_min_width
-            or height < plugin_config.tutu_crawler_min_height
-        ):
+        elif width < pc.tutu_crawler_min_width or height < pc.tutu_crawler_min_height:
             continue
         else:
             var.api_list_local[filename].append(img_url)
@@ -680,7 +667,7 @@ async def get_art_img_url(
     if crawler:
         if img_list:
             with open(
-                f"{plugin_config.tutu_local_api_path}/{filename}",
+                f"{pc.tutu_local_api_path}/{filename}",
                 "a",
                 encoding="utf-8",
             ) as a:
@@ -689,7 +676,7 @@ async def get_art_img_url(
 
     elif img_list:
         with open(
-            f"{plugin_config.tutu_local_api_path}/{filename}",
+            f"{pc.tutu_local_api_path}/{filename}",
             "a",
             encoding="utf-8",
         ) as a:
@@ -740,7 +727,7 @@ async def get_soutu_result(
     id: int = 0,
     page_num: int = 1,
     in_params: dict = {},
-) -> str | int | dict:
+) -> Union[str, int, dict]:
     """
     获取搜图api返回结果
     """
@@ -811,6 +798,7 @@ async def get_soutu_result(
 
     # 遍历插画
     result_list = {}
+    # 查询某个插画
     if result_keyword == "illust":
         pid = aa[result_keyword]["id"]
         result_list[pid] = {
@@ -819,6 +807,7 @@ async def get_soutu_result(
             "uid": aa[result_keyword]["user"]["id"],
             "search": params[query_mode],
             "url_list": [],
+            "tags": aa[result_keyword]["tags"],
         }
         if aa[result_keyword]["meta_single_page"]:
             url = aa[result_keyword]["meta_single_page"]["original_image_url"]
@@ -848,7 +837,7 @@ async def get_soutu_result(
     elif result_list:
         data_num = soutu_cache_data(params[query_mode], result_list)
         get_running_loop().call_later(
-            plugin_config.web_view_time * 60, del_soutu_cache_data, data_num
+            pc.web_view_time * 60, del_soutu_cache_data, data_num
         )
         return data_num
     else:

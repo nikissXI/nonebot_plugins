@@ -1,13 +1,14 @@
 from asyncio import gather
 from pathlib import Path
 from random import choice
+from typing import Optional
 from nonebot import get_asgi
 from nonebot.log import logger
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-from .config import plugin_config, soutu_options, var
+from .config import pc, soutu_options, var
 from .data_handle import (
     fn_cache_sent_img,
     get_img_url,
@@ -24,11 +25,11 @@ templates = Jinja2Templates(directory=f"{Path(__file__).parent}/html")
 @app.get("/img_api")
 async def img_api(
     request: Request,
-    fn: str | None = None,
+    fn: Optional[str] = None,
     mode: str = "随机",
     fw: int = 0,
     c: int = 1,
-    api: str | None = None,
+    api: Optional[str] = None,
 ):
     img_url_list = []
     api_url_list = []
@@ -83,7 +84,7 @@ async def img_api(
                     [
                         img_type_i
                         for img_type_i in var.api_list_online
-                        if img_type_i != plugin_config.tutu_r18_name
+                        if img_type_i != pc.tutu_r18_name
                     ]
                 )
                 api_url_list.append(
@@ -138,7 +139,7 @@ async def img_api(
         type_urls = ""
         img_list = ""
         for m in var.api_list_online:
-            type_urls += f'<a href="img_api?c={c}&mode={m}">{"." if m == plugin_config.tutu_r18_name else m}</a> &emsp13;'
+            type_urls += f'<a href="img_api?c={c}&mode={m}">{"." if m == pc.tutu_r18_name else m}</a> &emsp13;'
         for success, img_url, img_num in img_url_list:
             if success:
                 img_list += f'<span>No.{img_num}</span><br /><p><a href="{img_url}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{url_diy_replace(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><br />'
@@ -178,8 +179,8 @@ async def soutu(
 @app.get("/sr")
 async def search_result(
     request: Request,
-    s: int | None = None,
-    r: int | None = None,
+    s: Optional[int] = None,
+    r: Optional[int] = None,
     query_type: str = "",
     word: str = "",
     mode: str = "",
@@ -215,7 +216,7 @@ async def search_result(
         result_list = var.soutu_data[s][1]
         for pid in result_list:
             data = result_list[pid]
-            out_text += f"<span>插画 {data['title']}&emsp13;id {pid}</span><br/><span>画师 {data['uname']}&emsp13;id {data['uid']}</span><br/>"
+            out_text += f"<span><strong>插画</strong> {data['title']}&emsp13;id {pid}</span><br/><span><strong>画师</strong> {data['uname']}&emsp13;id {data['uid']}</span><br/>"
             for img_url in data["url_list"]:
                 out_text += f'<p><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><br/>'
     # 翻页
@@ -256,7 +257,16 @@ async def search_result(
             if result_list:
                 for pid in result_list:
                     data = result_list[pid]
-                    out_text += f"<span>插画 {data['title']}&emsp13;id {pid}</span><br/><span>画师 {data['uname']}&emsp13;id {data['uid']}</span><br/>"
+                    out_text += f"<span><strong>插画</strong> {data['title']}&emsp13;id {pid}</span><br/><span><strong>画师</strong> {data['uname']}&emsp13;id {data['uid']}</span><br/>"
+                    if query_type == "illust":
+                        out_text += "<strong>标签 </strong>"
+                        for t in data["tags"]:
+                            out_text += t["name"]
+                            if t["translated_name"]:
+                                out_text += f"({t['translated_name']})"
+                            out_text += "&emsp13;"
+                        out_text += "<br/>"
+
                     for img_url in data["url_list"]:
                         out_text += f'<p><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><br/>'
             else:
@@ -293,7 +303,9 @@ async def search_result(
     next_page = f'<a href="{new_url}&page={page+1}">下一页</a>'
 
     if query_type == "illust":
-        last_page = next_page = c_page = ""
+        last_page = ""
+        next_page = ""
+        c_page = ""
     else:
         c_page = f"第{page}页"
 

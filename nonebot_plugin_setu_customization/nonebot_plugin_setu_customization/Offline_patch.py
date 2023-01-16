@@ -1,13 +1,8 @@
 from typing import Type, TypeVar
-
-from nonebot.adapters.onebot.v11 import (
-    Adapter,
-    Event,
-    NoticeEvent,
-)
-from typing_extensions import Literal
-from pydantic import BaseModel
+from nonebot.adapters.onebot.v11 import Adapter, Event, NoticeEvent
 from nonebot.typing import overrides
+from pydantic import BaseModel
+from typing_extensions import Literal
 
 Event_T = TypeVar("Event_T", bound=Type[Event])
 
