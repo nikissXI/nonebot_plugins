@@ -71,7 +71,7 @@ tutu_self_cosplay_lib = self_cosplay
 # 插件数据文件名
 tutu_data_filename = tutu_data.json
 # 自定义字体文件路径（要填真实路径，这里只是举个例子）
-tutu_font_path = __file__/font/msyh.ttf
+tutu_font_path = __file__/font/HYWenHei-85W.ttf
 # 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
 tutu_site_url = http://127.0.0.1:8080
 # pixiv图片反代地址，自己可以看看哪个快用哪个 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/ 、 https://c.jitsu.top/

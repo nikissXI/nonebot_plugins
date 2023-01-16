@@ -34,7 +34,7 @@ class Config(BaseModel, extra=Extra.ignore):
     # 插件数据文件名
     tutu_data_filename: str = "tutu_data.json"
     # 字体文件路径
-    tutu_font_path: str = f"{Path(__file__).parent}/font/msyh.ttf"
+    tutu_font_path: str = f"{Path(__file__).parent}/font/HYWenHei-85W.ttf"
     # 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
     port: int = 8080
     tutu_site_url: str = f"http://127.0.0.1:{port}"
