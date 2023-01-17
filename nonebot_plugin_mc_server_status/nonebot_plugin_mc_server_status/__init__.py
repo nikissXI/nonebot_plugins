@@ -6,7 +6,6 @@ from nonebot.adapters.onebot.v11.event import GroupMessageEvent, MessageEvent
 from nonebot.log import logger
 from nonebot.params import RegexGroup
 from nonebot.plugin import PluginMetadata
-from core_plugins.core.utils import handle_exception
 from .config import var, pc, save_file
 from asyncio import gather
 
@@ -37,7 +36,6 @@ list_all = on_fullmatch("信息数据", rule=admin_check)
 
 
 @xinxi.handle()
-@handle_exception("MC信息")
 async def handle_xinxi(event: GroupMessageEvent):
     group = event.group_id
     task_list = []
@@ -63,7 +61,6 @@ async def handle_xinxi(event: GroupMessageEvent):
 
 
 @add_server.handle()
-@handle_exception("添加服务器")
 async def handle_add_server(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         await add_server.finish(
@@ -90,7 +87,6 @@ async def handle_add_server(matchgroup=RegexGroup()):
 
 
 @del_server.handle()
-@handle_exception("删除服务器")
 async def handle_del_server(matchgroup=RegexGroup()):
     if not matchgroup[0]:
         await del_server.finish(f"删除服务器 [群号] [名称]")
@@ -112,7 +108,6 @@ async def handle_del_server(matchgroup=RegexGroup()):
 
 
 @list_all.handle()
-@handle_exception("列出所有")
 async def handle_list_all():
     msg = ""
     for group_id in var.group_list:
