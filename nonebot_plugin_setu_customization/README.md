@@ -52,7 +52,7 @@ tutu_admin_qqnum = 114514
 # 非必填项
 # 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
 # 如果不填该配置则由第一个连上的bot响应
-tutu_bot_qqnum_list = ['1234','5678','6666']
+tutu_bot_qqnum_list = [1234,5678,6666]
 # 图片下载模式，true则nonebot下载，false则协议端下载
 tutu_img_local_download = true
 # 图图命令CD时间（秒）

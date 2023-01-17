@@ -42,7 +42,7 @@ nb plugin install nonebot_plugin_easy_translate
 ```bash
 # 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
 # 如果不填该配置则由第一个连上的bot响应
-easy_translate_bot_qqnum_list = ['1234','5678','6666']
+easy_translate_bot_qqnum_list = [1234,5678,6666]
 ```
 
 ## 插件命令  

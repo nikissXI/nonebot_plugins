@@ -43,7 +43,7 @@ nya_cook_user_list: list[int] = [1234, 5678]
 # 机器人的QQ号列表，选填
 # 如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
 # 如果不填该配置则由第一个连上的bot响应
-nya_cook_bot_qqnum_list = ['1234','5678','6666']
+nya_cook_bot_qqnum_list = [1234,5678,6666]
 ```
 
 ## 插件命令  
