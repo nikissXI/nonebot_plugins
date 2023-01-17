@@ -18,7 +18,7 @@ _✨ Nonebot2查询MC服务器在线信息插件 ✨_
   <a href="https://v2.nonebot.dev/">
     <img src="https://img.shields.io/static/v1?label=nonebot&message=v2rc1%2B&color=green" alt="nonebot2">
   </a>
-  <img src="https://img.shields.io/static/v1?label=python+&message=3.9%2B&color=blue" alt="python">
+  <img src="https://img.shields.io/static/v1?label=python+&message=3.8%2B&color=blue" alt="python">
 </p>
 
 ## 简介
