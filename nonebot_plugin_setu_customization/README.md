@@ -26,6 +26,7 @@ _✨ Nonebot2 可动态管理API并带网页浏览的setu插件 ✨_
 
 <img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/soutu.jpg"/><img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_web.jpg"/>  <img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_test.jpg"/>
 
+### 搜图功能目前用不了了，因为接口被关了
 
 ## 安装
 
