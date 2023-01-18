@@ -80,15 +80,15 @@ tutu_site_url = http://127.0.0.1:8080
 # pixiv图片反代地址，自己可以看看哪个快用哪个 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/ 、 https://c.jitsu.top/
 tutu_pixiv_proxy = https://i.pixiv.re/
 # http代理地址，如 http://127.0.0.1:1234
-tutu_http_proxy = None
+tutu_http_proxy = none
 # socks5代理地址，如 socks5://127.0.0.1:1234
-tutu_socks5_proxy = None
+tutu_socks5_proxy = none
 # 使用网页访问时，新浪图片反代地址，不用网页浏览可不填，如 http://img.example.top:514
 tutu_sina_img_proxy = https://i0.wp.com/tvax1.sinaimg.cn/
 # 使用网页访问时，微信图片反代地址，不用网页浏览可不填，如 http://img.example.top:114
-tutu_wx_img_proxy = None
+tutu_wx_img_proxy = none
 # 使用网页访问时，B站图片反代地址，不用网页浏览可不填，如 http://img.example.top:514
-tutu_bili_img_proxy = None
+tutu_bili_img_proxy = none
 # 爬取文章图片时，图片的宽或高小于多少忽略爬取
 tutu_crawler_min_width =  500
 tutu_crawler_min_height =  500
