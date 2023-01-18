@@ -155,7 +155,7 @@ https://moe.anosu.top/img/?sort=r18
 没收集到好的，但是我爬了很多，在仓库的tutu_local_img_lib文件夹，下载放进去data/tutu_local_img_lib/里面，没事来看看有没有更新，里面也有二次元的
 
 **本地图片库**  
-即data/tutu_local_img_lib/中的图片，放入图片url文件后，使用命令“图图插件接口管理 刷新本地”进行导入  
+即data/tutu_local_img_lib/中的图片，放入图片url文件后，使用命令“图图接口管理 刷新本地”进行导入  
 访问接口url如果没有在.env配置tutu_site_url，就是nonebot的地址和端口号，如绑定的host=127.0.0.1，port=8080，就是http://127.0.0.1:8080/img_api?fw=1&fn=<filename\>
 | 参数 | 说明 |
 |:-----:|:----:|
@@ -166,14 +166,14 @@ https://moe.anosu.top/img/?sort=r18
 
 ```bash
 # 添加一个接口到二次元类型接口
-图图插件接口管理 二次元 + https://api.lolicon.app/setu/v2
+图图接口管理 二次元 + https://api.lolicon.app/setu/v2
 # 支持批量添加接口
-图图插件接口管理 二次元 + 
+图图接口管理 二次元 + 
 https://api.lolicon.app/setu/v2  
 http://api.tangdouz.com/sjdmbz.php  
 https://api.dujin.org/pic/yuanshen/  
 # 添加一个本地图片库接口到三次元类型接口
-图图插件接口管理 三次元 + 本地图库self_cosplay
+图图接口管理 三次元 + 本地图库self_cosplay
 # 爬取一篇微信文章的图片到本地图片库self_anime
 https://mp.weixin.qq.com/s/IHeYqZTu8xYLv7nDkRwxUQ self_anime
 # 该命令等效于上面的命令 默认2指self_anime，3指self_cosplay
