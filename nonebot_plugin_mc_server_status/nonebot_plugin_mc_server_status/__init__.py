@@ -8,6 +8,8 @@ from nonebot.params import RegexGroup
 from nonebot.plugin import PluginMetadata
 from .config import var, pc, save_file
 from asyncio import gather
+from base64 import b64decode
+from io import BytesIO
 
 __plugin_meta__ = PluginMetadata(
     name="MC服务器查询插件",
@@ -153,7 +155,7 @@ async def check_mc_status(name: str, host: str, server_type: str) -> str:
             # base64图标
             if status.favicon:
                 aa, bb = status.favicon.split("base64,")
-                icon = MS.image(f"base64://{bb}") + "\n"
+                icon = MS.image(BytesIO(b64decode(bb))) + "\n"
             else:
                 icon = ""
             msg = f"{icon}名称：{name} 【{version}】\n在线：{online}  延迟：{latency}ms\n◤ {player_list} ◢"
@@ -163,7 +165,7 @@ async def check_mc_status(name: str, host: str, server_type: str) -> str:
                 host, port = host.split(":")
             else:
                 host, port = host, 19132
-            bds = BedrockServer(host="mc.nikiss.top", port=int(port))
+            bds = BedrockServer(host=host, port=int(port))
             status = await bds.async_status()
             online = f"{status.players_online}/{status.players_max}"
             latency = round(status.latency)
