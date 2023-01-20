@@ -1,8 +1,13 @@
 from re import findall
 from mcstatus import BedrockServer, JavaServer
 from nonebot import on_fullmatch, on_regex
-from nonebot.adapters.onebot.v11 import MessageSegment as MS, Bot
-from nonebot.adapters.onebot.v11.event import GroupMessageEvent, MessageEvent
+from nonebot.adapters.onebot.v11 import (
+    MessageSegment as MS,
+    Bot,
+    Message,
+    GroupMessageEvent,
+    MessageEvent,
+)
 from nonebot.log import logger
 from nonebot.params import RegexGroup
 from nonebot.plugin import PluginMetadata
@@ -10,6 +15,7 @@ from .config import var, pc, save_file
 from asyncio import gather
 from base64 import b64decode
 from io import BytesIO
+from typing import Union
 
 __plugin_meta__ = PluginMetadata(
     name="MC服务器查询插件",
@@ -123,7 +129,9 @@ async def handle_list_all():
     await list_all.finish(f"mc_status数据\n{msg}")
 
 
-async def check_mc_status(name: str, host: str, server_type: str) -> str:
+async def check_mc_status(
+    name: str, host: str, server_type: str
+) -> Union[str, Message]:
     try:
         if server_type == "js":
             js = await JavaServer.async_lookup(host, timeout=5)
@@ -158,7 +166,10 @@ async def check_mc_status(name: str, host: str, server_type: str) -> str:
                 icon = MS.image(BytesIO(b64decode(bb))) + "\n"
             else:
                 icon = ""
-            msg = f"{icon}名称：{name} 【{version}】\n在线：{online}  延迟：{latency}ms\n◤ {player_list} ◢"
+            msg = (
+                icon
+                + f"名称：{name} 【{version}】\n在线：{online}  延迟：{latency}ms\n◤ {player_list} ◢"
+            )
 
         else:
             if host.find(":") != -1:
