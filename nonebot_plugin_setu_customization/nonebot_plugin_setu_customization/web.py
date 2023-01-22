@@ -1,7 +1,7 @@
 from asyncio import gather
 from pathlib import Path
 from random import choice
-from typing import Optional
+from typing import Optional, Union
 from nonebot import get_asgi
 from nonebot.log import logger
 from starlette.requests import Request
@@ -12,10 +12,10 @@ from .config import pc, soutu_options, var
 from .data_handle import (
     fn_cache_sent_img,
     get_img_url,
-    get_soutu_result,
     pixiv_reverse_proxy,
     url_diy_replace,
 )
+from .pixivapi import Pixiv
 
 app = get_asgi()
 app.mount("/tutu", StaticFiles(directory=f"{Path(__file__).parent}/html"), name="tutu")
@@ -167,146 +167,197 @@ async def img_api(
 @app.get("/soutu")
 async def soutu(
     request: Request,
-):
-    return templates.TemplateResponse(
-        "soutu.html",
-        {
-            "request": request,
-        },
-    )
-
-
-@app.get("/sr")
-async def search_result(
-    request: Request,
-    s: Optional[int] = None,
-    r: Optional[int] = None,
+    sk: int = 0,
     query_type: str = "",
     word: str = "",
+    search_target: str = "",
+    sort: str = "",
+    bookmark_num_min: Union[str, int] = "",
+    bookmark_num_max: Union[str, int] = "",
     mode: str = "",
-    order: str = "",
     date: str = "",
-    id: int = 0,
+    user_id: int = 0,
+    illust_id: int = 0,
     page: int = 1,
 ):
-    if (not s and not r) or (s and r):
+    """
+    pixiv搜图
+    """
+    if not pc.pixiv_refresh_token:
         return templates.TemplateResponse(
             "show_info.html",
             {
                 "request": request,
-                "msg": "？",
-            },
-        )
-    elif not r and s not in var.soutu_data:
-        return templates.TemplateResponse(
-            "show_info.html",
-            {
-                "request": request,
-                "msg": "失效链接",
+                "msg": "refresh token未配置",
             },
         )
 
-    # 第一次访问（直接拿数据
-    if s:
-        # 插画id：{title插画名称 uname画师名称 uid画师id url_list插画数据}
-        out_text = ""
-        query_type = var.soutu_data[s][0]["type"]
-        page = var.soutu_data[s][0]["page"]
-        params = {query_type: var.soutu_data[s][0]}
-        result_list = var.soutu_data[s][1]
-        for pid in result_list:
-            data = result_list[pid]
-            out_text += f"<span><strong>插画</strong> {data['title']}&emsp13;id {pid}</span><br/><span><strong>画师</strong> {data['uname']}&emsp13;id {data['uid']}</span><br/>"
-            for img_url in data["url_list"]:
-                out_text += f'<p><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><br/>'
-    # 翻页
+    if sk not in var.soutu_key_live:
+        return templates.TemplateResponse(
+            "show_info.html",
+            {
+                "request": request,
+                "msg": "链接失效，请私聊机器人发“搜图”获取新链接",
+            },
+        )
     else:
-        params = {
-            "search": {
-                "type": "search",
-                "word": word,
-                "mode": mode,
-                "order": order,
-                "page": page,
-            },
-            "rank": {
-                "type": "rank",
-                "mode": mode,
-                "date": date,
-                "page": page,
-            },
-            "member_illust": {
-                "type": "member_illust",
-                "id": id,
-                "page": page,
-            },
-            "illust": {
-                "type": "illust",
-                "id": id,
-                "page": page,
-            },
-            "related": {
-                "type": "related",
-                "id": id,
-                "page": page,
-            },
-        }
-        out_text = ""
-        result_list = await get_soutu_result("roll", in_params=params[query_type])
-        if isinstance(result_list, dict):
-            if result_list:
-                for pid in result_list:
-                    data = result_list[pid]
-                    out_text += f"<span><strong>插画</strong> {data['title']}&emsp13;id {pid}</span><br/><span><strong>画师</strong> {data['uname']}&emsp13;id {data['uid']}</span><br/>"
-                    if query_type == "illust":
-                        out_text += "<strong>标签 </strong>"
-                        for t in data["tags"]:
-                            out_text += t["name"]
-                            if t["translated_name"]:
-                                out_text += f"({t['translated_name']})"
-                            out_text += "&emsp13;"
-                        out_text += "<br/>"
+        var.soutu_key_live[sk] = pc.pixiv_sk_time
 
-                    for img_url in data["url_list"]:
-                        out_text += f'<p><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><br/>'
-            else:
-                out_text = "<h1>空空的</h1>"
+    if not query_type:
+        return templates.TemplateResponse(
+            "soutu.html",
+            {
+                "request": request,
+                "sk": sk,
+            },
+        )
+
+    offset = (page - 1) * 30
+    params = {
+        "search_illust": {
+            "word": word,
+            "search_target": search_target,
+            "sort": sort,
+            "offset": offset,
+        },
+        "illust_ranking": {
+            "mode": mode,
+            "date": date,
+            "offset": offset,
+        },
+        "illust_recommended": {
+            "offset": offset,
+        },
+        "user_illusts": {
+            "user_id": user_id,
+            "offset": offset,
+        },
+        "illust_detail": {
+            "illust_id": illust_id,
+        },
+        "illust_related": {
+            "illust_id": illust_id,
+            "offset": offset,
+        },
+    }
+    if query_type == "search_illust":
+        if not bookmark_num_min:
+            bookmark_num_min = 0
+        if not bookmark_num_max:
+            bookmark_num_max = 0
+        bookmark_num_min, bookmark_num_max = int(bookmark_num_min), int(
+            bookmark_num_max
+        )
+        if bookmark_num_min > 0:
+            params[query_type]["bookmark_num_min"] = bookmark_num_min
+        if bookmark_num_max > 0:
+            params[query_type]["bookmark_num_max"] = bookmark_num_max
+
+    try:
+        api = Pixiv(http_proxy=pc.tutu_http_proxy, socks5_proxy=pc.tutu_socks5_proxy)
+        await api.auth(refresh_token=pc.pixiv_refresh_token)
+        resp_json = await getattr(api, query_type)(**params[query_type])
+    except Exception as e:
+        msg = f"搜图请求出错：{e}"
+        logger.error(msg)
+        return msg
+
+    if query_type == "illust_detail":
+        result_keyword = "illust"
+
+    else:
+        result_keyword = "illusts"
+
+    if result_keyword not in resp_json:
+        return templates.TemplateResponse(
+            "show_info.html",
+            {
+                "request": request,
+                "msg": "无结果",
+            },
+        )
+    else:
+        # 遍历数据
+        out_text = ""
+        result_list = []
+        if result_keyword == "illust":
+            result_list.append(resp_json[result_keyword])
         else:
-            out_text = f"error!\n{result_list}"
+            result_list = resp_json[result_keyword]
 
-    if query_type == "search":
-        title = "搜索：" + params[query_type]["word"].replace(
-            "-R-18", '<span style="text-decoration:line-through">R18</span>'
-        )
-    elif query_type == "rank":
-        title = f"{soutu_options['_rank'][params[query_type]['mode']]} {params[query_type]['date'] if params[query_type]['date'] else ''}"
-    elif query_type == "illust":
-        title = f"作品id{params[query_type]['id']}详情"
-    elif query_type == "member_illust":
-        title = f"画师id{params[query_type]['id']}的作品"
+    more_num = 1
+    for d in result_list:
+        # 分割线
+        out_text += '<br /><div style="background-color: rgb(255, 93, 155);height:10px;width:100%;margin-top:20px;"></div>'
+        # 插画简介
+        out_text += f"<span><strong>插画</strong> {d['title']}&emsp13;id {d['id']}</span><br/><span><strong>画师</strong> {d['user']['name']}&emsp13;id {d['user']['id']}</span><br/>"
+
+        # tags，查询插画详情时显示
+        if result_keyword == "illust":
+            out_text += "<strong>标签 </strong>"
+            if d["illust_ai_type"] != 0:
+                out_text += "<strong>AI生成</strong>&emsp13;"
+            for t in d["tags"]:
+                out_text += t["name"]
+                if t["translated_name"]:
+                    out_text += f"({t['translated_name']})"
+                out_text += "&emsp13;"
+            out_text += "<br/>"
+
+        # 获取图片链接, 输出图片
+        if d["meta_single_page"]:
+            img_url = d["meta_single_page"]["original_image_url"]
+            if img_url.find("ugoira") == -1:
+                out_text += f'<p><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p>'
+            else:
+                out_text += f'<p>动图无法预览<br/><img alt="点我重新加载试试" src="{pixiv_reverse_proxy(img_url,resize=False)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p>'
+        else:
+            first_pic = True
+            for mp in d["meta_pages"]:
+                img_url = mp["image_urls"]["original"]
+                if first_pic:
+                    first_pic = False
+                    out_text += f'<p><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p><button id="button{more_num}" onclick="show({more_num})">点击查看/隐藏余下{len(d["meta_pages"])-1}张</button><div id="more{more_num}" style="display:none;">'
+                else:
+                    out_text += f'<p><a href="{pixiv_reverse_proxy(img_url, resize=False)}">点击查看原图</a><br/><img alt="点我重新加载试试" src="{pixiv_reverse_proxy(img_url)}" onclick="this.src=this.src+\'?\'" loading="lazy"></p>'
+            out_text += "</div>"
+            more_num += 1
+
+    # 根据不同的
+    if query_type == "search_illust":
+        title = "搜索：" + params[query_type]["word"]
+    elif query_type == "illust_ranking":
+        title = f"{soutu_options['rank_name'][params[query_type]['mode']]} {params[query_type]['date'] if params[query_type]['date'] else ''}"
+    elif query_type == "user_illusts":
+        title = f"画师id{params[query_type]['user_id']}的作品"
+    elif query_type == "illust_detail":
+        title = f"作品id{params[query_type]['illust_id']}详情"
+    elif query_type == "illust_recommended":
+        title = f"随机推荐"
     else:
-        title = f"插画id{params[query_type]['id']}相关插画"
+        title = f"插画id{params[query_type]['illust_id']}相关插画"
 
-    new_url = f"sr?r=1"
-    # 拼接参数
+    # 拼接翻页链接
+    page_params = f"soutu?sk={sk}&query_type={query_type}"
     for k, v in params[query_type].items():
-        if k == "type":
-            k = "query_type"
-        if k != "page":
-            new_url += f"&{k}={v}"
+        if k != "offset":
+            page_params += f"&{k}={v}"
 
-    if page > 1:
-        last_page = f'<a href="{new_url}&page={page-1}">上一页</a>'
-    else:
-        last_page = "到头啦"
-
-    next_page = f'<a href="{new_url}&page={page+1}">下一页</a>'
-
-    if query_type == "illust":
+    if query_type == "illust_detail":
         last_page = ""
         next_page = ""
         c_page = ""
     else:
+        if page != 1:
+            last_page = f'<a href="{page_params}&page={page-1}">上一页</a>'
+        else:
+            last_page = "到头啦"
+
+        if resp_json["next_url"]:
+            next_page = f'<a href="{page_params}&page={page+1}">下一页</a>'
+        else:
+            next_page = "到底啦"
+
         c_page = f"第{page}页"
 
     return templates.TemplateResponse(
@@ -318,5 +369,6 @@ async def search_result(
             "last_page": last_page,
             "c_page": c_page,
             "next_page": next_page,
+            "sk": sk,
         },
     )

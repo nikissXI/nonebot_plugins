@@ -4,6 +4,7 @@ from os import listdir, makedirs, path
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 from nonebot import get_bot, get_bots, get_driver
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from nonebot.adapters import Bot
 from nonebot.log import logger
@@ -22,8 +23,12 @@ class Config(BaseModel, extra=Extra.ignore):
     tutu_cooldown: int = 3
     # 一次最多发多少张图
     once_send: int = 5
+
+    # 搜图功能的，pixiv refresh_token
+    pixiv_refresh_token: str = ""
     # 搜图结果链接有效时间（分钟）
-    web_view_time: int = 10
+    pixiv_sk_time: int = 10
+
     # R18类别的名称
     tutu_r18_name: str = "R18"
     # 本地图片库的路径
@@ -101,8 +106,9 @@ class Var:
     # 网页浏览个人库时发送过去的图片数据  图片序号
     fn_sent_img_filename_data: Dict[int, str] = {}
     fn_sent_img_imgurl_data: Dict[int, str] = {}
-    # 搜图结果
-    soutu_data: Dict[int, Tuple[dict, dict]] = {}
+    # 搜图key
+    soutu_key_live: Dict[int, int] = {}
+    soutu_user_key: Dict[int, int] = {}
     # 是否有爬取任务
     crawler_task = False
     # 当前任务文件名，总数，剩余数，爬取图片数量，入库名
@@ -197,37 +203,16 @@ async def on_startup():
 
 
 soutu_options = {
-    "order": {
-        1: "popular_desc",
-        2: "popular_male_desc",
-        3: "popular_female_desc",
-        4: "date_desc",
-        5: "date_asc",
-    },
-    "match": {
-        1: "partial_match_for_tags",
-        2: "exact_match_for_tags",
-        3: "title_and_caption",
-    },
-    "rank": {
-        "日榜": "day",
-        "周榜": "week",
-        # "月榜": "month",
-        "新人周榜": "week_rookie",
-        # "原创": "week_original",
-        "男日榜": "day_male",
-        "女日榜": "day_female",
-        "R18日榜": "day_r18",
-        "R18男日榜": "day_male_r18",
-        "R18女日榜": "day_female_r18",
-        "R18周榜": "week_r18",
-    },
-    "_rank": {
+    "rank_name": {
         "day": "日榜",
         "week": "周榜",
-        "week_rookie": "新人周榜",
+        "month": "月榜",
         "day_male": "男日榜",
         "day_female": "女日榜",
+        "week_original": "原创周榜",
+        "week_rookie": "新人周榜",
+        "day_manga": "新人周榜",
+        "week_original": "漫画日榜",
         "day_r18": "R18日榜",
         "day_male_r18": "R18男日榜",
         "day_female_r18": "R18女日榜",
@@ -235,66 +220,28 @@ soutu_options = {
     },
 }
 
+
+# soutu_key计时
+@scheduler.scheduled_job("cron", second="30")
+async def soutu_key_live():
+    for sk in list(var.soutu_key_live):
+        if var.soutu_key_live[sk] < 0:
+            var.soutu_key_live.pop(sk)
+            for user, key in var.soutu_user_key.items():
+                if key == sk:
+                    var.soutu_user_key.pop(user)
+                    break
+        else:
+            var.soutu_key_live[sk] -= 1
+
+
 # 清空搜图缓存结果
 @scheduler.scheduled_job("cron", hour="0,6,12,18")
 async def clear():
-    tmp = deepcopy(var.soutu_data)
-    var.soutu_data.clear()
-    var.soutu_data = tmp
+    tmp = deepcopy(var.soutu_user_key)
+    var.soutu_user_key.clear()
+    var.soutu_user_key = tmp
 
-
-# qq机器人连接时执行
-@driver.on_bot_connect
-async def on_bot_connect(bot: Bot):
-    # 是否有写bot qq，如果写了只处理bot qq在列表里的
-    if pc.tutu_bot_qqnum_list and bot.self_id in pc.tutu_bot_qqnum_list:
-        # 如果已经有bot连了
-        if var.handle_bot:
-            # 当前bot qq 下标
-            handle_bot_id_index = pc.tutu_bot_qqnum_list.index(var.handle_bot.self_id)
-            # 连过俩的bot qq 下标
-            new_bot_id_index = pc.tutu_bot_qqnum_list.index(bot.self_id)
-            # 判断优先级，下标越低优先级越高
-            if new_bot_id_index < handle_bot_id_index:
-                var.handle_bot = bot
-
-        # 没bot连就直接给
-        else:
-            var.handle_bot = bot
-
-    # 不写就给第一个连的
-    elif not var.handle_bot:
-        var.handle_bot = bot
-
-
-# qq机器人断开时执行
-@driver.on_bot_disconnect
-async def on_bot_disconnect(bot: Bot):
-    # 判断掉线的是否为handle bot
-    if bot == var.handle_bot:
-        # 如果有写bot qq列表
-        if pc.tutu_bot_qqnum_list:
-            # 获取当前连着的bot列表(需要bot是在bot qq列表里)
-            available_bot_id_list = [
-                bot_id for bot_id in get_bots() if bot_id in pc.tutu_bot_qqnum_list
-            ]
-            if available_bot_id_list:
-                # 打擂台排序？
-                new_bot_index = pc.tutu_bot_qqnum_list.index(available_bot_id_list[0])
-                for bot_id in available_bot_id_list:
-                    now_bot_index = pc.tutu_bot_qqnum_list.index(bot_id)
-                    if now_bot_index < new_bot_index:
-                        new_bot_index = now_bot_index
-                # 取下标在qq列表里最小的bot qq为新的handle bot
-                var.handle_bot = get_bot(pc.tutu_bot_qqnum_list[new_bot_index])
-
-            else:
-                var.handle_bot = None
-
-        # 不写就随便给一个连着的(如果有)
-        elif var.handle_bot:
-            try:
-                new_bot = get_bot()
-                var.handle_bot = new_bot
-            except ValueError:
-                var.handle_bot = None
+    tmp = deepcopy(var.soutu_key_live)
+    var.soutu_key_live.clear()
+    var.soutu_key_live = tmp

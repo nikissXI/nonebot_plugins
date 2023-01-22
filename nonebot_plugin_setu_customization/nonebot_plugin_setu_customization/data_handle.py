@@ -1,4 +1,4 @@
-from asyncio import gather, get_running_loop, sleep
+from asyncio import gather, sleep
 from datetime import datetime, timedelta
 from functools import wraps
 from io import BytesIO
@@ -20,7 +20,6 @@ from nonebot.matcher import Matcher
 from PIL import Image, ImageDraw, ImageFont
 from ujson import dumps, loads
 from .config import pc, var
-
 
 ###################################
 # 异常处理
@@ -101,7 +100,7 @@ def pixiv_reverse_proxy(img_url: str, resize: bool = True) -> str:
         if pc.tutu_pixiv_proxy:
             img_url = pc.tutu_pixiv_proxy + "/".join(img_url_group)
         else:
-            img_url = f"https://{choice('abcdgi')}.jitsu.top/" + "/".join(img_url_group)
+            img_url = f"https://{choice('abcdi')}.jitsu.top/" + "/".join(img_url_group)
 
         # 缩小图片大小
         if resize:
@@ -176,25 +175,6 @@ def fn_cache_sent_img(filename: str, img_url: str) -> int:
     var.fn_sent_img_filename_data[var.fn_sent_img_num] = filename
     var.fn_sent_img_imgurl_data[var.fn_sent_img_num] = img_url
     return var.fn_sent_img_num
-
-
-def soutu_cache_data(params: dict, data: dict) -> int:
-    """
-    每执行编号，重启后重置，用于网页看图
-    """
-    while True:
-        soutu_num = randint(1, 9999)
-        if soutu_num not in var.soutu_data:
-            break
-    var.soutu_data[soutu_num] = (params, data)
-    return soutu_num
-
-
-def del_soutu_cache_data(data_num: int):
-    """
-    使网页浏览数据失效
-    """
-    var.soutu_data.pop(data_num)
 
 
 async def send_error_msg(msg: Union[str, Message]):
@@ -715,130 +695,3 @@ async def get_art_img_url(
         await matcher.send(
             f"从文章【{title}】中获取到图片{img_found}个\n没有收录新图片\n因重复过滤掉图片{filter_count}张"
         )
-
-
-async def get_soutu_result(
-    query_mode: str,
-    tags: str = "",
-    match_mode: str = "",
-    order_mode: str = "",
-    rank_mode: str = "",
-    date: str = "",
-    id: int = 0,
-    page_num: int = 1,
-    in_params: dict = {},
-) -> Union[str, int, dict]:
-    """
-    获取搜图api返回结果
-    """
-
-    params = {
-        "search": {
-            "type": "search",
-            "word": tags,
-            "mode": match_mode,
-            "order": order_mode,
-            "page": page_num,
-        },
-        "rank": {
-            "type": "rank",
-            "mode": rank_mode,
-            "date": date,
-            "page": page_num,
-        },
-        "member_illust": {
-            "type": "member_illust",
-            "id": id,
-            "page": page_num,
-        },
-        "illust": {
-            "type": "illust",
-            "id": id,
-            "page": page_num,
-        },
-        "related": {
-            "type": "related",
-            "id": id,
-            "page": page_num,
-        },
-        "roll": in_params,
-    }
-
-    try:
-        async with AsyncClient(
-            headers=var.headers,
-            timeout=var.http_timeout,
-            verify=False,
-        ) as c:
-            res = await c.get(
-                "https://api.moedog.org/pixiv/v2/", params=params[query_mode]
-            )
-    except Exception as e:
-        msg = f"搜图请求出错：{repr(e)}"
-        logger.error(msg)
-        return msg
-
-    if res.status_code != 200:
-        msg = f"搜图请求出错：状态码{res.status_code}"
-        logger.error(msg)
-        return msg
-
-    aa = loads(res.text)
-
-    if params[query_mode]["type"] == "illust":
-        result_keyword = "illust"
-    else:
-        result_keyword = "illusts"
-
-    if result_keyword not in aa:
-        if query_mode == "roll":
-            return {}
-        else:
-            return 0
-
-    # 遍历插画
-    result_list = {}
-    # 查询某个插画
-    if result_keyword == "illust":
-        pid = aa[result_keyword]["id"]
-        result_list[pid] = {
-            "title": aa[result_keyword]["title"],
-            "uname": aa[result_keyword]["user"]["name"],
-            "uid": aa[result_keyword]["user"]["id"],
-            "search": params[query_mode],
-            "url_list": [],
-            "tags": aa[result_keyword]["tags"],
-        }
-        if aa[result_keyword]["meta_single_page"]:
-            url = aa[result_keyword]["meta_single_page"]["original_image_url"]
-            result_list[pid]["url_list"].append(url)
-        for cc in aa[result_keyword]["meta_pages"]:
-            url = cc["image_urls"]["original"]
-            result_list[pid]["url_list"].append(url)
-    else:
-        for bb in aa[result_keyword]:
-            pid = bb["id"]
-            result_list[pid] = {
-                "title": bb["title"],
-                "uname": bb["user"]["name"],
-                "uid": bb["user"]["id"],
-                "search": params[query_mode],
-                "url_list": [],
-            }
-            if bb["meta_single_page"]:
-                url = bb["meta_single_page"]["original_image_url"]
-                result_list[pid]["url_list"].append(url)
-            for cc in bb["meta_pages"]:
-                url = cc["image_urls"]["original"]
-                result_list[pid]["url_list"].append(url)
-
-    if query_mode == "roll":
-        return result_list
-    elif result_list:
-        data_num = soutu_cache_data(params[query_mode], result_list)
-        get_running_loop().call_later(
-            pc.web_view_time * 60, del_soutu_cache_data, data_num
-        )
-        return data_num
-    else:
-        return 0

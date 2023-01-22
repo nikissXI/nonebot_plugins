@@ -26,7 +26,7 @@ _✨ Nonebot2 可动态管理API并带网页浏览的setu插件 ✨_
 
 <img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/soutu.jpg"/><img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_web.jpg"/>  <img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_test.jpg"/>
 
-### 搜图功能目前用不了了，因为接口被关了
+### 搜图功能恢复，但需要设置refresh token，该token的获取方法在“get_token”文件夹里，由于调用的是pixiv客户端接口，所以需要设置tutu_http_proxy或tutu_socks5_proxy来使用代理访问P站，或让bot在墙外的服务器使用
 
 ## 安装
 
@@ -49,18 +49,25 @@ api_timeout=60
 # 管理员的QQ号（别问我为什么要另外写）
 tutu_admin_qqnum = 114514
 
-# 非必填项
+# 如果要用P站搜图功能要设置以下内容
+# 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
+tutu_site_url = http://127.0.0.1:8080
+# 搜图功能的，pixiv refresh_token
+pixiv_refresh_token: str = ""
+# 搜图结果链接有效时间（分钟）
+pixiv_sk_time: int = 10
+
+# 非必填项，就是不填不影响插件运行，不需要的就不要加进去env
 # 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
 # 如果不填该配置则由第一个连上的bot响应
-tutu_bot_qqnum_list = [1234,5678,6666]
+tutu_bot_qqnum_list = [1234, 5678, 6666]
 # 图片下载模式，true则nonebot下载，false则协议端下载
 tutu_img_local_download = true
 # 图图命令CD时间（秒）
 tutu_cooldown = 3
 # 一次最多发多少张图
 once_send = 5
-# 搜图结果链接有效时间（分钟）
-web_view_time = 10
+
 # R18类别的名称
 tutu_r18_name = R18
 # 本地图片库的路径
@@ -75,8 +82,6 @@ tutu_data_filename = tutu_data.json
 tutu_font_path = __file__/font/HYWenHei-85W.ttf
 # 字体大小
 tutu_font_size = 18
-# 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
-tutu_site_url = http://127.0.0.1:8080
 # pixiv图片反代地址，自己可以看看哪个快用哪个 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/ 、 https://c.jitsu.top/
 tutu_pixiv_proxy = https://i.pixiv.re/
 # http代理地址，如 http://127.0.0.1:1234
@@ -130,6 +135,7 @@ http://127.0.0.1:8080/soutu （具体域名和端口看你nb绑定的地址）
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/url_diy_replace.jpg"/>
 
 ## 使用示例、导入api和图片库
+自己看看接口的图片是否合适和能否正常访问再导入  
 **二次元图片api**  
 http://api.tangdouz.com/sjdmbz.php  
 https://api.dujin.org/pic/yuanshen/  
@@ -223,6 +229,11 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 然后给机器人私聊发送“开爬”就会自动爬取
 
 ## 更新日志
+### 2023/1/23 \[v1.5.0]
+
+* 恢复搜图功能，使用pixivpy调用P站的接口完成搜图功能 https://github.com/upbit/pixivpy
+* 优化搜图前端界面
+
 ### 2023/1/16 \[v1.4.9]
 
 * 最低python版本兼容至3.8

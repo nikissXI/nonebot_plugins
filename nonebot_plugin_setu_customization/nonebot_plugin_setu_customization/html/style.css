@@ -50,12 +50,16 @@ select {
     border-radius: 4px;
 }
 
+select:focus {
+    border-color: #ff6294;
+}
+
 button {
     width: 260px;
     height: 36px;
     border: none;
     color: white;
-    background-color: #409eff;
+    background-color: #48b32a;
     font-size: 18px;
     display: inline-block;
     padding: 2px 4px;
@@ -98,4 +102,21 @@ form {
     white-space: nowrap;
     margin: 0 auto;
     padding: 10px;
+}
+
+.formItem {
+    display: flex;
+    height: 28px;
+    padding: 5px;
+}
+
+.itemText {
+    width: 25%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.itemInput {
+    flex: 1;
 }

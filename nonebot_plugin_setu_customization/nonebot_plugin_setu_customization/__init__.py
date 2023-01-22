@@ -1,11 +1,10 @@
 from asyncio import gather, sleep
 from datetime import datetime, timedelta
 from io import BytesIO
-from os import listdir, makedirs
-from random import choice
-from re import search
+from os import listdir, makedirs, path, walk
+from random import choice, randint
 from urllib.parse import unquote
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 from httpx import AsyncClient
 from httpx_socks import AsyncProxyTransport
 from nonebot import on_fullmatch, on_notice, on_regex
@@ -18,11 +17,11 @@ from nonebot.params import ArgPlainText, RegexGroup
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 from PIL import Image
+from pathlib import Path
 from .config import (
     load_local_api,
     pc,
     save_data,
-    soutu_options,
     var,
 )
 from .data_handle import (
@@ -30,7 +29,6 @@ from .data_handle import (
     get_art_img_url,
     handle_exception,
     get_img_url,
-    get_soutu_result,
     load_crawler_files,
     send_img_msg,
     text_to_img,
@@ -59,7 +57,7 @@ __plugin_meta__ = PluginMetadata(
 
 
 # 群判断
-async def permission_check(event: MessageEvent, bot: Bot) -> bool:
+async def tutu_permission_check(event: MessageEvent, bot: Bot) -> bool:
     if isinstance(event, GroupMessageEvent):
         return event.group_id in var.group_list and bot == var.handle_bot
     elif isinstance(event, PrivateMessageEvent):
@@ -68,7 +66,7 @@ async def permission_check(event: MessageEvent, bot: Bot) -> bool:
         return False
 
 
-async def permission_check_st(event: MessageEvent, bot: Bot) -> bool:
+async def soutu_permission_check(event: MessageEvent, bot: Bot) -> bool:
     if isinstance(event, GroupMessageEvent):
         return event.group_id in var.group_list_st and bot == var.handle_bot
     elif isinstance(event, PrivateMessageEvent):
@@ -88,13 +86,9 @@ async def admin_upload_check(event: OfflineUploadNoticeEvent, bot: Bot) -> bool:
 
 tutu = on_regex(
     r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$",
-    permission=permission_check,
+    permission=tutu_permission_check,
 )
-# 搜图 白丝，萝莉 排序1 匹配1 页数1
-soutu = on_regex(
-    r"^搜图\s*(\S+)?(.*)?",
-    permission=permission_check_st,
-)
+soutu = on_fullmatch("搜图", permission=soutu_permission_check)
 group_manage = on_regex(r"^(图图群管理|图图群管理搜图)\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
 api_manage = on_regex(
     r"^图图接口管理\s*((\S+)(\s+(\+|\-)?\s+([\s\S]*)?)?)?", rule=admin_check
@@ -112,6 +106,7 @@ img_no = on_regex(r"^图片序号\s*((fn)?(\d+))?$", rule=admin_check)
 img_del = on_regex(r"^图片删除\s*((\S+)\s+(\S+)\s*(\S+)?)?", rule=admin_check)
 img_test = on_regex(r"^图片测试\s*(\S+)?$", rule=admin_check)
 upload_file = on_notice(rule=admin_upload_check)
+download_local_img_lib = on_fullmatch("打包", rule=admin_check)
 
 
 @tutu.handle(
@@ -252,117 +247,17 @@ async def handle_tutu(
         await tutu.finish("发送完毕~如果还有图没出来可能在路上哦")
 
 
-@soutu.handle(
-    parameterless=[helpers.Cooldown(cooldown=pc.tutu_cooldown, prompt="我知道你很急，但你先别急")]
-)
+@soutu.handle()
 @handle_exception("搜图")
-async def handle_soutu(matchgroup=RegexGroup()):
-    tags: str = matchgroup[0]
-    options: str = matchgroup[1]
-    if not tags:
-        text = "pixiv搜图命令介绍\n\n命令格式：搜图  [关键字]  [选项1]  [选项2]\n\n关键字：多个使用逗号分割，中英逗号都行\n屏蔽某个关键字就加“-”，如“-R-18”就是屏蔽掉r18的图\n因为屏蔽标签会影响单页出图数量，所以现在默认不屏蔽r18了\n如原神的图因为太多r18，屏蔽后可能会导致几页都没图\n\n选项不需要可不写\n\n页数：页数[数字]（默认第1页）\n页数选项全部都能带，网页里有翻页功能\n\n排序模式：排序[模式数字]\n1 热门度顺序（默认）\n2 受男性欢迎\n3 受女性欢迎\n4 由新到旧\n5 由旧到新\n\n关键字匹配匹配模式：匹配[模式数字]\n1 标签部分一致（默认）\n2 标签完全一致\n3 标题说明文\n\n使用例子（注意空格分割参数）：\nex1：搜图 白丝，萝莉\nex2：搜图 黑丝，御姐 匹配2 排序4 页数2\nex3：搜图 原神，可莉，-R-18\n\n搜指定id插画：\n搜图 找图[插画id] （找图和id间不能有空格）\n使用例子：搜图 找图114514\n\n搜相关插画：\n搜图 相关[插画id] （相关和id间不能有空格）\n使用例子：搜图 相关114514\n\n搜画师插画：\n搜图 画师[画师id] （画师和id间不能有空格）\n使用例子：搜图 画师114514\n\n排行榜搜索：\n搜图 [榜类]  [日期]\n榜类：日榜、周榜、新人周榜、男日榜、女日榜\n      R18日榜、R18男日榜、R18女日榜、R18周榜\n日期：格式XXXX-XX-XX，如2022-1-1，默认昨天\n使用例子：搜图 日榜 2023-1-1"
-        img_bytes = text_to_img(text)
-        await soutu.finish(MS.image(img_bytes))
-
-    uid = 0
-    pid = 0
-    pid_rl = 0
-    rank = ""
-    tags = tags.replace("，", ",").replace("、", ",")
-    try:
-        if tags in soutu_options["rank"]:
-            rank = soutu_options["rank"][tags]
-        elif tags.find("找图") != -1:
-            pid = int(tags[2:])
-        elif tags.find("相关") != -1:
-            pid_rl = int(tags[2:])
-        elif tags.find("画师") != -1:
-            uid = int(tags[2:])
-        elif tags.find(",") != -1:
-            tags = " ".join(tags.split(","))
-    except ValueError:
-        await soutu.finish("参数格式有误")
-
-    # if options.find("R18") == -1 and options.find("r18") == -1:
-    #     tags += " -R-18"
-
-    page_num = 1
-    order_mode = "popular_desc"
-    match_mode = "partial_match_for_tags"
-    date = ""
-
-    if rank:
-        aa = search(r"\d{4}-\d{1,2}-\d{1,2}", options)
-        if aa:
-            date = aa.group()
-
-    if options:
-        try:
-            o_list = options.split()
-            for o_i in o_list:
-                if o_i.find("页数") != -1:
-                    page_num = int(o_i[2:])
-                if o_i.find("排序") != -1:
-                    order_mode = soutu_options["order"][int(o_i[2:])]
-                if o_i.find("匹配") != -1:
-                    order_mode = soutu_options["match"][int(o_i[2:])]
-        except (ValueError, KeyError):
-            await soutu.finish("参数格式有误")
-
-    if uid:
-        result = await get_soutu_result(
-            "member_illust",
-            id=uid,
-            page_num=page_num,
-        )
-    elif pid:
-        result = await get_soutu_result(
-            "illust",
-            id=pid,
-            page_num=page_num,
-        )
-    elif pid_rl:
-        result = await get_soutu_result(
-            "related",
-            id=pid_rl,
-            page_num=page_num,
-        )
-    elif rank:
-        result = await get_soutu_result(
-            "rank", rank_mode=rank, date=date, page_num=page_num
-        )
+async def handle_soutu(event: MessageEvent):
+    if event.user_id in var.soutu_user_key:
+        sk = var.soutu_user_key[event.user_id]
     else:
-        result = await get_soutu_result(
-            "search",
-            tags=tags,
-            match_mode=match_mode,
-            order_mode=order_mode,
-            page_num=page_num,
-        )
-    if not isinstance(result, str):
-        if result != 0:
-            await soutu.finish(
-                f"打开链接查看，{pc.web_view_time}分钟有效期\n{pc.tutu_site_url}/sr?s={result}"
-            )
-        # elif page_num == 1:
-        #     # 如果第一页是空的，试试第二页
-        #     result = await get_soutu_result(
-        #         "search",
-        #         tags=tags,
-        #         match_mode=match_mode,
-        #         order_mode=order_mode,
-        #         page_num=page_num + 1,
-        #     )
-        #     if result != 0:
-        #         await soutu.finish(
-        #             f"打开链接查看，{pc.web_view_time}分钟有效期\n{pc.tutu_site_url}/sr?s={result}"
-        #         )
-        #     else:
-        #         await soutu.finish("没有搜到你要的图哦")
-        else:
-            await soutu.finish("没有搜到你要的图哦")
-    else:
-        await soutu.finish(f"{result}")
+        sk = randint(100000, 999999)
+        var.soutu_user_key[event.user_id] = sk
+
+    var.soutu_key_live[sk] = pc.pixiv_sk_time
+    await soutu.finish(f"请打开该网页使用搜图\n{pc.tutu_site_url}/soutu?sk={sk}")
 
 
 @group_manage.handle()
@@ -585,9 +480,6 @@ async def handle_tutu_kaipa(
 async def handle_wx_paqu(
     event: PrivateMessageEvent, matcher: Matcher, bot: Bot, matchgroup=RegexGroup()
 ):
-    # if not matchgroup[0]:
-    #     await matcher.finish(f"微信文章爬取 [url] （添加到本地api {pc.tutu_self_cosplay_lib}）")
-    # else:
     img_url = matchgroup[0]
     if img_url == "文章爬取":
         await art_paqu.finish(
@@ -850,8 +742,6 @@ async def upload_file_second_receive(
     state: T_State,
     confirm: str = ArgPlainText("confirm"),
 ):
-    # await send_error_msg("触发了文件上传2")
-
     # 用户输入的内容
     filename = state["name"]
     lib_name, ext = filename.split(".")
@@ -872,7 +762,7 @@ async def upload_file_second_receive(
 
     with ZipFile(file=BytesIO(res.content), mode="r") as zf:
         # 解压到指定目录,首先创建一个解压目录
-        makedirs(f"tutu_crawler/{lib_name}")
+        makedirs(f"{pc.tutu_crawler_file_path}{lib_name}")
         for old_name in zf.namelist():
             # 获取文件大小，目的是区分文件夹还是文件，如果是空文件应该不好用。
             file_size = zf.getinfo(old_name).file_size
@@ -880,7 +770,7 @@ async def upload_file_second_receive(
             new_name = old_name.encode("cp437").decode("gbk")
             logger.error(new_name)
             # 拼接文件的保存路径
-            new_path = f"tutu_crawler/{lib_name}/{new_name}"
+            new_path = f"{pc.tutu_crawler_file_path}{lib_name}/{new_name}"
             # 判断文件是文件夹还是文件
             if file_size > 0:
                 extra_file.append(new_name)
@@ -894,5 +784,26 @@ async def upload_file_second_receive(
 
     file_list = "\n".join(extra_file)
     await upload_file.finish(
-        f"文件已解压并保存到目录 tutu_crawler/{lib_name}\n已解压文件：\n{file_list}"
+        f"文件已解压并保存到目录 {pc.tutu_crawler_file_path}{lib_name}\n已解压文件：\n{file_list}"
+    )
+
+
+@download_local_img_lib.handle()
+@handle_exception("打包本地图库")
+async def handle_download_local_img_lib(bot: Bot):
+    with ZipFile(f"{Path(__file__).parent}/html/tutu_local_img_lib.zip", "w") as zf:
+        zf.write(
+            pc.tutu_local_api_path,
+            arcname=(dn := path.basename(pc.tutu_local_api_path)),
+        )
+        for root, dirs, files in walk(pc.tutu_local_api_path):
+            for fn in files:
+                zf.write(
+                    fp := path.join(root, fn),
+                    arcname=dn + "/" + path.relpath(fp, pc.tutu_local_api_path),
+                    compress_type=ZIP_DEFLATED,
+                    compresslevel=9,
+                )
+    await download_local_img_lib.finish(
+        f"打包完成，下载路径\n{pc.tutu_site_url}/tutu/tutu_local_img_lib.zip"
     )

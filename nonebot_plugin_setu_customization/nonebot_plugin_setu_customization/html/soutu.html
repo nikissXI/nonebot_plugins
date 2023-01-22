@@ -1,61 +1,76 @@
-<!DOCTYPE HTML>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
+    <title>搜图结果</title>
+    <link rel="shortcut icon" type="image/x-icon" href="tutu/soutu.ico" />
+    <link rel="stylesheet" href="tutu/style.css" />
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pixiv网页搜图</title>
-    <link rel="shortcut icon" type="image/x-icon" href="tutu/favicon.ico" />
-    <link rel="stylesheet" href="tutu/style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
     <br />
     <h2>Pixiv网页搜图</h2>
 
-    <form action="sr">
-        <input name="r" value="1" style="display: none;" />
-        搜索模式&ensp;<select id="op_type" name="query_type">
-            <option value="search">关键字搜索</option>
-            <option value="rank">排行榜</option>
-            <option value="member_illust">画家作品</option>
-            <option value="illust">插画详情</option>
-            <option value="related">相关插画</option>
-        </select>
-        <br />
+    <form action="soutu" style="max-width: 360px;">
+        <input name="sk" value="{{ sk }}" style="display: none;" />
+
+        <div class="formItem">
+            <span class="itemText">搜索模式</span>
+            <select class="itemInput" id="op_type" name="query_type">
+                <option value="search_illust">关键字搜索</option>
+                <option value="illust_ranking">排行榜</option>
+                <option value="illust_recommended">随机推荐</option>
+                <option value="user_illusts">画家作品</option>
+                <option value="illust_detail">插画详情</option>
+                <option value="illust_related">相关插画</option>
+            </select>
+        </div>
 
         <div id="input_form">
 
-            关&ensp;键&ensp;字&ensp;<input name="word" placeholder="填关键字，多个关键字空格分割" value=""
-                required />
-            <br />
-            匹配模式&ensp;<select name="mode">
-                <option value="partial_match_for_tags">标签部分一致</option>
-                <option value="exact_match_for_tags">标签完全一致</option>
-                <option value="title_and_caption">标题说明文</option>
-            </select>
-            <br />
-            图片排序&ensp;<select name="order">
-                <option value="popular_desc">热门度顺序</option>
-                <option value="popular_male_desc">受男性欢迎</option>
-                <option value="popular_female_desc">受女性欢迎</option>
-                <option value="date_desc">由新到旧</option>
-                <option value="date_asc">由旧到新</option>
-            </select>
+            <div class="formItem">
+                <span class="itemText">关&nbsp;&nbsp;键&nbsp;&nbsp;字</span>
+                <input class="itemInput" name="word" placeholder="填关键字，多个关键字空格分割" value=""
+                    required />
+            </div>
+            <div class="formItem">
+                <span class="itemText">匹配模式</span>
+                <select class="itemInput" name="search_target">
+                    <option value="partial_match_for_tags">标签部分一致</option>
+                    <option value="exact_match_for_tags">标签完全一致</option>
+                    <option value="title_and_caption">标题说明文</option>
+                </select>
+            </div>
+            <div class="formItem">
+                <span class="itemText">图片排序</span>
+                <select class="itemInput" name="sort">
+                    <option value="popular_desc">热门度顺序</option>
+                    <option value="popular_male_desc">受男性欢迎</option>
+                    <option value="popular_female_desc">受女性欢迎</option>
+                    <option value="date_desc">由新到旧</option>
+                    <option value="date_asc">由旧到新</option>
+                </select>
+            </div>
+            <div class="formItem">
+                <span class="itemText">收&nbsp;&nbsp;藏&nbsp;&nbsp;数</span>
+                <input style="width:35%;" name="bookmark_num_min" placeholder="最低收藏数" value="" />
+                <span style="width:5%;">~</span>
+                <input style="width:35%;" name="bookmark_num_max" placeholder="最高收藏数" value="" />
+            </div>
 
         </div>
-        页数跳转&ensp;<input name="page" placeholder="默认返回第1页" value="1" />
-        <br />
-        &emsp;&emsp;&emsp;&emsp;&thinsp;
-        <button type="submit">提交</button>
+
+        <div class="formItem">
+            <span class="itemText"></span>
+            <button class="itemInput" type="submit">提交</button>
+        </div>
+
     </form>
-
-    <div style="position: fixed;bottom: 20px;width: 100%;">
-        <a href="img_api" target="_blank">图图</a>
-    </div>
-
 </body>
+
 <script src="https://cdn.staticfile.org/jquery/3.6.3/jquery.min.js"></script>
 <script type="text/javascript">
 
@@ -63,17 +78,19 @@
         $("#input_form").empty();
         selected = $("#op_type option:selected").val()
         switch (selected) {
-            case 'search':
-                $('#input_form').append('关&ensp;键&ensp;字&ensp;<input name="word" placeholder="填关键字，多个关键字空格分割" value=""  required /><br />匹配模式&ensp;<select name="mode"><option value="partial_match_for_tags">标签部分一致</option><option value="exact_match_for_tags">标签完全一致</option><option value="title_and_caption">标题说明文</option></select><br />图片排序&ensp;<select name="order"><option value="popular_desc">热门度顺序</option><option value="popular_male_desc">受男性欢迎</option><option value="popular_female_desc">受女性欢迎</option><option value="date_desc">由新到旧</option><option value="date_asc">由旧到新</option></select>');
+            case 'search_illust':
+                $('#input_form').append('<div class="formItem"><span class="itemText">关&nbsp;&nbsp;键&nbsp;&nbsp;字</span><input class="itemInput" name="word" placeholder="填关键字，多个关键字空格分割" value=""required /></div><div class="formItem"><span class="itemText">匹配模式</span><select class="itemInput" name="search_target"><option value="partial_match_for_tags">标签部分一致</option><option value="exact_match_for_tags">标签完全一致</option><option value="title_and_caption">标题说明文</option></select></div><div class="formItem"><span class="itemText">图片排序</span><select class="itemInput" name="sort"><option value="popular_desc">热门度顺序</option><option value="popular_male_desc">受男性欢迎</option><option value="popular_female_desc">受女性欢迎</option><option value="date_desc">由新到旧</option><option value="date_asc">由旧到新</option></select></div><div class="formItem"><span class="itemText">收&nbsp;&nbsp;藏&nbsp;&nbsp;数</span><input style="width:35%;" name="bookmark_num_min" placeholder="最低收藏数" value="" /><span style="width:5%;">~</span><input style="width:35%;" name="bookmark_num_max" placeholder="最高收藏数" value="" /></div>');
                 break;
-            case 'rank':
-                $('#input_form').append('排行类型&ensp;<select name="mode"><option value="day">日榜</option><option value="week">周榜</option><option value="week_rookie">新人周榜</option><option value="day_male">男日榜</option><option value="day_female">女日榜</option><option value="day_r18">R18日榜</option><option value="day_male_r18">R18男日榜</option><option value="day_female_r18">R18女日榜</option><option value="week_r18">R18周榜</option></select><br />指定日期&ensp;<input name="date" placeholder="格式XXXX-XX-XX，默认最新" value="" />');
+            case 'illust_ranking':
+                $('#input_form').append('<div class="formItem"><span class="itemText">排行类型</span><select class="itemInput" name="mode"><option value="day">日榜</option><option value="week">周榜</option><option value="week">月榜</option><option value="day_male">男日榜</option><option value="day_female">女日榜</option><option value="week_original">原创周榜</option><option value="week_rookie">新人周榜</option><option value="day_manga">漫画日榜</option><option value="day_r18">R18日榜</option><option value="day_male_r18">R18男日榜</option><option value="day_female_r18">R18女日榜</option><option value="week_r18">R18周榜</option></select></div><div class="formItem"><span class="itemText">指定日期</span><input class="itemInput" name="date" placeholder="格式XXXX-XX-XX，默认最新" value="" /></div>');
                 break;
-            case 'member_illust':
-                $('#input_form').append('画&nbsp;家&nbsp;&thinsp;i&nbsp;d&ensp;<input name="id" placeholder="填写画家id" value=""  required />');
+            case 'user_illusts':
+                $('#input_form').append('<div class="formItem"><span class="itemText">画&nbsp;家&nbsp;&thinsp;i&nbsp;d</span><input class="itemInput" name="user_id" placeholder="填写画家id" value="" required /></div>');
+                break;
+            case 'illust_recommended':
                 break;
             default:
-                $("#input_form").append('插&nbsp;画&nbsp;&thinsp;i&nbsp;d&ensp;<input name="id" placeholder="填写插画id" value=""  required />');
+                $("#input_form").append('<div class="formItem"><span class="itemText">插&nbsp;画&nbsp;&thinsp;i&nbsp;d</span><input class="itemInput" name="illust_id" placeholder="填写插画id" value="" required /></div>');
                 break;
         }
     });
