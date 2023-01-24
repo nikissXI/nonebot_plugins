@@ -2,13 +2,18 @@ from asyncio import gather, sleep
 from datetime import datetime, timedelta
 from io import BytesIO
 from os import listdir, makedirs, path, walk
-from random import choice, randint
+from random import choice
 from urllib.parse import unquote
 from zipfile import ZipFile, ZIP_DEFLATED
 from httpx import AsyncClient
 from httpx_socks import AsyncProxyTransport
 from nonebot import on_fullmatch, on_notice, on_regex
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageEvent
+from nonebot.adapters.onebot.v11 import (
+    Bot,
+    GroupMessageEvent,
+    Message,
+    MessageEvent,
+)
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.adapters.onebot.v11 import PrivateMessageEvent, helpers
 from nonebot.log import logger
@@ -42,7 +47,6 @@ __plugin_meta__ = PluginMetadata(
     name="图图插件",
     description="如名",
     usage=f"""图图帮助 看图图的详细命令格式
-搜图 发一下就知道了
 图图群管理 增删群
 图图接口管理 增删API接口
 图图接口测试 测试API接口
@@ -66,15 +70,6 @@ async def tutu_permission_check(event: MessageEvent, bot: Bot) -> bool:
         return False
 
 
-async def soutu_permission_check(event: MessageEvent, bot: Bot) -> bool:
-    if isinstance(event, GroupMessageEvent):
-        return event.group_id in var.group_list_st and bot == var.handle_bot
-    elif isinstance(event, PrivateMessageEvent):
-        return event.sub_type == "friend"
-    else:
-        return False
-
-
 # 管理员判断
 async def admin_check(event: MessageEvent, bot: Bot) -> bool:
     return event.user_id == pc.tutu_admin_qqnum and bot == var.handle_bot
@@ -86,10 +81,9 @@ async def admin_upload_check(event: OfflineUploadNoticeEvent, bot: Bot) -> bool:
 
 tutu = on_regex(
     r"^图图\s*(帮助|\d+)?(\s+[^合并]\S+)?\s*(合并)?$",
-    permission=tutu_permission_check,
+    rule=tutu_permission_check,
 )
-soutu = on_fullmatch("搜图", permission=soutu_permission_check)
-group_manage = on_regex(r"^(图图群管理|图图群管理搜图)\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
+group_manage = on_regex(r"^图图群管理\s*((\+|\-)\s*(\d*))?$", rule=admin_check)
 api_manage = on_regex(
     r"^图图接口管理\s*((\S+)(\s+(\+|\-)?\s+([\s\S]*)?)?)?", rule=admin_check
 )
@@ -247,35 +241,17 @@ async def handle_tutu(
         await tutu.finish("发送完毕~如果还有图没出来可能在路上哦")
 
 
-@soutu.handle()
-@handle_exception("搜图")
-async def handle_soutu(event: MessageEvent):
-    if event.user_id in var.soutu_user_key:
-        sk = var.soutu_user_key[event.user_id]
-    else:
-        sk = randint(100000, 999999)
-        var.soutu_user_key[event.user_id] = sk
-
-    var.soutu_key_live[sk] = pc.pixiv_sk_time
-    await soutu.finish(f"请打开该网页使用搜图\n{pc.tutu_site_url}/soutu?sk={sk}")
-
-
 @group_manage.handle()
 @handle_exception("图图群管理")
 async def handle_group_manage(event: MessageEvent, matchgroup=RegexGroup()):
-    if matchgroup[0] == "图图群管理":
-        op_group_list = var.group_list
-    else:
-        op_group_list = var.group_list_st
-    if not matchgroup[1]:
+    if not matchgroup[0]:
         group_list = "\n".join([str(i) for i in var.group_list])
-        group_list_st = "\n".join([str(i) for i in var.group_list_st])
         await group_manage.finish(
-            f"图图群管理[搜图] +/-[群号]\n图图已启用的QQ群\n{group_list if group_list else 'None'}\n搜图已启用的QQ群\n{group_list_st if group_list_st else 'None'}"
+            f"图图群管理 +/-[群号]\n图图已启用的QQ群\n{group_list if group_list else 'None'}"
         )
     else:
-        choice = matchgroup[2]
-        group_id = matchgroup[3]
+        choice = matchgroup[1]
+        group_id = matchgroup[2]
         if not group_id:
             if isinstance(event, GroupMessageEvent):
                 group = event.group_id
@@ -285,15 +261,15 @@ async def handle_group_manage(event: MessageEvent, matchgroup=RegexGroup()):
             group = int(group_id)
 
     if choice == "+":
-        if group not in op_group_list:
-            op_group_list.add(group)
+        if group not in var.group_list:
+            var.group_list.add(group)
             save_data()
             await group_manage.finish("添加成功")
         else:
             await group_manage.finish("已经添加过了")
     else:
-        if group in op_group_list:
-            op_group_list.discard(group)
+        if group in var.group_list:
+            var.group_list.discard(group)
             save_data()
             await group_manage.finish("删除成功")
         else:
@@ -353,9 +329,7 @@ async def handle_api_manage(matchgroup=RegexGroup()):
             else:
                 if todo_api_url.find("本地图库") != -1:
                     filename = todo_api_url[4:]
-                    todo_api_url = (
-                        f"http://127.0.0.1:{pc.port}/img_api?fw=1&fn={filename}"
-                    )
+                    todo_api_url = f"http://127.0.0.1:{pc.port}/tutu?fw=1&fn={filename}"
                 if todo_api_url in var.api_list_online[api_type]:
                     var.api_list_online[api_type].remove(todo_api_url)
                     if not var.api_list_online[api_type]:
@@ -380,9 +354,7 @@ async def handle_api_manage(matchgroup=RegexGroup()):
                     )
                     continue
                 else:
-                    todo_api_url = (
-                        f"http://127.0.0.1:{pc.port}/img_api?fw=1&fn={filename}"
-                    )
+                    todo_api_url = f"http://127.0.0.1:{pc.port}/tutu?fw=1&fn={filename}"
 
             if api_type in var.api_list_online:
                 if todo_api_url not in var.api_list_online[api_type]:

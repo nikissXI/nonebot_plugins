@@ -1,11 +1,9 @@
-from copy import deepcopy
 from json import dump, load
 from os import listdir, makedirs, path
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 from nonebot import get_bot, get_bots, get_driver
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from nonebot.adapters import Bot
 from nonebot.log import logger
 from pydantic import BaseModel, Extra
@@ -23,11 +21,6 @@ class Config(BaseModel, extra=Extra.ignore):
     tutu_cooldown: int = 3
     # 一次最多发多少张图
     once_send: int = 5
-
-    # 搜图功能的，pixiv refresh_token
-    pixiv_refresh_token: str = ""
-    # 搜图结果链接有效时间（分钟）
-    pixiv_sk_time: int = 10
 
     # R18类别的名称
     tutu_r18_name: str = "R18"
@@ -87,8 +80,6 @@ class Var:
     api_list_local: Dict[str, List[str]] = {}
     # 图图白名单群列表
     group_list: Set[int] = set()
-    # 搜图白名单群列表
-    group_list_st: Set[int] = set()
     # 是否合并发送
     merge_send = True
     # 群频率限制
@@ -106,9 +97,6 @@ class Var:
     # 网页浏览个人库时发送过去的图片数据  图片序号
     fn_sent_img_filename_data: Dict[int, str] = {}
     fn_sent_img_imgurl_data: Dict[int, str] = {}
-    # 搜图key
-    soutu_key_live: Dict[int, int] = {}
-    soutu_user_key: Dict[int, int] = {}
     # 是否有爬取任务
     crawler_task = False
     # 当前任务文件名，总数，剩余数，爬取图片数量，入库名
@@ -139,7 +127,7 @@ driver = get_driver()
 global_config = driver.config
 pc = Config.parse_obj(global_config)
 var = Var()
-scheduler = AsyncIOScheduler(timezone="Asia/Shanghai")
+# scheduler = AsyncIOScheduler(timezone="Asia/Shanghai")
 
 
 def read_data():
@@ -150,10 +138,8 @@ def read_data():
         tmp_data = load(r)
         for group_id in tmp_data[0]:
             var.group_list.add(group_id)
-        for group_id in tmp_data[1]:
-            var.group_list_st.add(group_id)
-        var.api_list_online = tmp_data[2]
-        var.merge_send = tmp_data[3]
+        var.api_list_online = tmp_data[1]
+        var.merge_send = tmp_data[2]
 
 
 def save_data():
@@ -164,7 +150,6 @@ def save_data():
         dump(
             [
                 list(var.group_list),
-                list(var.group_list_st),
                 var.api_list_online,
                 var.merge_send,
             ],
@@ -202,51 +187,6 @@ async def on_startup():
     load_local_api()
 
 
-soutu_options = {
-    "rank_name": {
-        "day": "日榜",
-        "week": "周榜",
-        "month": "月榜",
-        "day_male": "男日榜",
-        "day_female": "女日榜",
-        "week_original": "原创周榜",
-        "week_rookie": "新人周榜",
-        "day_manga": "新人周榜",
-        "week_original": "漫画日榜",
-        "day_r18": "R18日榜",
-        "day_male_r18": "R18男日榜",
-        "day_female_r18": "R18女日榜",
-        "week_r18": "R18周榜",
-    },
-}
-
-
-# soutu_key计时
-@scheduler.scheduled_job("cron", second="30")
-async def soutu_key_live():
-    for sk in list(var.soutu_key_live):
-        if var.soutu_key_live[sk] < 0:
-            var.soutu_key_live.pop(sk)
-            for user, key in var.soutu_user_key.items():
-                if key == sk:
-                    var.soutu_user_key.pop(user)
-                    break
-        else:
-            var.soutu_key_live[sk] -= 1
-
-
-# 清空搜图缓存结果
-@scheduler.scheduled_job("cron", hour="0,6,12,18")
-async def clear():
-    tmp = deepcopy(var.soutu_user_key)
-    var.soutu_user_key.clear()
-    var.soutu_user_key = tmp
-
-    tmp = deepcopy(var.soutu_key_live)
-    var.soutu_key_live.clear()
-    var.soutu_key_live = tmp
-
-
 # qq机器人连接时执行
 @driver.on_bot_connect
 async def on_bot_connect(bot: Bot):
@@ -267,7 +207,7 @@ async def on_bot_connect(bot: Bot):
             var.handle_bot = bot
 
     # 不写就给第一个连的
-    elif not var.handle_bot:
+    elif not pc.tutu_bot_qqnum_list and not var.handle_bot:
         var.handle_bot = bot
 
 

@@ -4,21 +4,24 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>图图</title>
-    <link rel="shortcut icon" type="image/x-icon" href="tutu/tutu.ico" />
-    <link rel="stylesheet" href="tutu/style.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="tutu_static/tutu.ico" />
+    <link rel="stylesheet" href="tutu_static/style.css" />
 </head>
 
 <body>
-    <a href="soutu" target="_blank">Pixiv搜图</a>&emsp13;
-    <a href="{{ img_3 }}">三连发</a>&emsp13;
-    <a href="{{ img_10 }}">十连发</a><br />
+    当前类型：{{ img_type }}&emsp13;&emsp13;出图数量：{{ img_num }}
+    <br />
 
     {{ type_urls | safe }}
     <a href="{{ img_api_url_fn }}">个人库</a>
     &emsp13;
     <a href="{{ img_api_url_random }}">随机</a>
     <br />
-    <span>当前类型：{{ img_type }} &emsp13; 数量：{{ img_num }}</span>
+
+    <a href="{{ img_1 }}">单发</a>&emsp13;
+    <a href="{{ img_3 }}">三连发</a>&emsp13;
+    <a href="{{ img_6 }}">六连发</a>&emsp13;
+
     <br /><br />
 
     {{ img_list | safe }}

@@ -26,7 +26,7 @@ _✨ Nonebot2 可动态管理API并带网页浏览的setu插件 ✨_
 
 <img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/soutu.jpg"/><img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_web.jpg"/>  <img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_test.jpg"/>
 
-### 搜图功能恢复，但需要设置refresh token，该token的获取方法在“get_token”文件夹里，由于调用的是pixiv客户端接口，所以需要设置tutu_http_proxy或tutu_socks5_proxy来使用代理访问P站，或让bot在墙外的服务器使用
+### 搜图功能移除，商店有同类插件
 
 ## 安装
 
@@ -52,10 +52,7 @@ tutu_admin_qqnum = 114514
 # 如果要用P站搜图功能要设置以下内容
 # 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
 tutu_site_url = http://127.0.0.1:8080
-# 搜图功能的，pixiv refresh_token
-pixiv_refresh_token: str = ""
-# 搜图结果链接有效时间（分钟）
-pixiv_sk_time: int = 10
+
 
 # 非必填项，就是不填不影响插件运行，不需要的就不要加进去env
 # 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
@@ -116,7 +113,6 @@ tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文
 |:-----:|:----:|
 | 图图 | 机器人出图（好友私聊，群聊要添加白名单） |
 | 图图帮助 | 查看图图命令的更多使用姿势 |
-| 搜图 | 查看搜图命令使用姿势（好友私聊，群聊要添加白名单） |
 | （下面都是管理员命令） | （发送命令有使用格式） |
 | 图图群管理 | 增删群白名单 |
 | 图图接口测试 | 测试接口连接情况和返回的数据 |
@@ -229,6 +225,11 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 然后给机器人私聊发送“开爬”就会自动爬取
 
 ## 更新日志
+### 2023/1/24 \[v1.6.0]
+
+* 修复多bot处理bug
+* 移除搜图功能
+
 ### 2023/1/23 \[v1.5.1]
 
 * 恢复搜图功能，使用pixivpy调用P站的接口完成搜图功能 https://github.com/upbit/pixivpy

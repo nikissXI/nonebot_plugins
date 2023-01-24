@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from io import BytesIO
 from os import listdir, remove, rename, rmdir
-from random import choice, randint
+from random import choice
 from re import findall, search
 from traceback import format_exc
 from typing import Optional, Tuple, Union
