@@ -90,7 +90,7 @@ async def on_bot_connect(bot: Bot):
             var.handle_bot = bot
 
     # 不写就给第一个连的
-    elif not var.handle_bot:
+    elif not pc.nya_cook_bot_qqnum_list and not var.handle_bot:
         var.handle_bot = bot
 
 
