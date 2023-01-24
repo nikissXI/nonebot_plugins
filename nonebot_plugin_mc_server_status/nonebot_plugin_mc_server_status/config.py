@@ -74,7 +74,7 @@ async def on_bot_connect(bot: Bot):
             var.handle_bot = bot
 
     # 不写就给第一个连的
-    elif not var.handle_bot:
+    elif not pc.mc_status_bot_qqnum_list and not var.handle_bot:
         var.handle_bot = bot
 
 
