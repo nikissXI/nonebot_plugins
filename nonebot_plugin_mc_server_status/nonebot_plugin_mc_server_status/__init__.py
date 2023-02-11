@@ -1,6 +1,6 @@
 from re import findall
 from mcstatus import BedrockServer, JavaServer
-from nonebot import on_fullmatch, on_regex
+from nonebot import on_command, on_regex
 from nonebot.adapters.onebot.v11 import (
     MessageSegment as MS,
     Bot,
@@ -21,10 +21,10 @@ __plugin_meta__ = PluginMetadata(
     name="MC服务器查询插件",
     description="如名",
     usage=f"""插件命令如下：
-信息  # 字面意思
+信息  # 字面意思，需要加命令前缀，默认/
+信息数据  # 查看已启用群以及服务器信息，需要加命令前缀，默认/
 添加服务器  # 字面意思
 删除服务器  # 字面意思
-信息数据  # 查看已启用群以及服务器信息
 """,
 )
 
@@ -37,10 +37,10 @@ async def admin_check(event: MessageEvent, bot: Bot) -> bool:
     return bot == var.handle_bot and event.user_id == pc.mc_status_admin_qqnum
 
 
-xinxi = on_fullmatch("信息", rule=group_check)
+xinxi = on_command("信息", rule=group_check)
+list_all = on_command("信息数据", rule=admin_check)
 add_server = on_regex(r"^添加服务器\s*((\d+)\s+(\S+)\s+(\S+)\s+(\S+))?", rule=admin_check)
 del_server = on_regex(r"^删除服务器\s*((\d+)\s+(\S+))?", rule=admin_check)
-list_all = on_fullmatch("信息数据", rule=admin_check)
 
 
 @xinxi.handle()
