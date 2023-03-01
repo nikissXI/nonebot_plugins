@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_nya_cook_menu"
-version = "0.1.5"
+version = "0.1.6"
 description = "Nonebot2 喵喵自记菜谱，记录生活中的小菜谱"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
@@ -16,10 +16,10 @@ url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
 default = true
 
 [tool.poetry.dependencies]
-python = "^3.8"
-nonebot2 = "^2.0.0rc1"
-nonebot-adapter-onebot = "^2.0.0"
-Pillow = "^9.0.0"
+python = ">=3.8"
+nonebot2 = ">=2.0.0rc1"
+nonebot-adapter-onebot = ">=2.0.0"
+Pillow = ">=9.0.0"
 
 [build-system]
 requires = ["poetry-core"]
