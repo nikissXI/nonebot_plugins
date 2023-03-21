@@ -100,7 +100,7 @@ def pixiv_reverse_proxy(img_url: str, resize: bool = True) -> str:
         if pc.tutu_pixiv_proxy:
             img_url = pc.tutu_pixiv_proxy + "/".join(img_url_group)
         else:
-            img_url = f"https://{choice('abcdi')}.jitsu.top/" + "/".join(img_url_group)
+            img_url = f"https://i.pixiv.re/" + "/".join(img_url_group)
 
         # 缩小图片大小
         if resize:
