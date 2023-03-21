@@ -63,7 +63,7 @@ async def on_bot_connect(bot: Bot):
             handle_bot_id_index = pc.mc_status_bot_qqnum_list.index(
                 var.handle_bot.self_id
             )
-            # 连过俩的bot qq 下标
+            # 新连接的bot qq 下标
             new_bot_id_index = pc.mc_status_bot_qqnum_list.index(bot.self_id)
             # 判断优先级，下标越低优先级越高
             if new_bot_id_index < handle_bot_id_index:
@@ -91,15 +91,14 @@ async def on_bot_disconnect(bot: Bot):
             ]
             if available_bot_id_list:
                 # 打擂台排序？
-                new_bot_index = pc.mc_status_bot_qqnum_list.index(
-                    available_bot_id_list[0]
-                )
+                new_bot_index = pc.mc_status_bot_qqnum_list.index(available_bot_id_list[0])
                 for bot_id in available_bot_id_list:
                     now_bot_index = pc.mc_status_bot_qqnum_list.index(bot_id)
                     if now_bot_index < new_bot_index:
                         new_bot_index = now_bot_index
                 # 取下标在qq列表里最小的bot qq为新的handle bot
                 var.handle_bot = get_bot(pc.mc_status_bot_qqnum_list[new_bot_index])
+                
             else:
                 var.handle_bot = None
 

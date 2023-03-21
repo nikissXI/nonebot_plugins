@@ -196,7 +196,7 @@ async def on_bot_connect(bot: Bot):
         if var.handle_bot:
             # 当前bot qq 下标
             handle_bot_id_index = pc.tutu_bot_qqnum_list.index(var.handle_bot.self_id)
-            # 连过俩的bot qq 下标
+            # 新连接的bot qq 下标
             new_bot_id_index = pc.tutu_bot_qqnum_list.index(bot.self_id)
             # 判断优先级，下标越低优先级越高
             if new_bot_id_index < handle_bot_id_index:
