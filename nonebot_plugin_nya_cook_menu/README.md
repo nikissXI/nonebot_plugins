@@ -32,7 +32,7 @@ nb plugin install nonebot_plugin_nya_cook_menu
 ```
 
 或者  
-直接把插件clone下来放进去plugins文件夹
+直接把插件clone下来放进去plugins文件夹，但要记得装Pillow库
 
 ## 配置
 在bot对应的.env文件修改
