@@ -55,7 +55,7 @@ async def _(bot: Bot, event: MessageEvent, state: T_State, content: Message = Ar
             )
         )
 
-    if text[:2] == "搜索" or text[:2] == "翻页" or text[:1] == "下" or text[:1] == "上":
+    if text[:2] == "搜索" or text[:2] == "翻页" or text == "下" or text == "上":
         new_search = False
         if text[:2] == "搜索":
             keyword = text[2:].strip()
@@ -72,9 +72,9 @@ async def _(bot: Bot, event: MessageEvent, state: T_State, content: Message = Ar
             else:
                 await diange.reject("请正确输入数字！")
 
-        elif text[:1] == "下":
+        elif text == "下":
             page = now_page + 1
-        # text[:1] == "上"
+        # text == "上"
         else:
             page = now_page - 1
 
