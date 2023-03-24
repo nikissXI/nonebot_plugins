@@ -22,7 +22,7 @@ _✨ Nonebot2 喵喵点歌 ✨_
 
 ## 简介
 闲的没事（bushi）整个点歌插件玩玩，做的比较粗糙，但能用  
-可以搜索和下载歌曲
+可以搜索和下载歌曲  
 <img width="500" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_nya_music/readme_img/pic1.jpg"/>
 
 ## 安装
