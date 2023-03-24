@@ -88,18 +88,18 @@ class Song:
             if int(resp_total) <= 0:
                 return "", ""
 
-            result_dict: Dict[int, Tuple[int, str, str, str, str]] = dict()
+            result_dict: dict[int, tuple[int, str, str, str, str]] = dict()
             num = (int(page) - 1) * self.page_items
             for i in songs_data:
                 num += 1
                 # 歌手
-                singer = i["artist"]
+                singer = (
+                    i["artist"] if len(i["artist"]) < 20 else f"{i['artist'][:20]}..."
+                )
                 # 歌名
                 song_name = i["name"]
                 # 专辑
                 album = i["album"]
-                # print(f"{song_name}\n\t{singer}\t{album}\n")
-
                 # rid，下载用的
                 rid = i["rid"]
                 # pic，歌曲图片
@@ -107,6 +107,7 @@ class Song:
                 result_dict[num] = (rid, song_name, singer, album, pic)
 
             return resp_total, result_dict
+
 
         except Exception as e:
             return "", repr(e)
@@ -124,9 +125,6 @@ class Song:
 
         song_url = resp_json["data"]["url"]
         return song_url
-
-        print(f"歌曲下载url：{song_url}")
-        # await self.download_song(song_url)
 
     async def download_song(self, url: str):
         """

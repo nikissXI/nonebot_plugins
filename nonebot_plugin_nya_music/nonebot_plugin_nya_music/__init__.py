@@ -9,7 +9,7 @@ from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.params import Arg
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
-from .data_handle import get_query_result, Song
+from .data_handle import get_query_result, Song, text_to_img
 
 __plugin_meta__ = PluginMetadata(
     name="喵喵点歌",
@@ -48,10 +48,14 @@ async def _(bot: Bot, event: MessageEvent, state: T_State, content: Message = Ar
 
     if text[:2] == "帮助" or text[:2] == "点歌":
         await diange.reject(
-            "点歌命令教程，【XX】是命令参数\n搜索 【关键字】\n下一页\n上一页\n跳页 【页数】\n播放 【歌曲序号】\n下载 【歌曲序号】\n发“0”或“退出”结束交互"
+            MS.image(
+                text_to_img(
+                    "点歌命令教程，【XX】是命令参数，括号只是告诉你这是参数\n搜索 【关键字】\n下 （下一页）\n上 （上一页）\n翻页 【页数】 （跳转到指定页数）\n播放 【歌曲序号】\n下载 【歌曲序号】\n发“0”或“退出”结束交互\n超过2分钟没对话自动退出交互"
+                )
+            )
         )
 
-    if text[:2] == "搜索" or text[:2] == "翻页" or text[:3] == "下一页" or text[:3] == "上一页":
+    if text[:2] == "搜索" or text[:2] == "翻页" or text[:1] == "下" or text[:1] == "上":
         new_search = False
         if text[:2] == "搜索":
             keyword = text[2:].strip()
@@ -63,13 +67,19 @@ async def _(bot: Bot, event: MessageEvent, state: T_State, content: Message = Ar
             await diange.reject("还没有结果喵！")
         elif text[:2] == "翻页":
             page = text[2:].strip()
-            if not (page.isnumeric() and 1 <= int(page) <= total_page):
-                await diange.reject("页数超出范围喵！")
-        elif text[:3] == "下一页":
+            if page.isnumeric():
+                page = int(page)
+            else:
+                await diange.reject("请正确输入数字！")
+
+        elif text[:1] == "下":
             page = now_page + 1
-        # text[:3] == "上一页"
+        # text[:1] == "上"
         else:
             page = now_page - 1
+
+        if not new_search and not (1 <= page <= total_page):
+            await diange.reject("页数超出范围喵！")
 
         data = await get_query_result(song, keyword, str(page), state, new_search)
         if isinstance(data, str):
