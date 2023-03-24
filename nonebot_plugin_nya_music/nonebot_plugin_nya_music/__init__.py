@@ -153,7 +153,7 @@ async def _(bot: Bot, event: MessageEvent, state: T_State, content: Message = Ar
                     name=f"{song_name} - {singer}.mp3",
                 )
             except Exception as e:
-                await diange.reject(f"{file_name}上传失败！{e}\n直接提供mp3链接：{song_url}")
+                await diange.reject(f"{file_name}上传失败！\n{e}\n直接提供MP3链接\n{song_url}")
 
             await diange.reject()
 
@@ -166,7 +166,7 @@ async def _(bot: Bot, event: MessageEvent, state: T_State, content: Message = Ar
                     name=f"{song_name} - {singer}.mp3",
                 )
             except Exception as e:
-                await diange.reject(f"{file_name}上传失败！{e}")
+                await diange.reject(f"{file_name}上传失败！\n{e}\n直接提供MP3链接\n{song_url}")
 
             await diange.reject()
 

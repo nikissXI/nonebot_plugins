@@ -13,7 +13,7 @@ class Config(BaseModel, extra=Extra.ignore):
     # 字体大小
     nya_music_menu_font_size: int = 18
     # 每页返回的结果数量
-    nya_music_page_items: int = 10
+    nya_music_page_items: int = 20
 
 
 class Global_var:
