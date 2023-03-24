@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "nonebot_plugin_nya_music"
+version = "0.1.0"
+description = "Nonebot2 喵喵点歌，可听歌可下载"
+authors = ["nikissXI <1299577815@qq.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "nonebot_plugin_nya_music"}]
+homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_nya_music"
+repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_nya_music"
+documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_nya_music#README.md"
+
+[[tool.poetry.source]]
+name = "tsinghua"
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
+default = true
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+nonebot2 = ">=2.0.0rc1"
+nonebot-adapter-onebot = ">=2.0.0"
+Pillow = ">=9.0.0"
+httpx = ">=0.22.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
