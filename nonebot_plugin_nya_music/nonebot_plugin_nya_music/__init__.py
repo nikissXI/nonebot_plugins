@@ -83,10 +83,7 @@ async def _(bot: Bot, event: MessageEvent, state: T_State, content: Message = Ar
 
         data = await get_query_result(song, keyword, str(page), state, new_search)
         if isinstance(data, str):
-            if not data:
-                await diange.reject(f"【{keyword}】没有结果")
-            else:
-                await diange.reject(f"出错！{data}")
+            await diange.reject(f"出错！{data}")
         else:
             if new_search:
                 if state["keyword"]:
