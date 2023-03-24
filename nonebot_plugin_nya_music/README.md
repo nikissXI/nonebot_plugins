@@ -39,9 +39,6 @@ nb plugin install nonebot_plugin_nya_music
 在bot对应的.env文件修改
 
 ```bash
-# 使用用户qq号，必填
-nya_cook_user_list = [1234, 5678]
-
 # 每页返回的结果数量，选填
 nya_music_page_items = 10
 
