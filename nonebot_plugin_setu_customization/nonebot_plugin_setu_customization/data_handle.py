@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from functools import wraps
 from io import BytesIO
 from os import listdir, remove, rename, rmdir
-from random import choice
 from re import findall, search
 from traceback import format_exc
 from typing import Optional, Tuple, Union
@@ -20,6 +19,7 @@ from nonebot.matcher import Matcher
 from PIL import Image, ImageDraw, ImageFont
 from ujson import dumps, loads
 from .config import pc, var
+
 
 ###################################
 # 异常处理
@@ -121,9 +121,7 @@ def url_diy_replace(img_url: str) -> str:
     img_url = img_url.replace("\\", "")
     # pixiv反代
     img_url = pixiv_reverse_proxy(img_url)
-    # 反代地址
-    if img_url.find("https://hefollo.com") != -1:
-        img_url = img_url.replace("https://hefollo.com", "http://mc.nikiss.top:9896")
+
     # 新浪图床反代地址
     if pc.tutu_sina_img_proxy and img_url.find(".sinaimg.cn") != -1:
         img_url = img_url.replace(
@@ -187,11 +185,11 @@ async def send_img_msg(matcher: Matcher, img_num: int, img_url: str):
         if pc.tutu_img_local_download:
             ds, result = await download_img(img_url)
             if ds:
-                await matcher.send(f"No.{img_num}" + MS.image(result, timeout=30))
+                await matcher.send(f"No.{img_num}" + MS.image(result, timeout=10))
             else:
                 await matcher.send(f"No.{img_num}\n{result}")
         else:
-            await matcher.send(f"No.{img_num}" + MS.image(img_url, timeout=30))
+            await matcher.send(f"No.{img_num}" + MS.image(img_url, timeout=10))
 
     except Exception as e:
         await matcher.send(f"No.{img_num}  {img_url}\n发送失败 {repr(e)}")
@@ -673,11 +671,11 @@ async def get_art_img_url(
             var.tmp_data[img_num] = img_url
             if var.merge_send:
                 msg_list.append(to_node_msg(MS.text(f"序号：{img_num}  {img_url}")))
-                msg_list.append(to_node_msg(MS.image(img_url, timeout=30)))
+                msg_list.append(to_node_msg(MS.image(img_url, timeout=10)))
             else:
                 img_url_msg_list.append(f"序号：{img_num}  {img_url}")
                 task_list.append(
-                    matcher.send(f"序号：{img_num}" + MS.image(img_url, timeout=30))
+                    matcher.send(f"序号：{img_num}" + MS.image(img_url, timeout=10))
                 )
 
         await matcher.send(

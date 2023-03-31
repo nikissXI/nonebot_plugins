@@ -189,7 +189,7 @@ async def handle_tutu(
                     if ds:
                         msg_list.append(
                             to_node_msg(
-                                MS.text(f"No.{img_num}") + MS.image(img_url, timeout=30)
+                                MS.text(f"No.{img_num}") + MS.image(img_url, timeout=10)
                             )
                         )
                     else:
@@ -197,7 +197,7 @@ async def handle_tutu(
                 else:
                     msg_list.append(
                         to_node_msg(
-                            MS.text(f"No.{img_num}") + MS.image(img_url, timeout=30)
+                            MS.text(f"No.{img_num}") + MS.image(img_url, timeout=10)
                         )
                     )
 
@@ -531,12 +531,12 @@ async def handle_paqu_resend(bot: Bot, event: PrivateMessageEvent):
         img_url = value
         if var.merge_send:
             msg_list.append(to_node_msg(MS.text(f"序号：{img_num}  {img_url}")))
-            msg_list.append(to_node_msg(MS.image(img_url, timeout=30)))
+            msg_list.append(to_node_msg(MS.image(img_url, timeout=10)))
         else:
             img_url_msg_list.append(f"序号：{img_num}  {img_url}")
             task_list.append(
                 paqu_resend.send(
-                    MS.text(f"序号：{img_num}") + MS.image(img_url, timeout=30)
+                    MS.text(f"序号：{img_num}") + MS.image(img_url, timeout=10)
                 )
             )
     if var.merge_send:

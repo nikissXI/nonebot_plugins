@@ -3,7 +3,6 @@ from pathlib import Path
 from random import choice
 from typing import Optional
 from nonebot import get_asgi
-from nonebot.log import logger
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 from starlette.staticfiles import StaticFiles

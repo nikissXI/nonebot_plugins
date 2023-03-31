@@ -47,16 +47,13 @@ nb plugin install nonebot_plugin_setu_customization
 # api超时，这个时间建议设置一分钟以上，否则发图多的时候容易超时报错
 api_timeout = 60
 # 管理员的QQ号（别问我为什么要另外写）
-tutu_admin_qqnum = 114514
-
-# 如果要用P站搜图功能要设置以下内容
-# 网页访问地址，就是nonebot的监听地址和端口号，如 http://hahaha.com:80
-tutu_site_url = http://127.0.0.1:8080
+tutu_admin_qqnum = 114514  
 
 
-# 选填项，自己按需求填，不需要的就不要写进配置！
-# 选填项，自己按需求填，不需要的就不要写进配置！
-# 选填项，自己按需求填，不需要的就不要写进配置！
+# 以下选填项，自己按需求填，不需要的就不要写进配置！
+# 以下选填项，自己按需求填，不需要的就不要写进配置！
+# 以下选填项，自己按需求填，不需要的就不要写进配置！
+
 # 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
 # 如果不填该配置则由第一个连上的bot响应
 tutu_bot_qqnum_list = [1234, 5678, 6666]
@@ -66,6 +63,11 @@ tutu_img_local_download = true
 tutu_cooldown = 3
 # 一次最多发多少张图
 once_send = 5
+
+# 如果要使用网页访问才配置
+# 监听地址和端口号是对应nonebot的，如 http://hahaha.com:80
+# 由于涉及到图片跨域的问题，如果出问题不会搞就别折腾了
+tutu_site_url = http://127.0.0.1:8080
 
 # R18类别的名称
 tutu_r18_name = R18
@@ -128,13 +130,14 @@ tutu_crawler/ 自动爬取文章图片用的，里面放待爬取的文章url文
 
 ## 网页搜图（需要公网）
 http://127.0.0.1:8080/tutu （具体域名和端口看你nb绑定的地址）  
+由于涉及到图片跨域的问题，如果出问题不会搞就别折腾了  
 
 ## 自定义图片url关键字替换
-在data_handle.py文件里面的 url_diy_replace 函数，如果有其他更好的反代地址或其他需求可以自行调整
+在data_handle.py文件里面的 url_diy_replace 函数，如果有其他更好的反代地址或其他需求可以自行调整，主要是解决跨域问题，不懂可以不折腾  
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/url_diy_replace.jpg"/>
 
 ## 使用示例、导入api和图片库
-自己看看接口的图片是否合适和能否正常访问再导入  
+自己看看接口的图片是否合适和能否正常访问再导入，有一些接口返图速度慢的就别用了    
 **二次元图片api**  
 http://api.tangdouz.com/sjdmbz.php  
 https://api.dujin.org/pic/yuanshen/  
@@ -185,7 +188,7 @@ https://mp.weixin.qq.com/s/IHeYqZTu8xYLv7nDkRwxUQ self_anime
 https://mp.weixin.qq.com/s/IHeYqZTu8xYLv7nDkRwxUQ 2
 ```
 
-## 文章图片爬取 
+## 文章图片爬取（不想折腾就忽略）  
 下载mitmproxy_script文件夹中的两个脚本 
 ```bash
 # 安装mitmproxy
@@ -228,6 +231,12 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 然后给机器人私聊发送“开爬”就会自动爬取
 
 ## 更新日志
+### 2023/3/31 \[v1.6.3]
+
+* 优化readme
+* 有个bug忘记修了
+* 图片下载超时时间从30秒改为10秒
+
 ### 2023/3/21 \[v1.6.2]
 
 * 修复readme里的错误
