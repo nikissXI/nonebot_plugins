@@ -15,7 +15,7 @@ class Config(BaseModel, extra=Extra.ignore):
     # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） ['1234','5678','6666']
     tutu_bot_qqnum_list: List[str] = []
     # 图片下载模式，真则nonebot下载，假则协议端下载
-    tutu_img_local_download: bool = True
+    tutu_img_nonebot_download: bool = False
     # 图图命令CD时间（秒）
     tutu_cooldown: int = 3
     # 一次最多发多少张图

@@ -184,7 +184,7 @@ async def handle_tutu(
             if not success:
                 msg_list.append(to_node_msg(MS.text(text)))
             else:
-                if pc.tutu_img_local_download:
+                if pc.tutu_img_nonebot_download:
                     ds, result = await download_img(img_url)
                     if ds:
                         msg_list.append(

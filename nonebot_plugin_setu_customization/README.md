@@ -57,8 +57,8 @@ tutu_admin_qqnum = 114514
 # 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
 # 如果不填该配置则由第一个连上的bot响应
 tutu_bot_qqnum_list = [1234, 5678, 6666]
-# 图片下载模式，true则nonebot下载，false则协议端下载
-tutu_img_local_download = true
+# 图片下载模式，真则nonebot下载，假则协议端下载，让协议端下载响应更快
+tutu_img_nonebot_download = false
 # 图图命令CD时间（秒）
 tutu_cooldown = 3
 # 一次最多发多少张图
@@ -228,11 +228,12 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 然后给机器人私聊发送“开爬”就会自动爬取
 
 ## 更新日志
-### 2023/3/31 \[v1.6.3]
+### 2023/3/31 \[v1.6.4]
 
 * 优化readme
 * 有个bug忘记修了
 * 图片下载超时时间从30秒改为10秒
+* 修复了一个导致图片发送慢的究极傻逼逻辑，
 
 ### 2023/3/21 \[v1.6.2]
 

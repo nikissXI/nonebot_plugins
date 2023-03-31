@@ -182,7 +182,7 @@ async def send_error_msg(msg: Union[str, Message]):
 
 async def send_img_msg(matcher: Matcher, img_num: int, img_url: str):
     try:
-        if pc.tutu_img_local_download:
+        if pc.tutu_img_nonebot_download:
             ds, result = await download_img(img_url)
             if ds:
                 await matcher.send(f"No.{img_num}" + MS.image(result, timeout=10))
