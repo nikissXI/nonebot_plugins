@@ -141,13 +141,10 @@ http://127.0.0.1:8080/tutu （具体域名和端口看你nb绑定的地址）
 **二次元图片api**  
 http://api.tangdouz.com/sjdmbz.php  
 https://api.dujin.org/pic/yuanshen/  
-https://api.mtyqx.cn/tapi/random.php  
 https://www.dmoe.cc/random.php  
 https://setu.yuban10703.xyz/setu  
-https://api.ixiaowai.cn/api/api.php  
 https://tuapi.eees.cc/api.php?category=dongman&type=302  
 https://api.yimian.xyz/img/  
-http://api.iw233.cn/api.php?sort=random  
 https://image.anosu.top/pixiv/direct  
 https://api.lolicon.app/setu/v2  
 https://moe.anosu.top/img/?sort=pixiv  
