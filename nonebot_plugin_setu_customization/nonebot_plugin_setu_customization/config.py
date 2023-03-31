@@ -126,7 +126,6 @@ driver = get_driver()
 global_config = driver.config
 pc = Config.parse_obj(global_config)
 var = Var()
-# scheduler = AsyncIOScheduler(timezone="Asia/Shanghai")
 
 
 def read_data():
