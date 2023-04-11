@@ -16,11 +16,11 @@ class Config(BaseModel, extra=Extra.ignore):
     talk_with_chatgpt_http_proxy: Optional[str] = None
 
     # 触发对话的命令前缀，群聊直接艾特也可以触发
-    talk_with_chatgpt_start_cmd: str = "talk"
+    talk_with_chatgpt_start_cmd: str = "/talk"
     # 重置对话，就是清空聊天记录
-    talk_with_chatgpt_clear_cmd: str = "clear"
+    talk_with_chatgpt_clear_cmd: str = "/clear"
     # 设置预设
-    talk_with_chatgpt_prompt_cmd: str = "prompt"
+    talk_with_chatgpt_prompt_cmd: str = "/prompt"
     # 处理消息时是否提示
     talk_with_chatgpt_reply_notice: bool = True
     # 群聊是否共享会话
