@@ -85,6 +85,14 @@ async def _(event: MessageEvent):
     # 把命令前缀截掉
     if text[: len(start_cmd)] == start_cmd:
         text = text[len(start_cmd) :]
+    # 无内容
+    if not text:
+        await prompt.finish(
+            f"""插件命令如下
+{start_cmd} 【内容】 # 开始对话，群里@机器人也可以
+{clear_cmd}  # 重置对话（不会重置预设）
+{prompt_cmd}  # 设置预设（人格），设置后会重置对话"""
+        )
     # 根据配置是否发出提示
     if pc.talk_with_chatgpt_reply_notice:
         await talk.send("响应中...")
@@ -120,14 +128,6 @@ async def _(event: MessageEvent, mp=RegexGroup()):
             at_sender=True,
         )
     text = mp[0].strip()
-    # 无内容
-    if not text:
-        await prompt.finish(
-            f"""插件命令如下
-{start_cmd} 【内容】 # 开始对话，群里@机器人也可以
-{clear_cmd}  # 重置对话（不会重置预设）
-{prompt_cmd}  # 设置预设（人格），设置后会重置对话"""
-        )
     # 重置
     if text.strip() == "重置":
         var.session_data[id] = ["", "", ""]
