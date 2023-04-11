@@ -52,9 +52,9 @@ talk_with_chatgpt_http_proxy = http://127.0.0.1:7890
 # 触发对话的命令前缀，群聊直接艾特也可以触发
 talk_with_chatgpt_start_cmd = /talk
 # 重置对话的命令，就是清空聊天记录
-talk_with_chatgpt_clear_cmd = /talk
+talk_with_chatgpt_clear_cmd = /clear
 # 设置预设的命令前缀
-talk_with_chatgpt_prompt_cmd = /talk
+talk_with_chatgpt_prompt_cmd = /prompt
 # 处理消息时是否提示，默认开
 talk_with_chatgpt_reply_notice = true
 # 群聊是否共享会话，默认关
@@ -89,6 +89,6 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 | /prompt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
-### 2023/4/11 \[v0.2.0]
+### 2023/4/11 \[v0.2.1]
 
 * 发布第一版较简陋的插件，并修复了些小问题，细节很重要
