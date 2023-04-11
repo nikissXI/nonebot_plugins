@@ -22,7 +22,7 @@ _✨ Nonebot2 一个简单易用的chatgpt插件 ✨_
 
 ## 简介
 发现商店里没有基于accessToken登录的chatgpt插件，也没看到喜欢的插件，就花一天时间自己写了一个。参考了[chatgpt web](https://github.com/Chanzhaoyu/chatgpt-web)这个开源项目，使用了社区上的反代，如果要使用其他反代可以参考这个项目里的。  
-<img width="500" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_talk_with_chatgpt/readme_img/1.jpg"/>  
+<img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_talk_with_chatgpt/readme_img/1.jpg"/>  
 
 插件功能相对其他的来说比较简单，因此也比较易用，获取accessToken并配置代理即可使用，[accessToken获取方式](https://chat.openai.com/api/auth/session)，accessToken字段的值就是了。如果有其他想法或建议欢迎提出，欢迎pr。
 
