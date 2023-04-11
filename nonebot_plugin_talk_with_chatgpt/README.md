@@ -89,6 +89,6 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 | prompt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
-### 2023/4/1 \[v0.1.0]
+### 2023/4/11 \[v0.1.0]
 
 * 发布第一版较简陋的插件
