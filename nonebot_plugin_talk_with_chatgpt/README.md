@@ -34,7 +34,7 @@ nb plugin install nonebot_plugin_talk_with_chatgpt
 ```
 
 或者  
-直接把插件clone下来放进去plugins文件夹，如果没有装httpx需要装一下
+直接把插件clone下来放进去plugins文件夹，如果没有装httpx和ujson需要装一下
 
 ## 配置
 在bot对应的.env文件修改
@@ -50,11 +50,11 @@ talk_with_chatgpt_http_proxy = http://127.0.0.1:7890
 #### 大概率用得上的选填项
 ```bash
 # 触发对话的命令前缀，群聊直接艾特也可以触发
-talk_with_chatgpt_start_cmd = talk
+talk_with_chatgpt_start_cmd = /talk
 # 重置对话的命令，就是清空聊天记录
-talk_with_chatgpt_clear_cmd = clear
+talk_with_chatgpt_clear_cmd = /talk
 # 设置预设的命令前缀
-talk_with_chatgpt_prompt_cmd = prompt
+talk_with_chatgpt_prompt_cmd = /talk
 # 处理消息时是否提示，默认开
 talk_with_chatgpt_reply_notice = true
 # 群聊是否共享会话，默认关
@@ -84,11 +84,11 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 ## 插件命令（均可修改！） 
 | 指令 | 说明 |
 |:-----:|:----:|
-| talk | 开始对话，群里@机器人也可以 |
-| clear | 重置对话（不会重置预设） |
-| prompt | 设置预设（人格），设置后会重置对话 |
+| /talk | 开始对话，群里@机器人也可以 |
+| /clear | 重置对话（不会重置预设） |
+| /prompt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
-### 2023/4/11 \[v0.1.1]
+### 2023/4/11 \[v0.2.0]
 
-* 发布第一版较简陋的插件
+* 发布第一版较简陋的插件，并修复了些小问题，细节很重要

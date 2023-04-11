@@ -119,12 +119,21 @@ async def _(event: MessageEvent, mp=RegexGroup()):
             f"{prompt_cmd} 重置  # 重置预设\n{prompt_cmd} 【预设信息】  # 设置预设\n当前预设：\n{user_prompt}",
             at_sender=True,
         )
+    text = mp[0].strip()
+    # 无内容
+    if not text:
+        await prompt.finish(
+            f"""插件命令如下
+{start_cmd} 【内容】 # 开始对话，群里@机器人也可以
+{clear_cmd}  # 重置对话（不会重置预设）
+{prompt_cmd}  # 设置预设（人格），设置后会重置对话"""
+        )
     # 重置
-    if mp[0].strip() == "重置":
+    if text.strip() == "重置":
         var.session_data[id] = ["", "", ""]
         await prompt.finish("已重置预设", at_sender=True)
     # 设置
-    var.session_data[id][2] = mp[0]
+    var.session_data[id][2] = text
     await prompt.send("设置中，请稍后...", at_sender=True)
-    result = await req_chatgpt(id, mp[0])
+    result = await req_chatgpt(id, text)
     await prompt.finish(f"<已设置预设>\n{result}", at_sender=True)
