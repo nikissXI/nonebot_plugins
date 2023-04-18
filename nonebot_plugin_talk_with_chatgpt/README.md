@@ -21,7 +21,8 @@ _✨ Nonebot2 一个简单易用的chatgpt插件 ✨_
 </p>
 
 # 注意！
-由于现在社区反代用的人太多，已经不稳定了，需要自建代理或找到能用的代理，否则没法用该插件，插件默认用的就是社区代理，目前已经用不了了（2023/4/18）[go-chatgpt-api](https://github.com/linweiyuan/go-chatgpt-api)
+由于现在社区反代用的人太多，已经不稳定了，需要自建代理或找到能用的代理，否则没法用该插件，插件默认用的就是社区代理，目前已经用不了（2023/4/18）  
+[自建代理搭建教程](https://github.com/dqzboy/ChatGPT-Porxy)
 
 ## 简介
 发现商店里没有基于accessToken登录的chatgpt插件，也没看到喜欢的插件，就花一天时间自己写了一个。参考了[chatgpt web](https://github.com/Chanzhaoyu/chatgpt-web)这个开源项目，使用了社区上的反代，如果要使用其他反代可以参考这个项目里的。  
