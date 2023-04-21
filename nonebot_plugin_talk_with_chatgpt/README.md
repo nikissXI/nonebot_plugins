@@ -21,7 +21,7 @@ _✨ Nonebot2 一个简单易用的chatgpt插件 ✨_
 </p>
 
 # 注意！
-由于现在社区反代API用的人太多，稳定性可能不咋地，最好就自建一个，目前内置的是https://ai.fakeopen.com/api/conversation，截止2023/4/21是能用的。
+由于现在社区反代API用的人太多，稳定性可能不咋地，最好就自建一个，目前内置的是[https://ai.fakeopen.com/api/conversation](https://ai.fakeopen.com/api/conversation) ，截止2023/4/21是能用的。
 [自建反代API搭建教程](https://github.com/dqzboy/ChatGPT-Porxy)
 
 ## 简介
