@@ -54,21 +54,24 @@ def body(message: str, conversation_id: str, parent_message_id: str):
 
 async def handle_req(id: str, req_text: str, operation: str) -> str:
     """请求chatgpt"""
-    conversation_id = var.session_data[id][0]
-    parent_msg_id = var.session_data[id][1]
-    if not parent_msg_id:
-        parent_msg_id = str(uuid4())
     resp_code = 0
     err_msg = ""
-
-    if operation == "talk":
+    new_talk = False
+    if not var.session_data[id][1]:
+        new_talk = True
+        var.session_data[id][1] = str(uuid4())
+    # 如果是新会话且不是预设请求且预设里面有内容
+    if new_talk and operation != "prompt":
+        if prompt_text := var.prompt_list[var.session_data[id][2]]:
+            await handle_req(id, prompt_text, "prompt")
+    if operation == "talk" or operation == "prompt":
         url = pc.talk_with_chatgpt_api_addr
-        content = body(req_text, conversation_id, parent_msg_id)
+        content = body(req_text, var.session_data[id][0], var.session_data[id][1])
     elif operation == "rename":
-        url = f"{pc.talk_with_chatgpt_api_addr}/{conversation_id}"
+        url = f"{pc.talk_with_chatgpt_api_addr}/{var.session_data[id][0]}"
         content = dumps({"title": id})
     else:
-        url = f"{pc.talk_with_chatgpt_api_addr}/{conversation_id}"
+        url = f"{pc.talk_with_chatgpt_api_addr}/{var.session_data[id][0]}"
         content = dumps({"is_visible": False})
 
     try:
@@ -78,7 +81,7 @@ async def handle_req(id: str, req_text: str, operation: str) -> str:
             content=content,
         )
         # 非对话请求响应结果无所谓，发出去就行
-        if operation != "talk":
+        if operation == "rename" or operation == "delete":
             return ""
         # 响应码
         resp_code = resp.status_code
@@ -87,11 +90,12 @@ async def handle_req(id: str, req_text: str, operation: str) -> str:
         # 提取回答
         json_data = loads(resp.text.split("\n\n")[-3][6:])
         # 保存新的会话id
+        # if not var.session_data[id][0]:
         var.session_data[id][0] = json_data["conversation_id"]
         var.session_data[id][1] = json_data["message"]["id"]
         # 尝试重命名（需api支持）
-        if not conversation_id:
-            await req_chatgpt(var.session_data[id][0], "", "rename")
+        if new_talk:
+            await handle_req(id, "", "rename")
         result: str = json_data["message"]["content"]["parts"][0]
 
     except Exception as e:
@@ -100,9 +104,6 @@ async def handle_req(id: str, req_text: str, operation: str) -> str:
             # 清空会话id
             var.session_data[id][0] = ""
             var.session_data[id][1] = ""
-            # 重新发送预设
-            if var.prompt_list["默认"]:
-                await handle_req(id, var.prompt_list["默认"], operation)
             return await handle_req(id, req_text, operation)
         # 冲突，等待2秒再尝试
         if "Only one message at a time" in err_msg:
@@ -113,6 +114,11 @@ async def handle_req(id: str, req_text: str, operation: str) -> str:
         code_text = f"\n响应码: {resp_code}" if resp_code else ""
         err_type_text = "" if resp_code else f"\n错误类型: {repr(e)}"
         content_text = f"\n响应内容: {err_msg}" if resp_code else ""
+        content_text = (
+            f"{content_text[:300]}\n（内容过长已截断）"
+            if len(content_text) > 300
+            else content_text
+        )
         result = err_header + code_text + err_type_text + content_text
 
     return result

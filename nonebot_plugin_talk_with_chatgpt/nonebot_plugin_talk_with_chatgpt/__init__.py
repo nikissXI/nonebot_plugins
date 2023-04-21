@@ -20,7 +20,7 @@ prompt_cmd = pc.talk_with_chatgpt_prompt_cmd
 
 __plugin_meta__ = PluginMetadata(
     name="talk with chatgpt",
-    description="一个简单的基于accessToken验证的ChatGpt对话插件",
+    description="一个简单的基于accessToken验证的ChatGPT对话插件",
     usage=f"""插件命令如下
 {talk_cmd}  # 开始对话，群里@机器人也可以
 {reset_cmd}  # 重置对话（不会重置预设）
@@ -120,13 +120,10 @@ async def _(event: MessageEvent):
     # 获取用户id
     id = get_id(event)
 
-    # 判断是否为新会话，是的话加预设
-    if not var.session_data[id][0] and var.prompt_list["默认"]:
-        await req_chatgpt(id, var.prompt_list["默认"])
-
     # 根据配置是否发出提示
     if pc.talk_with_chatgpt_reply_notice:
         await talk.send("响应中...")
+
     result = await req_chatgpt(id, text)
     await talk.finish(result, at_sender=True)
 
@@ -140,13 +137,10 @@ async def _(event: PrivateMessageEvent):
     # 获取用户id
     id = get_id(event)
 
-    # 判断是否为新会话，是的话加预设
-    if not var.session_data[id][0] and var.prompt_list["默认"]:
-        await req_chatgpt(id, var.prompt_list["默认"])
-
     # 根据配置是否发出提示
     if pc.talk_with_chatgpt_reply_notice:
         await talk_p.send("响应中...")
+
     result = await req_chatgpt(id, text)
     await talk_p.reject(result)
 
@@ -156,15 +150,11 @@ async def _(event: MessageEvent):
     # 获取用户id
     id = get_id(event)
     # 尝试删除（需api支持）
-    await req_chatgpt(var.session_data[id][0], "", "delete")
+    await req_chatgpt(id, "", "delete")
     # 清空会话id
     var.session_data[id][0] = ""
     var.session_data[id][1] = ""
     await reset.send("已清空聊天记录", at_sender=True)
-    # 如果设置了预设，补回去
-    prompt_text = var.prompt_list[var.session_data[id][2]]
-    if prompt_text:
-        await req_chatgpt(id, prompt_text)
 
 
 @prompt_set.got(
@@ -230,11 +220,11 @@ async def _(event: MessageEvent, s: T_State):
         if prompt_name not in var.prompt_list.keys():
             await prompt_set.reject(f"不存在预设“{prompt_name}”", at_sender=True)
         # 尝试删除（需api支持）
-        await req_chatgpt(var.session_data[id][0], "", "delete")
+        await req_chatgpt(id, "", "delete")
         # 清空会话id
         var.session_data[id] = ["", "", prompt_name]
         # 设置预设
-        await prompt_set.send("设置中，请稍后...", at_sender=True)
+        await prompt_set.send("测试预设响应，请稍后...", at_sender=True)
         result = await req_chatgpt(id, var.prompt_list[prompt_name])
         await prompt_set.reject(
             f"已设置预设为“{prompt_name}”并清空聊天记录\n预设响应内容：{result}", at_sender=True

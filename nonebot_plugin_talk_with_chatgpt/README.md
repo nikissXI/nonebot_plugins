@@ -53,7 +53,7 @@ talk_with_chatgpt_accesstoken = xxxxxxxxxxx
 ```bash
 # chatgpt反代地址，默认 https://ai.fakeopen.com/api/conversation
 talk_with_chatgpt_api_addr = https://ai.fakeopen.com/api/conversation
-# http代理，不支持socks代理，默认无代理，视api情况看是否需要梯子
+# 默认无代理，视api情况看是否需要梯子。这个内置的反代我测过是不需要梯子的。
 talk_with_chatgpt_http_proxy = null
 
 # 处理消息时是否提示
@@ -100,7 +100,7 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 | /prompt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
-### 2023/4/21 \[v0.3.1]
+### 2023/4/21 \[v0.3.2]
 
 * 更换了默认API，暂时能用，建议还是自己搭建API
 * 新增多预设功能，内置三个预设：猫娘、魅魔、开发者模式
