@@ -21,8 +21,8 @@ _✨ Nonebot2 一个简单易用的chatgpt插件 ✨_
 </p>
 
 # 注意！
-由于现在社区反代用的人太多，已经不稳定了，需要自建代理或找到能用的代理，否则没法用该插件，插件默认用的就是社区代理，目前已经用不了（2023/4/18）  
-[自建代理搭建教程](https://github.com/dqzboy/ChatGPT-Porxy)
+由于现在社区反代API用的人太多，稳定性可能不咋地，最好就自建一个，目前内置的是https://ai.fakeopen.com/api/conversation，截止2023/4/21是能用的。
+[自建反代API搭建教程](https://github.com/dqzboy/ChatGPT-Porxy)
 
 ## 简介
 发现商店里没有基于accessToken登录的chatgpt插件，也没看到喜欢的插件，就花一天时间自己写了一个。参考了[chatgpt web](https://github.com/Chanzhaoyu/chatgpt-web)这个开源项目，使用了社区上的反代，如果要使用其他反代可以参考这个项目里的。  
@@ -41,42 +41,48 @@ nb plugin install nonebot_plugin_talk_with_chatgpt
 直接把插件clone下来放进去plugins文件夹，如果没有装httpx和ujson需要装一下
 
 ## 配置
-在bot对应的.env文件修改
+在bot对应的.env文件修改，文档中的均是默认值
 
 #### 必填项
 ```bash
 # 填上面获取到的accessToken
 talk_with_chatgpt_accesstoken = xxxxxxxxxxx
-# http代理，不支持socks代理，默认空值
-talk_with_chatgpt_http_proxy = http://127.0.0.1:7890
 ```
 
 #### 大概率用得上的选填项
 ```bash
-# 触发对话的命令前缀，群聊直接艾特也可以触发
-talk_with_chatgpt_start_cmd = /talk
-# 重置对话的命令，就是清空聊天记录
-talk_with_chatgpt_clear_cmd = /clear
-# 设置预设的命令前缀
-talk_with_chatgpt_prompt_cmd = /prompt
-# 处理消息时是否提示，默认开
+# chatgpt反代地址，默认 https://ai.fakeopen.com/api/conversation
+talk_with_chatgpt_api_addr = https://ai.fakeopen.com/api/conversation
+# http代理，不支持socks代理，默认无代理，视api情况看是否需要梯子
+talk_with_chatgpt_http_proxy = null
+
+# 处理消息时是否提示
 talk_with_chatgpt_reply_notice = true
-# 群聊是否共享会话，默认关
+# 群聊是否共享会话
 talk_with_chatgpt_group_share = false
+# 只允许超级管理员修改预设
+talk_with_chatgpt_prompt_admin_only = true
 ```
 
-#### 可能用得上的选填项
+#### 如果要修改触发命令就填
+```bash
+# 触发对话的命令前缀，群聊直接艾特也可以触发
+talk_with_chatgpt_start_cmd = /talk
+# 私聊沉浸式对话触发命令
+talk_with_chatgpt_talk_p_cmd = /hi
+# 重置对话的命令，就是清空聊天记录
+talk_with_chatgpt_reset_cmd = /reset
+# 设置预设的命令前缀
+talk_with_chatgpt_prompt_cmd = /prompt
+```
+
+#### 大概率用不上的选填项
 ```bash
 # 请求超时时间，回答生成的时间也要算在这里面的，所以不能太短，默认60秒
 talk_with_chatgpt_timeout = 60
-# chatgpt反代地址，默认 https://bypass.churchless.tech/api/conversation
-talk_with_chatgpt_api_addr = https://bypass.churchless.tech/api/conversation
 # chatgpt模型，默认 text-davinci-002-render-sha，更多模型请参考 https://platform.openai.com/docs/models
 talk_with_chatgpt_api_model = text-davinci-002-render-sha
-```
 
-#### 基本用不上的选填项
-```bash
 # 机器人的QQ号列表，选填
 # 如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
 # 如果不填该配置则由第一个连上的bot响应，所以单bot连可以不填
@@ -89,10 +95,18 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 | 指令 | 说明 |
 |:-----:|:----:|
 | /talk | 开始对话，群里@机器人也可以 |
+| /hi | 沉浸式对话（仅限私聊） |
 | /clear | 重置对话（不会重置预设） |
 | /prompt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
+### 2023/4/21 \[v0.3.1]
+
+* 更换了默认API，暂时能用，建议还是自己搭建API
+* 新增多预设功能，内置三个预设：猫娘、魅魔、开发者模式
+* 增加私聊沉浸式对话
+* 优化大量细节
+
 ### 2023/4/11 \[v0.2.3]
 
 * 发布第一版较简陋的插件，并修复了些小问题，细节很重要
