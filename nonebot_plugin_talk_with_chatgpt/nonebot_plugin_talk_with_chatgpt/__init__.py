@@ -22,7 +22,7 @@ __plugin_meta__ = PluginMetadata(
     name="talk with chatgpt",
     description="一个简单的基于accessToken验证的ChatGPT对话插件",
     usage=f"""插件命令如下
-{talk_cmd}  # 开始对话，群里@机器人也可以
+{talk_cmd}  # 开始对话，默认群里@机器人也可以
 {reset_cmd}  # 重置对话（不会重置预设）
 {prompt_cmd}  # 设置预设（人格），设置后会重置对话
 """,
@@ -56,7 +56,7 @@ async def rule_check(event: MessageEvent, bot: Bot) -> bool:
 
     if isinstance(event, GroupMessageEvent):
         # 仅艾特但没发内容
-        if event.is_tome():
+        if event.is_tome() and pc.talk_with_chatgpt_talk_at:
             if text:
                 return True
             else:

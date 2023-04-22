@@ -21,7 +21,7 @@ _✨ Nonebot2 一个简单易用的chatgpt插件 ✨_
 </p>
 
 # 注意！
-由于现在社区反代API用的人太多，稳定性可能不咋地，最好就自建一个，目前内置的是[https://ai.fakeopen.com/api/conversation](https://ai.fakeopen.com/api/conversation) ，截止2023/4/21是能用的，而且不需要设置代理。
+由于现在社区反代API用的人太多，稳定性可能不咋地，最好就自建一个，目前内置的是[https://ai.fakeopen.com/api/conversation](https://ai.fakeopen.com/api/conversation) ，截止2023/4/22是能用的，而且不需要设置代理。
 [自建反代API搭建教程](https://github.com/dqzboy/ChatGPT-Porxy)
 
 ## 简介
@@ -66,8 +66,10 @@ talk_with_chatgpt_prompt_admin_only = true
 
 #### 如果要修改触发命令就填
 ```bash
-# 触发对话的命令前缀，群聊直接艾特也可以触发
+# 触发对话的命令前缀，默认群聊直接艾特也可以触发
 talk_with_chatgpt_start_cmd = /talk
+# 群聊艾特是否响应
+talk_with_chatgpt_talk_at = true
 # 私聊沉浸式对话触发命令
 talk_with_chatgpt_talk_p_cmd = /hi
 # 重置对话的命令，就是清空聊天记录
@@ -94,12 +96,16 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 ## 插件命令（均可修改！） 
 | 指令 | 说明 |
 |:-----:|:----:|
-| /talk | 开始对话，群里@机器人也可以 |
+| /talk | 开始对话，默认群里@机器人也可以 |
 | /hi | 沉浸式对话（仅限私聊） |
 | /clear | 重置对话（不会重置预设） |
 | /prompt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
+### 2023/4/22 \[v0.4.1]
+
+* 增加群聊at触发开关
+
 ### 2023/4/21 \[v0.4.0]
 
 * 更换了默认API，暂时能用，建议还是自己搭建API

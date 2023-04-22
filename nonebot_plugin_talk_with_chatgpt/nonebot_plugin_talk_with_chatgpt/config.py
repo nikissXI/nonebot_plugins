@@ -28,6 +28,8 @@ class Config(BaseModel, extra=Extra.ignore):
 
     # 触发对话的命令前缀，群聊直接艾特也可以触发
     talk_with_chatgpt_talk_cmd: str = "/talk"
+    # 群聊艾特是否响应
+    talk_with_chatgpt_talk_at: bool = True
     # 私聊沉浸式对话触发命令
     talk_with_chatgpt_talk_p_cmd: str = "/hi"
     # 重置对话，就是清空聊天记录
