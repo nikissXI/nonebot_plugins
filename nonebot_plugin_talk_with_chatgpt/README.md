@@ -67,7 +67,7 @@ talk_with_chatgpt_prompt_admin_only = true
 #### 如果要修改触发命令就填
 ```bash
 # 触发对话的命令前缀，默认群聊直接艾特也可以触发
-talk_with_chatgpt_start_cmd = /talk
+talk_with_chatgpt_talk_cmd = /talk
 # 群聊艾特是否响应
 talk_with_chatgpt_talk_at = true
 # 私聊沉浸式对话触发命令
