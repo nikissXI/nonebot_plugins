@@ -98,7 +98,7 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 |:-----:|:----:|
 | /talk | 开始对话，默认群里@机器人也可以 |
 | /hi | 沉浸式对话（仅限私聊） |
-| /clear | 重置对话（不会重置预设） |
+| /reset | 重置对话（不会重置预设） |
 | /prompt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
