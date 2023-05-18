@@ -100,7 +100,7 @@ async def handle_req(id: str, req_text: str, operation: str) -> str:
 
     except Exception as e:
         # 会话丢失
-        if "Conversation not found" in err_msg:
+        if resp_code == 404 and "found" in err_msg:
             # 清空会话id
             var.session_data[id][0] = ""
             var.session_data[id][1] = ""
