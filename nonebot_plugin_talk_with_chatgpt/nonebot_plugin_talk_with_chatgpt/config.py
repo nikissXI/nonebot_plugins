@@ -42,7 +42,7 @@ class Config(BaseModel, extra=Extra.ignore):
     # chatgpt模型
     talk_with_chatgpt_api_model: str = "text-davinci-002-render-sha"
 
-    # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） [1234, 5678, 6666]
+    # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） [1234, 5678, 6666]  ["all"]则全部响应
     talk_with_chatgpt_bot_qqnum_list: List[str] = []  # 可选
     # 插件数据文件名
     talk_with_chatgpt_data: str = "talk_with_chatgpt.json"
@@ -134,6 +134,8 @@ async def _():
 # qq机器人连接时执行
 @driver.on_bot_connect
 async def _(bot: Bot):
+    if pc.talk_with_chatgpt_bot_qqnum_list == ["all"]:
+        return
     # 是否有写bot qq，如果写了只处理bot qq在列表里的
     if (
         pc.talk_with_chatgpt_bot_qqnum_list
@@ -163,6 +165,8 @@ async def _(bot: Bot):
 # qq机器人断开时执行
 @driver.on_bot_disconnect
 async def _(bot: Bot):
+    if pc.talk_with_chatgpt_bot_qqnum_list == ["all"]:
+        return
     # 判断掉线的是否为handle bot
     if bot == var.handle_bot:
         # 如果有写bot qq列表

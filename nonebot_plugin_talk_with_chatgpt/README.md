@@ -87,7 +87,7 @@ talk_with_chatgpt_api_model = text-davinci-002-render-sha
 
 # 机器人的QQ号列表，选填
 # 如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
-# 如果不填该配置则由第一个连上的bot响应，所以单bot连可以不填
+# 如果不填该配置则由第一个连上的bot响应，所以单bot连可以不填，写 ["all"]则所有机器人均响应
 talk_with_chatgpt_bot_qqnum_list = [1234, 5678, 6666]
 # 插件数据文件名，默认./data/talk_with_chatgpt.json
 talk_with_chatgpt_data = talk_with_chatgpt.json
@@ -102,13 +102,17 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 | /prompt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
+### 2023/5/29 \[v0.4.3]
+
+* [支持所有机器人响应命令](https://github.com/nikissXI/nonebot_plugins/issues/22)
+
 ### 2023/5/18 \[v0.4.2]
 
-* 修复会话丢失不重置的问题
+* [修复会话丢失不重置的问题](https://github.com/nikissXI/nonebot_plugins/issues/21)
 
 ### 2023/4/22 \[v0.4.1]
 
-* 增加群聊at触发开关
+* [增加群聊at触发开关](https://github.com/nikissXI/nonebot_plugins/issues/21)
 
 ### 2023/4/21 \[v0.4.0]
 

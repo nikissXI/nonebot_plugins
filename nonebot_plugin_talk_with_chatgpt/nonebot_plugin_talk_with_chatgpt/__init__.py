@@ -49,7 +49,7 @@ def get_id(event: MessageEvent) -> str:
 async def rule_check(event: MessageEvent, bot: Bot) -> bool:
     """对话响应判断"""
     # bot判断
-    if bot != var.handle_bot:
+    if pc.talk_with_chatgpt_bot_qqnum_list != ["all"] and bot != var.handle_bot:
         return False
     # 获取纯文本
     text = event.get_plaintext().strip()
@@ -73,19 +73,27 @@ async def rule_check(event: MessageEvent, bot: Bot) -> bool:
 
 async def rule_check2(event: MessageEvent, bot: Bot) -> bool:
     """其他命令判断"""
-    return bot == var.handle_bot and (
+    if not (
         isinstance(event, GroupMessageEvent) or isinstance(event, PrivateMessageEvent)
-    )
+    ):
+        return False
+
+    if pc.talk_with_chatgpt_bot_qqnum_list == ["all"]:
+        return True
+    else:
+        return bot == var.handle_bot
 
 
 async def rule_check3(event: MessageEvent, bot: Bot) -> bool:
     """预设权限判断"""
     if not (
-        bot == var.handle_bot
-        and isinstance(event, GroupMessageEvent)
-        or isinstance(event, PrivateMessageEvent)
+        isinstance(event, GroupMessageEvent) or isinstance(event, PrivateMessageEvent)
     ):
         return False
+
+    if pc.talk_with_chatgpt_bot_qqnum_list != ["all"] and bot != var.handle_bot:
+        return False
+
     if pc.talk_with_chatgpt_prompt_admin_only and not await SUPERUSER(bot, event):
         return False
     else:
