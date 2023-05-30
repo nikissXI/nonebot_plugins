@@ -62,20 +62,24 @@ talk_with_chatgpt_reply_notice = true
 talk_with_chatgpt_group_share = false
 # 只允许超级管理员修改预设
 talk_with_chatgpt_prompt_admin_only = true
+# 是否默认允许所有群聊使用，否则需要使用命令启用
+talk_with_chatgpt_all_group_enable = true
 ```
 
 #### 如果要修改触发命令就填
 ```bash
-# 触发对话的命令前缀，默认群聊直接艾特也可以触发
-talk_with_chatgpt_talk_cmd = /talk
 # 群聊艾特是否响应
 talk_with_chatgpt_talk_at = true
+# 触发对话的命令前缀，默认群聊直接艾特也可以触发
+talk_with_chatgpt_talk_cmd = /talk
 # 私聊沉浸式对话触发命令
 talk_with_chatgpt_talk_p_cmd = /hi
 # 重置对话的命令，就是清空聊天记录
 talk_with_chatgpt_reset_cmd = /reset
 # 设置预设的命令前缀
 talk_with_chatgpt_prompt_cmd = /prompt
+# 如果关闭所有群聊使用，启用该群的命令
+talk_with_chatgpt_group_enable_cmd = /chatgpt
 ```
 
 #### 大概率用不上的选填项
@@ -102,6 +106,10 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 | /prompt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
+### 2023/5/30 \[v0.5.0]
+
+* 更换了自带预设“猫娘”的内容，新增配置项talk_with_chatgpt_all_group_enable和talk_with_chatgpt_group_enable_cmd，新增命令/chatgpt
+
 ### 2023/5/29 \[v0.4.3]
 
 * [支持所有机器人响应命令](https://github.com/nikissXI/nonebot_plugins/issues/22)

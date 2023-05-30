@@ -17,6 +17,7 @@ talk_cmd = pc.talk_with_chatgpt_talk_cmd
 talk_p_cmd = pc.talk_with_chatgpt_talk_p_cmd
 reset_cmd = pc.talk_with_chatgpt_reset_cmd
 prompt_cmd = pc.talk_with_chatgpt_prompt_cmd
+enable_cmd = pc.talk_with_chatgpt_group_enable_cmd
 
 __plugin_meta__ = PluginMetadata(
     name="talk with chatgpt",
@@ -25,6 +26,7 @@ __plugin_meta__ = PluginMetadata(
 {talk_cmd}  # 开始对话，默认群里@机器人也可以
 {reset_cmd}  # 重置对话（不会重置预设）
 {prompt_cmd}  # 设置预设（人格），设置后会重置对话
+{enable_cmd}  # 如果关闭所有群启用，则用这个命令启用
 """,
 )
 
@@ -51,10 +53,18 @@ async def rule_check(event: MessageEvent, bot: Bot) -> bool:
     # bot判断
     if pc.talk_with_chatgpt_bot_qqnum_list != ["all"] and bot != var.handle_bot:
         return False
+
     # 获取纯文本
     text = event.get_plaintext().strip()
 
     if isinstance(event, GroupMessageEvent):
+        # 判断是否启用
+        if (
+            pc.talk_with_chatgpt_all_group_enable is False
+            and event.group_id not in var.enable_group_list
+        ):
+            return False
+
         # 仅艾特但没发内容
         if event.is_tome() and pc.talk_with_chatgpt_talk_at:
             if text:
@@ -97,7 +107,23 @@ async def rule_check3(event: MessageEvent, bot: Bot) -> bool:
     if pc.talk_with_chatgpt_prompt_admin_only and not await SUPERUSER(bot, event):
         return False
     else:
+        # 判断是否启用
+        if (
+            isinstance(event, GroupMessageEvent)
+            and pc.talk_with_chatgpt_all_group_enable is False
+            and event.group_id not in var.enable_group_list
+        ):
+            return False
+
         return True
+
+
+async def rule_admin(event: GroupMessageEvent, bot: Bot) -> bool:
+    if pc.talk_with_chatgpt_bot_qqnum_list != ["all"] and bot != var.handle_bot:
+        return False
+    if not await SUPERUSER(bot, event):
+        return False
+    return True
 
 
 #################
@@ -107,6 +133,7 @@ talk = on_message(rule=rule_check)
 talk_p = on_fullmatch(talk_p_cmd, rule=rule_check2)
 reset = on_fullmatch(reset_cmd, rule=rule_check2)
 prompt_set = on_fullmatch(prompt_cmd, permission=rule_check3)
+enable_group = on_fullmatch(enable_cmd, rule=rule_admin)
 
 
 @talk.handle()
@@ -250,3 +277,16 @@ async def _(event: MessageEvent, s: T_State):
 
     # 退出
     await prompt_set.finish(f"未知命令“{text}”，已退出", at_sender=True)
+
+
+@enable_group.handle()
+async def _(event: GroupMessageEvent):
+    if pc.talk_with_chatgpt_all_group_enable is True:
+        await enable_group.finish("当前配置是所有群都启用，此命令无效")
+
+    if event.group_id in var.enable_group_list:
+        var.enable_group_list.remove(event.group_id)
+        await enable_group.finish("chatgpt已禁用")
+    else:
+        var.enable_group_list.append(event.group_id)
+        await enable_group.finish("chatgpt已启用")
