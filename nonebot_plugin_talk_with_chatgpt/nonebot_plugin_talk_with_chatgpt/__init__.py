@@ -72,10 +72,11 @@ async def rule_check(event: MessageEvent, bot: Bot) -> bool:
             else:
                 return False
 
+        # 判断命令前缀
         return text[: len(talk_cmd)] == talk_cmd
 
     elif isinstance(event, PrivateMessageEvent):
-        # 判断前缀
+        # 判断命令前缀
         return text[: len(talk_cmd)] == talk_cmd
 
     return False
