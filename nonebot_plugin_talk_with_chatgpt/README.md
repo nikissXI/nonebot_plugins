@@ -104,6 +104,7 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 | /hi | 沉浸式对话（仅限私聊） |
 | /reset | 重置对话（不会重置预设） |
 | /prompt | 设置预设（人格），设置后会重置对话 |
+| /chatgpt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
 ### 2023/5/30 \[v0.5.0]
