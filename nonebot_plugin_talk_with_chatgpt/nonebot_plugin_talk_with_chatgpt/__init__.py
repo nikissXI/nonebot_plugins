@@ -4,11 +4,12 @@ from nonebot.adapters.onebot.v11 import (
     MessageEvent,
     GroupMessageEvent,
     PrivateMessageEvent,
+    MessageSegment as MS,
 )
 from nonebot.log import logger
 from nonebot.plugin import PluginMetadata
 from .config import pc, var
-from .data_handle import req_chatgpt
+from .data_handle import req_chatgpt, text_to_img
 from nonebot.typing import T_State
 from html import unescape
 from nonebot.permission import SUPERUSER
@@ -23,10 +24,10 @@ __plugin_meta__ = PluginMetadata(
     name="talk with chatgpt",
     description="一个简单的基于accessToken验证的ChatGPT对话插件",
     usage=f"""插件命令如下
-{talk_cmd}  # 开始对话，默认群里@机器人也可以
-{reset_cmd}  # 重置对话（不会重置预设）
-{prompt_cmd}  # 设置预设（人格），设置后会重置对话
-{enable_cmd}  # 如果关闭所有群启用，则用这个命令启用
+{talk_cmd}   # 开始对话，默认群里@机器人也可以
+{reset_cmd}   # 重置对话（不会重置预设）
+{prompt_cmd}   # 设置预设（人格），设置后会重置对话
+{enable_cmd}   # 如果关闭所有群启用，则用这个命令启用
 """,
 )
 
@@ -161,6 +162,14 @@ async def _(event: MessageEvent):
         await talk.send("响应中...")
 
     result = await req_chatgpt(id, text)
+    if pc.talk_with_chatgpt_ban_word:
+        for w in pc.talk_with_chatgpt_ban_word:
+            if w in result:
+                result = "本次回答中包含屏蔽词！"
+                break
+
+    if pc.talk_with_chatgpt_send_with_img:
+        result = MS.image(text_to_img(result))
     await talk.finish(result, at_sender=True)
 
 
@@ -178,6 +187,14 @@ async def _(event: PrivateMessageEvent):
         await talk_p.send("响应中...")
 
     result = await req_chatgpt(id, text)
+    if pc.talk_with_chatgpt_ban_word:
+        for w in pc.talk_with_chatgpt_ban_word:
+            if w in result:
+                result = "本次回答中包含屏蔽词！"
+                break
+
+    if pc.talk_with_chatgpt_send_with_img:
+        result = MS.image(text_to_img(result))
     await talk_p.reject(result)
 
 

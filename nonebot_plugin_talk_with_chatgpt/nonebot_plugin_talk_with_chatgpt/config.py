@@ -27,6 +27,8 @@ class Config(BaseModel, extra=Extra.ignore):
     talk_with_chatgpt_prompt_admin_only: bool = True
     # 是否默认允许所有群聊使用，否则需要使用命令启用
     talk_with_chatgpt_all_group_enable: bool = True
+    # 机器人的回复是否使用图片发送
+    talk_with_chatgpt_send_with_img: bool = False
 
     # 群聊艾特是否响应
     talk_with_chatgpt_talk_at: bool = True
@@ -41,6 +43,8 @@ class Config(BaseModel, extra=Extra.ignore):
     # 如果关闭所有群聊使用，启用该群的命令
     talk_with_chatgpt_group_enable_cmd: str = "/chatgpt"
 
+    # 敏感词屏蔽，默认不屏蔽任何词
+    talk_with_chatgpt_ban_word: List[str] = []
     # 请求超时时间
     talk_with_chatgpt_timeout: int = 60
     # chatgpt模型
@@ -50,6 +54,12 @@ class Config(BaseModel, extra=Extra.ignore):
     talk_with_chatgpt_bot_qqnum_list: List[str] = []  # 可选
     # 插件数据文件名
     talk_with_chatgpt_data: str = "talk_with_chatgpt.json"
+    # 字体文件路径
+    talk_with_chatgpt_font_path: str = str(
+        path.join(path.dirname(path.abspath(__file__)), "HYWenHei-85W.ttf")
+    )
+    # 字体大小
+    talk_with_chatgpt_font_size: int = 18
 
 
 driver = get_driver()

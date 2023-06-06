@@ -5,6 +5,8 @@ from asyncio import Future, sleep, Queue, create_task
 from ujson import dumps, loads
 from uuid import uuid4
 from nonebot import get_driver
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
 
 driver = get_driver()
 
@@ -144,3 +146,35 @@ async def req_chatgpt(id: str, req_text: str, operation: str = "talk") -> str:
             resp_text = resp_text.split("(Developer Mode Output) ")[1]
 
     return resp_text
+
+
+# 文字转图片
+def text_to_img(text: str, font_path: str = pc.talk_with_chatgpt_font_path) -> BytesIO:
+    """
+    字转图片
+    """
+    lines = text.splitlines()
+    line_count = len(lines)
+    # 读取字体
+    font = ImageFont.truetype(font_path, pc.talk_with_chatgpt_font_size)
+    # 获取字体的行高
+    left, top, width, line_height = font.getbbox("a")
+    # 增加行距
+    line_height += 3
+    # 获取画布需要的高度
+    height = line_height * line_count + 20
+    # 获取画布需要的宽度
+    width = int(max([font.getlength(line) for line in lines])) + 25
+    # 字体颜色
+    black_color = (0, 0, 0)
+    # 生成画布
+    image = Image.new("RGB", (width, height), (255, 255, 255))
+    draw = ImageDraw.Draw(image)
+    # 按行开画，c是计算写到第几行
+    c = 0
+    for line in lines:
+        draw.text((10, 6 + line_height * c), line, font=font, fill=black_color)
+        c += 1
+    img_bytes = BytesIO()
+    image.save(img_bytes, format="jpeg")
+    return img_bytes

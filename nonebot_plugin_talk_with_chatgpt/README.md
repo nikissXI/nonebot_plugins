@@ -64,6 +64,8 @@ talk_with_chatgpt_group_share = false
 talk_with_chatgpt_prompt_admin_only = true
 # 是否默认允许所有群聊使用，否则需要使用命令启用
 talk_with_chatgpt_all_group_enable = true
+# 机器人的回复是否使用图片发送
+talk_with_chatgpt_send_with_img = false
 ```
 
 #### 如果要修改触发命令就填
@@ -84,6 +86,8 @@ talk_with_chatgpt_group_enable_cmd = /chatgpt
 
 #### 大概率用不上的选填项
 ```bash
+# 敏感词屏蔽，默认不屏蔽任何词
+talk_with_chatgpt_ban_word = ["示例词1", "示例词2"]
 # 请求超时时间，回答生成的时间也要算在这里面的，所以不能太短，默认60秒
 talk_with_chatgpt_timeout = 60
 # chatgpt模型，默认 text-davinci-002-render-sha，更多模型请参考 https://platform.openai.com/docs/models
@@ -95,6 +99,8 @@ talk_with_chatgpt_api_model = text-davinci-002-render-sha
 talk_with_chatgpt_bot_qqnum_list = [1234, 5678, 6666]
 # 插件数据文件名，默认./data/talk_with_chatgpt.json
 talk_with_chatgpt_data = talk_with_chatgpt.json
+# 如果使用图片回复，字体大小
+talk_with_chatgpt_font_size = 18
 ```
 
 ## 插件命令（均可修改！） 
@@ -107,9 +113,13 @@ talk_with_chatgpt_data = talk_with_chatgpt.json
 | /chatgpt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
+### 2023/6/6 \[v0.6.0]
+
+* 新增配置项 talk_with_chatgpt_send_with_img 和 talk_with_chatgpt_ban_word
+
 ### 2023/5/30 \[v0.5.0]
 
-* 更换了自带预设“猫娘”的内容，新增配置项talk_with_chatgpt_all_group_enable和talk_with_chatgpt_group_enable_cmd，新增命令/chatgpt
+* 更换了自带预设“猫娘”的内容，新增配置项 talk_with_chatgpt_all_group_enable 和 talk_with_chatgpt_group_enable_cmd ，新增命令/chatgpt
 
 ### 2023/5/29 \[v0.4.3]
 
