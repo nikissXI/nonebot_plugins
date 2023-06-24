@@ -8,6 +8,8 @@ from typing import Optional, List, Dict, Tuple
 class Config(BaseModel, extra=Extra.ignore):
     # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） ['1234','5678','6666']
     easy_translate_bot_qqnum_list: List[str] = []  # 可选
+    # 代理
+    easy_translate_http_proxy: Optional[str] = None  # 可选
 
 
 class Var:
@@ -19,6 +21,7 @@ driver = get_driver()
 
 pc = Config.parse_obj(driver.config)
 var = Var()
+
 
 # qq机器人连接时执行
 @driver.on_bot_connect

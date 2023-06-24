@@ -9,6 +9,7 @@ from nonebot.adapters.onebot.v11.event import (
 from nonebot.params import RegexGroup
 from nonebot.plugin import PluginMetadata
 from .config import pc, var
+from gtranslate.client import Translator
 
 __plugin_meta__ = PluginMetadata(
     name="简单翻译插件",
@@ -38,8 +39,8 @@ async def handle_fanyi(matchgroup=RegexGroup()):
         await fanyi.finish("翻译/x译x [内容]\n直接翻译是自动识别，x是指定语言\nx支持：中（简中）、繁（繁中）、英、日、韩、法、俄、德")
 
     dd = {
-        "中": "zh-CN",
-        "繁": "zh-TW",
+        "中": "zh-cn",
+        "繁": "zh-tw",
         "英": "en",
         "日": "ja",
         "韩": "ko",
@@ -49,25 +50,23 @@ async def handle_fanyi(matchgroup=RegexGroup()):
     }
 
     if matchgroup[0] == "翻译":
-        from_ = "auto"
-        to_ = "auto"
+        src = "auto"
+        dest = "zh-cn"
     else:
         try:
-            from_ = dd[matchgroup[1]]
-            to_ = dd[matchgroup[2]]
+            src = dd[matchgroup[1]]
+            dest = dd[matchgroup[2]]
         except KeyError:
             await fanyi.finish("不支持该语种")
 
-    data = {"data": [in_, from_, to_]}
-    async with AsyncClient(verify=False, follow_redirects=True) as c:
-        resp = await c.post(
-            "https://hf.space/embed/mikeee/gradio-gtr/+/api/predict", json=data
-        )
-        if resp.status_code != 200:
-            await fanyi.finish(f"翻译接口调用失败\n错误代码{resp.status_code},{resp.text}")
-
-        result = resp.json()
-        result = result["data"][0]
+    try:
+        result = (
+            await Translator(proxies=pc.easy_translate_http_proxy).translate(
+                in_, dest=dest, src=src
+            )
+        ).text
+    except Exception as e:
+        result = repr(e)
 
     await fanyi.finish(result)
 

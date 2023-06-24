@@ -21,8 +21,7 @@ _✨ Nonebot2 简单易用谷歌翻译插件，免key！ ✨_
 </p>
 
 ## 简介
-使用了sena-nana大佬给的接口，他的仓库
-<a href="https://github.com/sena-nana/nonebot-plugin-novelai/blob/main/nonebot_plugin_novelai/extension/translation.py">sena-nana/nonebot-plugin-novelai</a>，不需要使用梯子和api key就能使用的翻译插件
+之前的免梯谷歌翻译接口寄了，现在用的是[谷歌翻译库](https://py-googletrans.readthedocs.io/en/latest/#googletrans.Translator.translate)，我把代码改成异步然后当插件用了，得用梯子
 
 <img width="500" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_easy_translate/readme_img/fanyi.jpg"/>
 
@@ -51,6 +50,10 @@ easy_translate_bot_qqnum_list = [1234,5678,6666]
 | 翻译 | 你发一下就知道啦 |
 
 ## 更新日志
+### 2023/6/24 \[v0.2.0]
+
+* 改用谷歌翻译库，需要梯子了
+
 ### 2023/1/24 \[v0.1.4]
 
 * 修复多bot处理bug
