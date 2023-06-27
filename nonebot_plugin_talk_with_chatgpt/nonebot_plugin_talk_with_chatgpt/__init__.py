@@ -51,9 +51,6 @@ def get_id(event: MessageEvent) -> str:
 
 async def rule_check(event: MessageEvent, bot: Bot) -> bool:
     """对话响应判断"""
-    # bot判断
-    if pc.talk_with_chatgpt_bot_qqnum_list != ["all"] and bot != var.handle_bot:
-        return False
 
     # 获取纯文本
     text = event.get_plaintext().strip()
@@ -64,6 +61,9 @@ async def rule_check(event: MessageEvent, bot: Bot) -> bool:
             pc.talk_with_chatgpt_all_group_enable is False
             and event.group_id not in var.enable_group_list
         ):
+            return False
+
+        if pc.talk_with_chatgpt_bot_qqnum_list != ["all"] and bot != var.handle_bot:
             return False
 
         # 仅艾特但没发内容
