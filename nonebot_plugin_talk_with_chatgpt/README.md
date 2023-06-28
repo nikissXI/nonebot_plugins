@@ -113,7 +113,7 @@ talk_with_chatgpt_font_size = 18
 | /chatgpt | 设置预设（人格），设置后会重置对话 |
 
 ## 更新日志
-### 2023/6/6 \[v0.6.0]
+### 2023/6/28 \[v0.6.1]
 
 * 新增配置项 talk_with_chatgpt_send_with_img 和 talk_with_chatgpt_ban_word
 
