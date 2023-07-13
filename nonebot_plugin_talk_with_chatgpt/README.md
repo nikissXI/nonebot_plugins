@@ -110,7 +110,7 @@ talk_with_chatgpt_font_size = 18
 | /hi | 沉浸式对话（仅限私聊） |
 | /reset | 重置对话（不会重置预设） |
 | /prompt | 设置预设（人格），设置后会重置对话 |
-| /chatgpt | 设置预设（人格），设置后会重置对话 |
+| /chatgpt | 如果talk_with_chatgpt_all_group_enable为false，则用该命令启用 |
 
 ## 更新日志
 ### 2023/6/28 \[v0.6.1]
