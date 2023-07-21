@@ -113,6 +113,10 @@ talk_with_chatgpt_font_size = 18
 | /chatgpt | 如果talk_with_chatgpt_all_group_enable为false，则用该命令启用 |
 
 ## 更新日志
+### 2023/7/21 \[v0.6.2]
+
+* [修复无法响应的问题](https://github.com/nikissXI/nonebot_plugins/issues/29)
+
 ### 2023/6/28 \[v0.6.1]
 
 * 新增配置项 talk_with_chatgpt_send_with_img 和 talk_with_chatgpt_ban_word

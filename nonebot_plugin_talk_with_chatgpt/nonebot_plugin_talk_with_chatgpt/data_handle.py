@@ -90,11 +90,13 @@ async def handle_req(id: str, req_text: str, operation: str) -> str:
         # 先存着结果，如果报错了用于判断
         err_msg = resp.text
         # 提取回答
-        json_data = loads(resp.text.split("\n\n")[-3][6:])
+        pre_data = resp.text.split("\n\n")
+        json_data = loads(pre_data[pre_data.index("data: [DONE]") - 2][6:])
         # 保存新的会话id
         # if not var.session_data[id][0]:
         var.session_data[id][0] = json_data["conversation_id"]
         var.session_data[id][1] = json_data["message"]["id"]
+
         # 尝试重命名（需api支持）
         if new_talk:
             await handle_req(id, "", "rename")
@@ -117,7 +119,7 @@ async def handle_req(id: str, req_text: str, operation: str) -> str:
         err_type_text = "" if resp_code else f"\n错误类型: {repr(e)}"
         content_text = f"\n响应内容: {err_msg}" if resp_code else ""
         content_text = (
-            f"{content_text[:300]}\n（内容过长已截断）"
+            f"{content_text[:300]}\n（中间内容过多，忽略）\n{content_text[-300:]}"
             if len(content_text) > 300
             else content_text
         )
