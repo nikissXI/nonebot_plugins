@@ -107,15 +107,6 @@ class Poe_Client:
             raise ValueError(
                 "Failed to extract 'viewer' or 'user_id' from 'next_data'."
             ) from e
-        if not self.formkey:
-            if not self.formkey:
-                script_url_regex = r'src="(https://psc2\.cf2\.poecdn\.net/[a-f0-9]{40}/_next/static/chunks/pages/_app-[a-f0-9]{16}\.js)"'
-                script_url = re.search(script_url_regex, text).group(1)
-                async with aiohttp.ClientSession(**self.session_args) as client:
-                    response = await client.get(script_url)
-                    script_text = await response.text()
-            self.formkey = extract_formkey(text, script_text)
-            self.headers["poe-formkey"] = self.formkey
 
     async def get_channel_data(self) -> None:
         """
