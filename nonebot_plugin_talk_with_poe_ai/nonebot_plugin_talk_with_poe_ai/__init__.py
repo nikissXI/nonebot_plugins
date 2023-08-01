@@ -26,6 +26,7 @@ __plugin_meta__ = PluginMetadata(
     description="Nonebot2 基于poe cookie登录AI聊天插件",
     usage=f"""插件命令如下
 {talk_cmd}   # 开始对话，默认群里@机器人也可以
+{talk_p_cmd}   # 沉浸式对话（仅限私聊）
 {reset_cmd}   # 重置对话（不会重置预设）
 {prompt_cmd}   # 设置预设（人格），设置后会重置对话
 {enable_cmd}   # 如果关闭所有群启用，则用这个命令启用

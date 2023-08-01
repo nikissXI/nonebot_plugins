@@ -36,15 +36,13 @@ class Config(BaseModel, extra=Extra.ignore):
     talk_with_poe_ai_prompt_cmd: str = "/prompt"
     # 如果关闭所有群聊使用，启用该群的命令
     talk_with_poe_ai_group_enable_cmd: str = "/poeai"
-    # poe ai重连
+    # 重连
     talk_with_poe_ai_reconnect_cmd: str = "/poeai re"
-    # poe ai修改登录凭证
+    # 录入登录凭证
     talk_with_poe_ai_auth_cmd: str = "/poeai auth"
 
     # 敏感词屏蔽，默认不屏蔽任何词
     talk_with_poe_ai_ban_word: List[str] = []
-    # 请求超时时间
-    talk_with_poe_ai_timeout: int = 30
     # AI模型  chinchilla（ChatGPT），a2（Claude），beaver（ChatGPT4），a2_2（Claude-2-100k）
     talk_with_poe_ai_model: str = "chinchilla"
 
