@@ -1,0 +1,33 @@
+query availableBotsListModalPaginationQuery($cursor: String, $limit: Int = 11) {
+  viewer {
+    availableBotsConnection(after: $cursor, first: $limit) {
+      edges {
+        node {
+          id
+          handle
+          botId
+          displayName
+          isLimitedAccess
+          deletionState
+          image {
+            __typename
+            ... on LocalBotImage {
+              localName
+            }
+            ... on UrlBotImage {
+              url
+            }
+          }
+          isPrivateBot
+          viewerIsCreator
+          isSystemBot
+        }
+        cursor
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}
