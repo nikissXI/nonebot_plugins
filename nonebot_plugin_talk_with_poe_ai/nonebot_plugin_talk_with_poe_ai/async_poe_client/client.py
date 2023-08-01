@@ -20,7 +20,6 @@ from .util import (
     generate_data,
     QUERIES,
     generate_nonce,
-    extract_formkey,
 )
 
 
