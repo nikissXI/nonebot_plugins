@@ -49,7 +49,7 @@ poe登录凭证需要两个值，获取方法如下：
 **formkey值** 浏览器登陆[poe官网](https://poe.com/)，打开开发者工具（一般是按F12），然后随便跟一个ai发一句话，点网络，选Fetch/XHR，随便一个请求，在标头那，往下找到请求标头那类，里面有一个Poe-Formkey字段，后面就是值了  
 <img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_talk_with_poe_ai/readme_img/3.jpg"/>  
 
-注意：不同浏览器可能会有点不同，自己变通一下啦！两个值在安装好插件后，使用命令“/poeai auth”进行登录  
+注意：需要先手动create bot试试能不能创建。不同浏览器可能会有点不同，自己变通一下啦！两个值在安装好插件后，使用命令“/poeai auth”进行登录  
 
 
 #### 国内必填
@@ -121,6 +121,10 @@ talk_with_poe_ai_font_size = 18
 | /poeai auth | 修改登录凭证并重新登录 |
 
 ## 更新日志
+### 2023/8/2 \[v0.1.4]
+
+* 增加一个异常捕获
+
 ### 2023/8/1 \[v0.1.3]
 
 * 发布插件
