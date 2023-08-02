@@ -26,6 +26,7 @@ __plugin_meta__ = PluginMetadata(
     description="Nonebot2 基于poe cookie登录AI聊天插件",
     type="application",
     homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_talk_with_poe_ai",
+    supported_adapters={"~onebot.v11"},
     usage=f"""插件命令如下
 {talk_cmd}   # 开始对话，默认群里@机器人也可以
 {talk_p_cmd}   # 沉浸式对话（仅限私聊）
