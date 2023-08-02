@@ -64,6 +64,7 @@ async def handle_req(id: str, req_text: str, op: str) -> str:
             await var.poe.delete_bot_conversation(
                 url_botname=var.session_data[id][0], del_all=True
             )
+            await var.poe.send_chat_break(url_botname=var.session_data[id][0])
             result = ""
 
         elif op == "prompt":
@@ -91,7 +92,6 @@ async def handle_req(id: str, req_text: str, op: str) -> str:
         if (
             "The bot doesn't exist or isn't accessible" in err_msg
             or "Failed to create a bot with error: handle_already_taken" in err_msg
-            or "Failed to get bot chat_data from https://poe.com/_next/data/" in err_msg
         ):
             # 重置handle，重新请求
             var.session_data[id][0] = ""

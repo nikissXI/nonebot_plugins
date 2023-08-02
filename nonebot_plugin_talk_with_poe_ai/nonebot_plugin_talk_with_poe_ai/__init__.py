@@ -295,13 +295,13 @@ async def _(event: MessageEvent, s: T_State):
 
         # 检查之前是否进行过对话
         if id in var.session_data and var.session_data[id][0]:
-            # 修改预设
-            result = await put_in_req_queue(id, "", "prompt")
+            # 清空聊天记录
+            result = await put_in_req_queue(id, "", "reset")
             if result:
                 await prompt_set.send(result)
 
-            # 清空聊天记录
-            result = await put_in_req_queue(id, "", "reset")
+            # 修改预设
+            result = await put_in_req_queue(id, "", "prompt")
             if result:
                 await prompt_set.send(result)
 
