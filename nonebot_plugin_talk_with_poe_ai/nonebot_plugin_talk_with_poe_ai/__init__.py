@@ -136,13 +136,13 @@ async def rule_admin(event: MessageEvent, bot: Bot) -> bool:
 #################
 ### 响应器
 #################
-talk = on_message(rule=rule_check)
-talk_p = on_fullmatch(talk_p_cmd, rule=rule_check2)
-reset = on_fullmatch(reset_cmd, rule=rule_check2)
-prompt_set = on_fullmatch(prompt_cmd, permission=rule_check3)
-enable_group = on_fullmatch(enable_cmd, rule=rule_admin)
-re_connect = on_fullmatch(re_cmd, rule=rule_admin)
-auth = on_fullmatch(auth_cmd, rule=rule_admin)
+talk = on_message(rule=rule_check, priority=100)
+talk_p = on_fullmatch(talk_p_cmd, rule=rule_check2, priority=100)
+reset = on_fullmatch(reset_cmd, rule=rule_check2, priority=100)
+prompt_set = on_fullmatch(prompt_cmd, permission=rule_check3, priority=100)
+enable_group = on_fullmatch(enable_cmd, rule=rule_admin, priority=100)
+re_connect = on_fullmatch(re_cmd, rule=rule_admin, priority=100)
+auth = on_fullmatch(auth_cmd, rule=rule_admin, priority=100)
 
 
 @talk.handle()
