@@ -5,7 +5,7 @@
 
 <div align="center">
 
-# nonebot_plugin_talk_with_poe_ai
+# nonebot_plugin_talk_with_poe_ai（当前已无法使用，没空维护，建议去用[Spark-GPT](https://github.com/canxin121/Spark-GPT)）
 
 _✨ Nonebot2 一个简单易用的poe ai插件 ✨_
 
