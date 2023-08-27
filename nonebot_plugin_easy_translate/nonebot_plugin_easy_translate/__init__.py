@@ -1,4 +1,3 @@
-from httpx import AsyncClient
 from nonebot import on_regex
 from nonebot.adapters import Bot
 from nonebot.adapters.onebot.v11.event import (
@@ -9,7 +8,7 @@ from nonebot.adapters.onebot.v11.event import (
 from nonebot.params import RegexGroup
 from nonebot.plugin import PluginMetadata
 from .config import pc, var
-from gtranslate.client import Translator
+from .gtranslate.client import Translator
 
 __plugin_meta__ = PluginMetadata(
     name="简单翻译插件",
