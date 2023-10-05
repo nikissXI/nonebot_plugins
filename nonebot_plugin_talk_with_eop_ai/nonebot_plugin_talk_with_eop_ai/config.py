@@ -1,4 +1,3 @@
-
 from typing import Dict, List, Optional
 from httpx import AsyncClient
 from nonebot import get_bot, get_bots, get_driver
@@ -7,17 +6,19 @@ from nonebot.log import logger
 from pydantic import BaseModel, Extra
 
 
-
-
 class Config(BaseModel, extra=Extra.ignore):
-    # auth
+    # eop后端url地址，如 https://api.eop.nikiss.top
+    eop_ai_base_addr: str = ""
+
+    # eop登录账号密码
     eop_ai_user: str = ""
     eop_ai_passwd: str = ""
-    # base url
-    eop_ai_base_url: str = ""
+
+    # 代理地址
+    eop_ai_http_proxy_addr: Optional[str] = None
 
     # AI回答是否使用图片输出
-    eop_ai_reply_with_img: bool = False
+    eop_ai_reply_with_img: bool = True
     # 处理消息时是否提示
     eop_ai_reply_notice: bool = False
     # 群聊是否共享会话
@@ -25,10 +26,10 @@ class Config(BaseModel, extra=Extra.ignore):
     # 是否默认允许所有群聊使用，否则需要使用命令启用
     eop_ai_all_group_enable: bool = False
 
-    # 如果关闭所有群聊使用，启用该群的命令
-    eop_ai_group_enable_cmd: str = "/eopai"
     # 群聊艾特是否响应
     eop_ai_talk_at: bool = False
+    # 如果关闭所有群聊使用，启用该群的命令
+    eop_ai_group_enable_cmd: str = "/eopai"
     # 触发对话的命令前缀，群聊直接艾特也可以触发
     eop_ai_talk_cmd: str = "/talk"
     # 私聊沉浸式对话触发命令
@@ -58,17 +59,15 @@ class Global_var:
     session_lock: Dict[str, bool] = {}
     # httpx
     httpx_client = AsyncClient(
-        base_url=pc.eop_ai_base_url,
+        base_url=pc.eop_ai_base_addr,
         headers={},
         timeout=20,
+        proxies=pc.eop_ai_http_proxy_addr,
     )
     access_token = ""
 
 
 var = Global_var()
-
-
-
 
 
 # qq机器人连接时执行
