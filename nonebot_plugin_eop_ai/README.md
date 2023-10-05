@@ -115,7 +115,7 @@ eop_ai_data = eop_ai.json
 
 ## 会话管理
 如果租了了开发者的后端，可以使用配套的前端进行会话管理。创建会话别名为{QQ号}或{群号}-share，插件会自动调用那个会话。  
-<img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/4.jpg"/>  
+<img width="400" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/4.jpg"/>  
 
 ## 更新日志
 
