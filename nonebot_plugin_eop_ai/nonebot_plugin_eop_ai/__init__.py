@@ -1,13 +1,7 @@
 from nonebot.plugin import PluginMetadata
 from nonebot.log import logger
-from .matchers import talk, talk_p, reset, enable_group
-from .config import pc
+from .matchers import usage, talk_keyword, talk_tome, talk_p, reset, group_enable
 
-usage = f"""插件命令如下
-{pc.eop_ai_talk_cmd}   # 开始对话，默认群里@机器人也可以
-{pc.eop_ai_talk_p_cmd}   # 沉浸式对话（仅限私聊）
-{pc.eop_ai_reset_cmd}   # 重置对话（不会重置预设）
-{pc.eop_ai_group_enable_cmd}   # 如果关闭所有群启用，则用这个命令启用"""
 
 __plugin_meta__ = PluginMetadata(
     name="talk with eop ai",

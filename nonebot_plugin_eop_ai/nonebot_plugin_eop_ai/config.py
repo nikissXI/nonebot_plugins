@@ -26,8 +26,8 @@ class Config(BaseModel, extra=Extra.ignore):
     # 是否默认允许所有群聊使用，否则需要使用命令启用
     eop_ai_all_group_enable: bool = False
 
-    # 群聊艾特是否响应
-    eop_ai_talk_at: bool = False
+    # 群聊艾特和发bot昵称是否响应（需要先启用该群的eop ai）
+    eop_ai_talk_tome: bool = False
     # 如果关闭所有群聊使用，启用该群的命令
     eop_ai_group_enable_cmd: str = "/eopai"
     # 触发对话的命令前缀，群聊直接艾特也可以触发

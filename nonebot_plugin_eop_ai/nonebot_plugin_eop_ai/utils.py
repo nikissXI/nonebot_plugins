@@ -1,8 +1,9 @@
 from hashlib import sha256
 from os import makedirs, path
 from re import search
+from html import unescape
 from typing import Optional
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent, Bot
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 from nonebot import get_driver
@@ -75,9 +76,42 @@ def get_id(event: MessageEvent) -> str:
     return id
 
 
+async def gen_chat_text(event: MessageEvent, bot: Bot) -> str:
+    """生成合适的会话消息内容(eg. 将cq at 解析为真实的名字)"""
+    if not isinstance(event, GroupMessageEvent):
+        return event.get_plaintext()
+
+    msg = ""
+    for seg in event.message:
+        if seg.is_text():
+            msg += seg.data.get("text", "")
+
+        elif seg.type == "at":
+            qq = seg.data.get("qq", None)
+
+            if qq:
+                if qq == "all":
+                    msg += "@全体成员"
+                else:
+                    user_info = await bot.get_group_member_info(
+                        group_id=event.group_id,
+                        user_id=event.user_id,
+                        no_cache=False,
+                    )
+                    user_name = user_info.get("card", None) or user_info.get(
+                        "nickname", None
+                    )
+                    if user_name:
+                        msg += f"@{user_name}"  # 保持给bot看到的内容与真实用户看到的一致
+    return msg
+
+
 async def get_answer(
-    matcher: Matcher, event: MessageEvent, q: str, immersive=False
+    matcher: Matcher, event: MessageEvent, bot: Bot, immersive=False
 ) -> str:
+    # 获取问题
+    question = unescape(await gen_chat_text(event, bot))
+
     # 获取用户id
     id = get_id(event)
 
@@ -101,9 +135,9 @@ async def get_answer(
         # 检查会话列表是否有
         if not eop_id:
             resp_data = await http_request("get", "/bot/list")
-            for bot in resp_data["bots"]:
-                if id == bot["alias"]:
-                    eop_id = bot["eop_id"]
+            for b in resp_data["bots"]:
+                if id == b["alias"]:
+                    eop_id = b["eop_id"]
                     break
 
         # 没有就创建新的
@@ -121,7 +155,7 @@ async def get_answer(
 
         answer = ""
         async with var.httpx_client.stream(
-            "POST", f"/bot/{eop_id}/talk", json={"q": q}
+            "POST", f"/bot/{eop_id}/talk", json={"q": question}
         ) as response:
             async for chunk in response.aiter_lines():
                 data = loads(chunk)

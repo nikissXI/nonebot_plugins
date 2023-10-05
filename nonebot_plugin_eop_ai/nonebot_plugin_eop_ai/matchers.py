@@ -1,9 +1,9 @@
-from html import unescape
-from nonebot import on_fullmatch, on_message, require
+from nonebot import on_fullmatch, on_message, require, on_startswith
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
-from nonebot.adapters.onebot.v11 import PrivateMessageEvent
+from nonebot.adapters.onebot.v11 import PrivateMessageEvent, Bot
 from nonebot.matcher import Matcher
+
 require("nonebot_plugin_htmlrender")
 from nonebot_plugin_htmlrender import md_to_pic
 from .config import pc, var
@@ -11,96 +11,91 @@ from .rules import (
     enable_cmd,
     reset_cmd,
     rule_admin,
-    rule_check,
-    rule_check2,
+    talk_keyword_rule,
+    talk_tome_rule,
     talk_cmd,
     talk_p_cmd,
 )
 from .utils import RequestError, get_answer, get_id, get_pasted_url, http_request
 
-#################
-### 响应器
-#################
-talk = on_message(rule=rule_check)
-talk_p = on_fullmatch(talk_p_cmd, rule=rule_check2)
-reset = on_fullmatch(reset_cmd, rule=rule_check2)
-enable_group = on_fullmatch(enable_cmd, rule=rule_admin)
+usage = f"""插件命令如下
+{pc.eop_ai_talk_cmd}   # 开始对话，默认群里@机器人也可以
+{pc.eop_ai_talk_p_cmd}   # 沉浸式对话（仅限私聊）
+{pc.eop_ai_reset_cmd}   # 重置对话（不会重置预设）
+{pc.eop_ai_group_enable_cmd}   # 如果关闭所有群启用，则用这个命令启用"""
 
 
-@talk.handle()
-async def _(matcher: Matcher, event: MessageEvent):
-    # 获取信息
-    text = unescape(event.get_plaintext().strip())
-    # 把命令前缀截掉
-    if text[: len(talk_cmd)] == talk_cmd:
-        text = text[len(talk_cmd) :]
-    # 无内容
-    if not text:
-        await talk.finish(
-            f"""插件命令如下
-{talk_cmd} 【内容】 # 发送问题，群里@机器人接内容也可以
-{talk_p_cmd}  # 进入沉浸式对话模式，仅私聊可用
-{reset_cmd}  # 清空聊天记录
-"""
-        )
+talk_keyword = on_startswith(talk_cmd, rule=talk_keyword_rule, priority=100)
+talk_tome = on_message(rule=talk_tome_rule, priority=100)
 
-    answer = await get_answer(matcher, event, text)
+talk_p = on_fullmatch(talk_p_cmd, priority=100)
+
+reset = on_fullmatch(reset_cmd, rule=rule_admin, priority=100)
+group_enable = on_fullmatch(enable_cmd, rule=rule_admin, priority=100)
+
+
+@talk_keyword.handle()
+@talk_tome.handle()
+async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
+    if not event.get_plaintext():
+        await matcher.finish(usage)
+
+    answer = await get_answer(matcher, event, bot)
     if pc.eop_ai_reply_with_img:
-        await talk.finish(
+        await matcher.finish(
             MS.image(await md_to_pic(md=answer))
             + MS.text("原文：" + await get_pasted_url(answer))
         )
 
-    await talk.finish(answer, at_sender=True)
+    await matcher.finish(answer, at_sender=True)
 
 
 @talk_p.got("msg", prompt="进入沉浸式对话模式，发送“退出”结束对话")
-async def _(matcher: Matcher, event: PrivateMessageEvent):
-    # 获取信息
-    text = unescape(event.get_plaintext().strip())
-    if text == "退出":
-        await talk_p.finish("Bye~")
+async def _(matcher: Matcher, event: PrivateMessageEvent, bot: Bot):
+    if event.get_plaintext() == "退出":
+        await matcher.finish("Bye~")
 
-    answer = await get_answer(matcher, event, text,True)
+    answer = await get_answer(matcher, event, bot, True)
     if pc.eop_ai_reply_with_img:
-        await talk_p.reject(
+        await matcher.reject(
             MS.image(await md_to_pic(md=answer))
             + MS.text("原文：" + await get_pasted_url(answer))
         )
 
-    await talk_p.reject(answer)
+    await matcher.reject(answer)
 
 
 @reset.handle()
-async def _(event: MessageEvent):
+async def _(matcher: Matcher, event: MessageEvent):
     # 获取用户id
     id = get_id(event)
     eop_id = var.session_data[id]
     if not eop_id:
-        await reset.finish("还没聊过呢", at_sender=True)
+        await matcher.finish("还没聊过呢", at_sender=True)
 
     try:
         await http_request("delete", f"/bot/{eop_id}")
 
     except RequestError as e:
         if not (e.data and e.data["code"] == 2005):
-            await reset.finish(str(e))
+            await matcher.finish(str(e))
 
     except Exception as e:
-        await reset.finish(str(e))
+        await matcher.finish(str(e))
 
     var.session_data[id] = ""
-    await reset.finish("已重置会话", at_sender=True)
+    await matcher.finish("已重置会话", at_sender=True)
 
 
-@enable_group.handle()
-async def _(event: GroupMessageEvent):
+@group_enable.handle()
+async def _(matcher: Matcher, event: GroupMessageEvent):
     if pc.eop_ai_all_group_enable is True:
-        await enable_group.finish("当前配置是所有群都启用，此命令无效")
+        await matcher.finish("当前配置是所有群都启用，此命令无效")
 
     if event.group_id in var.enable_group_list:
         var.enable_group_list.remove(event.group_id)
-        await enable_group.finish("eop ai已禁用")
+        await matcher.finish("eop ai已禁用")
+
     else:
         var.enable_group_list.append(event.group_id)
-        await enable_group.finish("eop ai已启用")
+        await matcher.finish("eop ai已启用")

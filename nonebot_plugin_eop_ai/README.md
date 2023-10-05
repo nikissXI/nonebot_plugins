@@ -83,11 +83,11 @@ eop_ai_all_group_enable = true
 
 #### 如果要修改触发命令就填
 ```bash
-# 群聊艾特是否响应（需要先启用该群的eop ai）
-eop_ai_talk_at = false
+# 群聊艾特和发bot昵称是否响应（需要先启用该群的eop ai）
+eop_ai_talk_tome = false
 # 如果关闭所有群聊使用，启用该群的命令
 eop_ai_group_enable_cmd = /eopai
-# 触发对话的命令前缀，如果eop_ai_talk_at为true直接艾特即可
+# 触发对话的命令前缀，如果eop_ai_talk_tome为true直接艾特即可
 eop_ai_talk_cmd = /talk
 # 私聊沉浸式对话触发命令
 eop_ai_talk_p_cmd = /hi
@@ -118,6 +118,10 @@ eop_ai_data = eop_ai.json
 <img width="400" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/4.jpg"/>  
 
 ## 更新日志
+### 2023/10/6 \[v0.1.2]
+
+* 参考项目[nonebot-plugin-naturel-gpt](https://github.com/KroMiose/nonebot_plugin_naturel_gpt)，增加utils.py中的gen_chat_text函数
+* 优化响应器逻辑
 
 ### 2023/10/5 \[v0.1.1]
 
