@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "nonebot_plugin_talk_with_eop_ai"
+name = "nonebot_plugin_eop_ai"
 version = "0.1.0"
 description = "Nonebot2 一款调用eop api的AI聊天插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "nonebot_plugin_talk_with_eop_ai"}]
-homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_talk_with_eop_ai"
-repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_talk_with_eop_ai"
-documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_talk_with_eop_ai#README.md"
+packages = [{include = "nonebot_plugin_eop_ai"}]
+homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_eop_ai"
+repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_eop_ai"
+documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_eop_ai#README.md"
 
 [[tool.poetry.source]]
 name = "tsinghua"

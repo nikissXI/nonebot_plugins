@@ -5,7 +5,7 @@
 
 <div align="center">
 
-# nonebot_plugin_talk_with_eop_ai
+# nonebot_plugin_eop_ai
 
 _✨ Nonebot2 一款调用eop api的AI聊天插件 ✨_
 
@@ -30,7 +30,7 @@ _✨ Nonebot2 一款调用eop api的AI聊天插件 ✨_
 
 使用nb-cli安装
 ```bash
-nb plugin install nonebot_plugin_talk_with_eop_ai
+nb plugin install nonebot_plugin_eop_ai
 ```
 
 或者  
@@ -84,7 +84,7 @@ eop_ai_reset_cmd = /reset
 # 如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
 # 如果不填该配置则由第一个连上的bot响应，所以单bot连可以不填，写 ["all"]则所有机器人均响应
 eop_ai_bot_qqnum_list = [1234, 5678, 6666]
-# 插件数据文件名，默认./data/talk_with_eop_ai.json
+# 插件数据文件名，默认./data/eop_ai.json
 eop_ai_data = eop_ai.json
 ```
 
