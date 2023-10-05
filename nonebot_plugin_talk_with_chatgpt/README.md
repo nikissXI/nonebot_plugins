@@ -6,6 +6,7 @@
 <div align="center">
 
 # nonebot_plugin_talk_with_chatgpt
+# 开发者的chatgpt账号被封了后就没用过了，所以不清楚该插件还能不能使用
 
 _✨ Nonebot2 一个简单易用的chatgpt插件 ✨_
 
@@ -19,6 +20,10 @@ _✨ Nonebot2 一个简单易用的chatgpt插件 ✨_
   </a>
   <img src="https://img.shields.io/static/v1?label=python+&message=3.8%2B&color=blue" alt="python">
 </p>
+
+## 开发者信息
+- nikiss，个人QQ 1299577815，插件反馈QQ群 226462236，插件有问题到群里反馈响应更快哦
+- <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
 
 # 注意！
 由于现在社区反代API用的人太多，稳定性可能不咋地，最好就自建一个，目前内置的是[https://ai.fakeopen.com/api/conversation](https://ai.fakeopen.com/api/conversation) ，截止2023/4/22是能用的，而且不需要设置代理。

@@ -20,6 +20,10 @@ _✨ Nonebot2 喵喵点歌 ✨_
   <img src="https://img.shields.io/static/v1?label=python+&message=3.8%2B&color=blue" alt="python">
 </p>
 
+## 开发者信息
+- nikiss，个人QQ 1299577815，插件反馈QQ群 226462236，插件有问题到群里反馈响应更快哦
+- <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
+
 ## 简介
 闲的没事（bushi）整个点歌插件玩玩，做的比较粗糙，但能用  
 可以搜索和下载歌曲  

@@ -5,7 +5,8 @@
 
 <div align="center">
 
-# nonebot_plugin_talk_with_poe_ai（当前已无法使用，没空维护，建议去用[Spark-GPT](https://github.com/canxin121/Spark-GPT)）
+# nonebot_plugin_talk_with_poe_ai
+# （当前已无法使用，因为直接调用poe的接口问题太多了，维护太费人，放弃维护，建议去用[Spark-GPT](https://github.com/canxin121/Spark-GPT)或[eop ai](https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_eop_ai)）
 
 _✨ Nonebot2 一个简单易用的poe ai插件 ✨_
 
@@ -19,6 +20,10 @@ _✨ Nonebot2 一个简单易用的poe ai插件 ✨_
   </a>
   <img src="https://img.shields.io/static/v1?label=python+&message=3.8%2B&color=blue" alt="python">
 </p>
+
+## 开发者信息
+- nikiss，个人QQ 1299577815，插件反馈QQ群 226462236，插件有问题到群里反馈响应更快哦
+- <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
 
 # 注意！
 使用本插件需要配置代理，要么把nb配置在大陆外的网络环境。  

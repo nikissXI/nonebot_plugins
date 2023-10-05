@@ -20,6 +20,10 @@ _✨ Nonebot2 一款调用eop api的AI聊天插件 ✨_
   <img src="https://img.shields.io/static/v1?label=python+&message=3.8%2B&color=blue" alt="python">
 </p>
 
+## 开发者信息
+- nikiss，个人QQ 1299577815，插件反馈QQ群 226462236，插件有问题到群里反馈响应更快哦
+- <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
+
 ## 简介
 本插件需要调用一个逆向poe前端写的后端，也是我负责开发维护的，[eop-next-api仓库](https://github.com/nikissXI/eop-next-api)。  
 后端可以自行部署，或者付费租用我的，目前价格15元/月，带前端，免梯直连，图省事且不差钱的可以加我QQ129957715了解。  

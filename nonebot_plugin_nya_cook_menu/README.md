@@ -20,6 +20,10 @@ _✨ Nonebot2 喵喵自记菜谱 ✨_
   <img src="https://img.shields.io/static/v1?label=python+&message=3.8%2B&color=blue" alt="python">
 </p>
 
+## 开发者信息
+- nikiss，个人QQ 1299577815，插件反馈QQ群 226462236，插件有问题到群里反馈响应更快哦
+- <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
+
 ## 简介
 我和老婆经常做菜忘记以前某个菜咋做，于是就整了这个插件记录一下我们的菜谱，顺便发到商店，嘿嘿~  
 <img width="500" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_nya_cook_menu/readme_img/caipu.jpg"/>

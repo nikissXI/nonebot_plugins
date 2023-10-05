@@ -20,6 +20,10 @@ _✨ Nonebot2 简单易用谷歌翻译插件，免key！ ✨_
   <img src="https://img.shields.io/static/v1?label=python+&message=3.8%2B&color=blue" alt="python">
 </p>
 
+## 开发者信息
+- nikiss，个人QQ 1299577815，插件反馈QQ群 226462236，插件有问题到群里反馈响应更快哦
+- <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
+
 ## 简介
 之前的免梯谷歌翻译接口寄了，现在用的是[谷歌翻译库](https://py-googletrans.readthedocs.io/en/latest/#googletrans.Translator.translate)，我把代码改成异步然后当插件用了，得用梯子
 

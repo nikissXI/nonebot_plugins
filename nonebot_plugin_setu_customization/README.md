@@ -21,6 +21,10 @@ _✨ Nonebot2 可动态管理API并带网页浏览的setu插件 ✨_
   <img src="https://img.shields.io/static/v1?label=python+&message=3.8%2B&color=blue" alt="python">
 </p>
 
+## 开发者信息
+- nikiss，个人QQ 1299577815，插件反馈QQ群 226462236，插件有问题到群里反馈响应更快哦
+- <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
+
 ## 简介
 可以动态增删网络上的图片API接口，也可以载入本地图库链接对外提供图片API接口，支持接口分类管理，不再受限于单个API出图，如果服务器有公网IP还可以在网页浏览图片。  
 

@@ -21,6 +21,10 @@ _✨ Nonebot2查询MC服务器在线信息插件 ✨_
   <img src="https://img.shields.io/static/v1?label=python+&message=3.8%2B&color=blue" alt="python">
 </p>
 
+## 开发者信息
+- nikiss，个人QQ 1299577815，插件反馈QQ群 226462236，插件有问题到群里反馈响应更快哦
+- <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
+
 ## 简介
 使用mcstatus库，支持Java和Bedrock服务器的服务器查询。   
 
