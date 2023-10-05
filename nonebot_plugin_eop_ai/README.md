@@ -27,8 +27,8 @@ _✨ Nonebot2 一款调用eop api的AI聊天插件 ✨_
 ## 简介
 本插件需要调用一个逆向poe前端写的后端，也是我负责开发维护的，[eop-next-api仓库](https://github.com/nikissXI/eop-next-api)，前端不是我开发的，目前尚未开源。  
 > 后端可以自行部署，或者付费租用我的，目前价格15元/月，带前端，免梯直连，图省事且不差钱的可以加我QQ129957715了解。
+> 目前插件功能尚不完善，建议配合付费租用后的前端使用。  
 
-目前插件功能尚不完善，建议配合付费租用后的前端使用。  
 <img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/1.jpg"/>  
 
 ## 功能列表
