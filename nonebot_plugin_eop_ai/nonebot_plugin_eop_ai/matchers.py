@@ -1,11 +1,7 @@
-from nonebot import on_fullmatch, on_message, require, on_startswith
+from nonebot import on_fullmatch, on_message, on_startswith
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent
-from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.adapters.onebot.v11 import PrivateMessageEvent, Bot
 from nonebot.matcher import Matcher
-
-require("nonebot_plugin_htmlrender")
-from nonebot_plugin_htmlrender import md_to_pic
 from .config import pc, var
 from .rules import (
     enable_cmd,
@@ -16,7 +12,7 @@ from .rules import (
     talk_cmd,
     talk_p_cmd,
 )
-from .utils import RequestError, get_answer, get_id, get_pasted_url, http_request
+from .utils import RequestError, get_answer, get_id, http_request
 
 usage = f"""插件命令如下
 {pc.eop_ai_talk_cmd}   # 开始对话，默认群里@机器人也可以
@@ -40,14 +36,7 @@ async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
     if not event.get_plaintext():
         await matcher.finish(usage)
 
-    answer = await get_answer(matcher, event, bot)
-    if pc.eop_ai_reply_with_img:
-        await matcher.finish(
-            MS.image(await md_to_pic(md=answer))
-            + MS.text("原文：" + await get_pasted_url(answer))
-        )
-
-    await matcher.finish(answer, at_sender=True)
+    await get_answer(matcher, event, bot)
 
 
 @talk_p.got("msg", prompt="进入沉浸式对话模式，发送“退出”结束对话")
@@ -55,14 +44,7 @@ async def _(matcher: Matcher, event: PrivateMessageEvent, bot: Bot):
     if event.get_plaintext() == "退出":
         await matcher.finish("Bye~")
 
-    answer = await get_answer(matcher, event, bot, True)
-    if pc.eop_ai_reply_with_img:
-        await matcher.reject(
-            MS.image(await md_to_pic(md=answer))
-            + MS.text("原文：" + await get_pasted_url(answer))
-        )
-
-    await matcher.reject(answer)
+    await get_answer(matcher, event, bot, True)
 
 
 @reset.handle()

@@ -6,8 +6,12 @@ from typing import Optional
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent, Bot
 from nonebot.log import logger
 from nonebot.matcher import Matcher
-from nonebot import get_driver
-from nonebot.exception import FinishedException
+from nonebot import get_driver, require
+from nonebot.exception import RejectedException, FinishedException
+from nonebot.adapters.onebot.v11 import MessageSegment as MS
+
+require("nonebot_plugin_htmlrender")
+from nonebot_plugin_htmlrender import md_to_pic
 from .config import pc, var
 
 try:
@@ -106,9 +110,7 @@ async def gen_chat_text(event: MessageEvent, bot: Bot) -> str:
     return msg
 
 
-async def get_answer(
-    matcher: Matcher, event: MessageEvent, bot: Bot, immersive=False
-) -> str:
+async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=False):
     # 获取问题
     question = unescape(await gen_chat_text(event, bot))
 
@@ -174,11 +176,26 @@ async def get_answer(
 
                     await matcher.finish(f"生成回答异常，类型：{data['type']}：{data['data']}")
 
+        # 解锁
         var.session_lock[id] = False
-        return answer
 
-    except FinishedException:
-        await matcher.finish()
+        if not immersive:
+            if pc.eop_ai_reply_with_img:
+                await matcher.finish(
+                    MS.image(await md_to_pic(md=answer))
+                    + MS.text("文本：" + await get_pasted_url(answer))
+                )
+            await matcher.finish(answer, at_sender=True)
+
+        if pc.eop_ai_reply_with_img:
+            await matcher.reject(
+                MS.image(await md_to_pic(md=answer))
+                + MS.text("文本：" + await get_pasted_url(answer))
+            )
+        await matcher.reject(answer, at_sender=True)
+
+    except (RejectedException, FinishedException) as e:
+        raise e
 
     except RequestError as e:
         await matcher.finish(str(e))
@@ -258,6 +275,6 @@ async def get_pasted_url(content: str) -> str:
     )
     if resp.status_code == 302:
         location = resp.headers.get("Location")
-        return f"https://paste.mozilla.org{location}"
+        return f"https://paste.mozilla.org{location}/slim"
     else:
         raise Exception("提交后响应码非302")

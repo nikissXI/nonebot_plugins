@@ -7,7 +7,7 @@ from pydantic import BaseModel, Extra
 
 
 class Config(BaseModel, extra=Extra.ignore):
-    # eop后端url地址，如 https://api.eop.nikiss.top
+    # eop后端url地址，如 https://api.eop.com
     eop_ai_base_addr: str = ""
 
     # eop登录账号密码
