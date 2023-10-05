@@ -35,12 +35,6 @@ async def talk_tome_rule(event: MessageEvent) -> bool:
 
 
 async def rule_admin(event: MessageEvent, bot: Bot) -> bool:
-    print(
-        bot,
-        await SUPERUSER(bot, event),
-        pc.eop_ai_bot_qqnum_list == ["all"],
-        bot == var.handle_bot,
-    )
     if await SUPERUSER(bot, event) and (
         pc.eop_ai_bot_qqnum_list == ["all"] or bot == var.handle_bot
     ):
