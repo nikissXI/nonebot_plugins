@@ -34,7 +34,9 @@ nb plugin install nonebot_plugin_talk_with_eop_ai
 ```
 
 或者  
-直接把插件clone下来放进去plugins文件夹，依赖库自己补全
+直接把插件clone下来放进去plugins文件夹，依赖库自己补全  
+
+可选安装ujson进行解析json数据  
 
 ## 配置
 在bot对应的.env文件修改，文档中的均是默认值。  
