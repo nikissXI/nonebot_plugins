@@ -1,9 +1,10 @@
 from html import unescape
-from nonebot import on_fullmatch, on_message
+from nonebot import on_fullmatch, on_message, require
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.adapters.onebot.v11 import PrivateMessageEvent
 from nonebot.matcher import Matcher
+require("nonebot_plugin_htmlrender")
 from nonebot_plugin_htmlrender import md_to_pic
 from .config import pc, var
 from .rules import (
