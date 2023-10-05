@@ -21,13 +21,13 @@ usage = f"""插件命令如下
 {pc.eop_ai_group_enable_cmd}   # 如果关闭所有群启用，则用这个命令启用"""
 
 
-talk_keyword = on_startswith(talk_cmd, rule=talk_keyword_rule, priority=100)
-talk_tome = on_message(rule=talk_tome_rule, priority=100)
+talk_keyword = on_startswith(talk_cmd, rule=talk_keyword_rule)
+talk_tome = on_message(rule=talk_tome_rule)
 
-talk_p = on_fullmatch(talk_p_cmd, priority=100)
+talk_p = on_fullmatch(talk_p_cmd)
 
-reset = on_fullmatch(reset_cmd, rule=rule_admin, priority=100)
-group_enable = on_fullmatch(enable_cmd, rule=rule_admin, priority=100)
+reset = on_fullmatch(reset_cmd, rule=rule_admin)
+group_enable = on_fullmatch(enable_cmd, rule=rule_admin)
 
 
 @talk_keyword.handle()
@@ -56,7 +56,7 @@ async def _(matcher: Matcher, event: MessageEvent):
         await matcher.finish("还没聊过呢", at_sender=True)
 
     try:
-        await http_request("delete", f"/bot/{eop_id}")
+        await http_request("delete", f"/bot/{eop_id}/clear")
 
     except RequestError as e:
         if not (e.data and e.data["code"] == 2005):
