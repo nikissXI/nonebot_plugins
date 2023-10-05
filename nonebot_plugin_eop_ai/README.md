@@ -28,11 +28,13 @@ _✨ Nonebot2 一款调用eop api的AI聊天插件 ✨_
 本插件需要调用一个逆向poe前端写的后端，也是我负责开发维护的，[eop-next-api仓库](https://github.com/nikissXI/eop-next-api)，前端不是我开发的，目前尚未开源。  
 后端可以自行部署，或者付费租用我的，目前价格15元/月，带前端，免梯直连，图省事且不差钱的可以加我QQ129957715了解。  
 目前插件功能尚不完善，建议配合付费租用后的前端使用。  
-<img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_talk_with_poe_ai/readme_img/1.jpg"/>  
+<img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_talk_with_eop_ai/readme_img/1.jpg"/>  
 
 ## todo
 - 预设管理
-- 
+- 更完善的会话管理
+- 默认会话设置
+- 等等别的功能
 
 ## 安装
 
@@ -106,7 +108,7 @@ eop_ai_data = eop_ai.json
 
 ## 会话管理
 如果租了了开发者的后端，可以使用配套的前端进行会话管理。创建会话别名为{QQ号}或{群号}-share，插件会自动调用那个会话。  
-<img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_talk_with_poe_ai/readme_img/4.jpg"/>  
+<img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_talk_with_eop_ai/readme_img/4.jpg"/>  
 
 ## 更新日志
 
