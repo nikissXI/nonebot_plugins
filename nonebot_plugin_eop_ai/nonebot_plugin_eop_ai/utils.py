@@ -11,13 +11,74 @@ from nonebot.exception import RejectedException, FinishedException
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 
 require("nonebot_plugin_htmlrender")
-from nonebot_plugin_htmlrender import md_to_pic
+from nonebot_plugin_htmlrender.data_source import (
+    html_to_pic,
+    env as htmlrender_env,
+    markdown,
+    read_tpl,
+    TEMPLATES_PATH,
+)
 from .config import pc, var
 
 try:
     from ujson import dump, load, loads
 except:
     from json import dump, load, loads
+
+
+async def md_to_pic(md_text: str = "") -> bytes:
+    """markdown 转 图片
+
+    Args:
+        md (str): markdown 格式文本
+
+    Returns:
+        bytes: 图片, 可直接发送
+    """
+    template = htmlrender_env.get_template("markdown.html")
+    md = markdown.markdown(
+        md_text,
+        extensions=[
+            "pymdownx.tasklist",
+            "tables",
+            "fenced_code",
+            "codehilite",
+            "mdx_math",
+            "mdx_truly_sane_lists",
+            "mdx_breakless_lists",
+            # "pymdownx.tilde", # 波浪线
+        ],
+        extension_configs={
+            "mdx_math": {"enable_dollar_delimiter": True},
+            "mdx_truly_sane_lists": {
+                "nested_indent": 2,
+                "truly_sane": True,
+            },
+        },
+    )
+
+    extra = ""
+    if "math/tex" in md:
+        katex_css = await read_tpl("katex/katex.min.b64_fonts.css")
+        katex_js = await read_tpl("katex/katex.min.js")
+        mathtex_js = await read_tpl("katex/mathtex-script-type.min.js")
+        extra = (
+            f'<style type="text/css">{katex_css}</style>'
+            f"<script defer>{katex_js}</script>"
+            f"<script defer>{mathtex_js}</script>"
+        )
+
+    css = await read_tpl("github-markdown-light.css") + await read_tpl(
+        "pygments-default.css"
+    )
+
+    return await html_to_pic(
+        template_path=f"file://{TEMPLATES_PATH}",
+        html=await template.render_async(md=md, css=css, extra=extra),
+        viewport={"width": 500, "height": 10},
+        type="png",
+        device_scale_factor=2,
+    )
 
 
 driver = get_driver()
@@ -182,14 +243,14 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
         if not immersive:
             if pc.eop_ai_reply_with_img:
                 await matcher.finish(
-                    MS.image(await md_to_pic(md=answer))
+                    MS.image(await md_to_pic(answer))
                     + MS.text("文本：" + await get_pasted_url(answer))
                 )
             await matcher.finish(answer, at_sender=True)
 
         if pc.eop_ai_reply_with_img:
             await matcher.reject(
-                MS.image(await md_to_pic(md=answer))
+                MS.image(await md_to_pic(answer))
                 + MS.text("文本：" + await get_pasted_url(answer))
             )
         await matcher.reject(answer, at_sender=True)
