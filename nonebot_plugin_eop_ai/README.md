@@ -118,6 +118,10 @@ eop_ai_data = eop_ai.json
 <img width="400" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/4.jpg"/>  
 
 ## 更新日志
+### 2023/10/7 \[v0.1.4]
+
+* 优化转图片输出的速度
+
 ### 2023/10/6 \[v0.1.3]
 
 * 优化md转图片的格式

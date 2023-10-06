@@ -9,14 +9,16 @@ from nonebot.matcher import Matcher
 from nonebot import get_driver, require
 from nonebot.exception import RejectedException, FinishedException
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
+from datetime import datetime
+from asyncio import gather, create_task
 
 require("nonebot_plugin_htmlrender")
 from nonebot_plugin_htmlrender.data_source import (
-    html_to_pic,
     env as htmlrender_env,
     markdown,
     read_tpl,
     TEMPLATES_PATH,
+    get_new_page,
 )
 from .config import pc, var
 
@@ -26,7 +28,7 @@ except:
     from json import dump, load, loads
 
 
-async def md_to_pic(md_text: str = "") -> bytes:
+async def md_to_pic(md_text: str) -> bytes:
     """markdown 转 图片
 
     Args:
@@ -46,7 +48,6 @@ async def md_to_pic(md_text: str = "") -> bytes:
             "mdx_math",
             "mdx_truly_sane_lists",
             "mdx_breakless_lists",
-            # "pymdownx.tilde", # 波浪线
         ],
         extension_configs={
             "mdx_math": {"enable_dollar_delimiter": True},
@@ -72,13 +73,60 @@ async def md_to_pic(md_text: str = "") -> bytes:
         "pygments-default.css"
     )
 
-    return await html_to_pic(
-        template_path=f"file://{TEMPLATES_PATH}",
-        html=await template.render_async(md=md, css=css, extra=extra),
-        viewport={"width": 500, "height": 10},
-        type="png",
-        device_scale_factor=2,
+    html = await template.render_async(md=md, css=css, extra=extra)
+    async with get_new_page(2, viewport={"width": 400, "height": 10}) as page:
+        await page.goto(f"file://{TEMPLATES_PATH}")
+        await page.set_content(html, wait_until="networkidle")
+        img_raw = await page.screenshot(full_page=True, type="png")
+
+    return img_raw
+
+
+async def get_csrftoken(id: str) -> str:
+    resp = await var.httpx_client.get("https://paste.mozilla.org/")
+    if resp.status_code != 200:
+        raise Exception(f"访问https://paste.mozilla.org/失败，响应码：{resp.status_code}")
+
+    match = search(
+        r'<input[^>]+name="csrfmiddlewaretoken"[^>]+value="([^"]+)"', resp.text
     )
+    if match:
+        var.paste_csrftoken[id] = match.group(1)
+        return var.paste_csrftoken[id]
+    else:
+        raise Exception("未找到csrfmiddlewaretoken")
+
+
+async def get_pasted_url(content: str, id: str) -> str:
+    if id in var.paste_csrftoken and var.paste_csrftoken[id]:
+        csrfmiddlewaretoken = var.paste_csrftoken[id]
+    else:
+        csrfmiddlewaretoken = await get_csrftoken(id)
+
+    resp = await var.httpx_client.post(
+        "https://paste.mozilla.org/",
+        headers={
+            "Origin": "https://paste.mozilla.org",
+            "Referer": "https://paste.mozilla.org/",
+        },
+        data={
+            "csrfmiddlewaretoken": csrfmiddlewaretoken,
+            "title": "",
+            "lexer": "_markdown",
+            "expires": 86400,
+            "content": content,
+        },
+    )
+    if resp.status_code == 302:
+        # 缓存下一个token
+        create_task(get_csrftoken(id))
+        return f"https://paste.mozilla.org{resp.headers.get('Location')}/slim"
+    elif resp.status_code == 403:
+        # token失效
+        var.paste_csrftoken[id] = ""
+        return await get_pasted_url(content, id)
+    else:
+        raise Exception("提交后响应码非302")
 
 
 driver = get_driver()
@@ -116,14 +164,6 @@ async def _():
             indent=4,
             ensure_ascii=False,
         )
-
-
-# from traceback import format_exc
-# from nonebot import get_driver
-# driver = get_driver()
-# @driver.on_startup
-# async def _():
-#     pass
 
 
 def get_id(event: MessageEvent) -> str:
@@ -172,6 +212,7 @@ async def gen_chat_text(event: MessageEvent, bot: Bot) -> str:
 
 
 async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=False):
+    """ "从api获取回答"""
     # 获取问题
     question = unescape(await gen_chat_text(event, bot))
 
@@ -215,7 +256,7 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
         var.session_data[id] = eop_id
         # 上锁
         var.session_lock[id] = True
-
+        # 获取回答
         answer = ""
         async with var.httpx_client.stream(
             "POST", f"/bot/{eop_id}/talk", json={"q": question}
@@ -237,23 +278,23 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
 
                     await matcher.finish(f"生成回答异常，类型：{data['type']}：{data['data']}")
 
-        # 解锁
-        var.session_lock[id] = False
+        # 转图片并粘贴到剪切板
+        async def _reply_with_img(answer: str):
+            answer_image, answer_text_link = await gather(
+                md_to_pic(answer), get_pasted_url(answer, id)
+            )
+            return MS.image(answer_image) + MS.text("文本：" + answer_text_link)
 
+        # 沉浸式对话
         if not immersive:
             if pc.eop_ai_reply_with_img:
-                await matcher.finish(
-                    MS.image(await md_to_pic(answer))
-                    + MS.text("文本：" + await get_pasted_url(answer))
-                )
+                await matcher.finish(await _reply_with_img(answer))
             await matcher.finish(answer, at_sender=True)
-
-        if pc.eop_ai_reply_with_img:
-            await matcher.reject(
-                MS.image(await md_to_pic(answer))
-                + MS.text("文本：" + await get_pasted_url(answer))
-            )
-        await matcher.reject(answer, at_sender=True)
+        # 普通对话
+        else:
+            if pc.eop_ai_reply_with_img:
+                await matcher.reject(await _reply_with_img(answer))
+            await matcher.reject(answer, at_sender=True)
 
     except (RejectedException, FinishedException) as e:
         raise e
@@ -263,6 +304,10 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
 
     except Exception as e:
         await matcher.finish(str(e))
+
+    finally:
+        # 解锁
+        var.session_lock[id] = False
 
 
 class RequestError(Exception):
@@ -277,9 +322,9 @@ class RequestError(Exception):
         super().__init__(message)
 
 
-async def http_request(method: str, url: str, **params) -> dict:
+async def http_request(method: str, url: str, **kwargs) -> dict:
     try:
-        resp = await var.httpx_client.request(method, url, **params)
+        resp = await var.httpx_client.request(method, url, **kwargs)
     except Exception as e:
         raise e
 
@@ -295,7 +340,7 @@ async def http_request(method: str, url: str, **params) -> dict:
         var.access_token = resp_data["access_token"]
         var.httpx_client.headers.update({"Authorization": f"Bearer {var.access_token}"})
         # 重新请求
-        return await http_request(method, url, **params)
+        return await http_request(method, url, **kwargs)
 
     if resp.status_code == 204:
         return {}
@@ -304,38 +349,3 @@ async def http_request(method: str, url: str, **params) -> dict:
         raise RequestError(method, url, resp.status_code, resp.json())
 
     return resp.json()
-
-
-async def get_pasted_url(content: str) -> str:
-    resp = await var.httpx_client.get("https://paste.mozilla.org/")
-    if resp.status_code != 200:
-        raise Exception(f"访问https://paste.mozilla.org/失败，响应码：{resp.status_code}")
-
-    match = search(
-        r'<input[^>]+name="csrfmiddlewaretoken"[^>]+value="([^"]+)"', resp.text
-    )
-    if match:
-        csrfmiddlewaretoken: str = match.group(1)
-    else:
-        raise Exception("未找到csrfmiddlewaretoken")
-
-    data = {
-        "csrfmiddlewaretoken": csrfmiddlewaretoken,
-        "title": "",
-        "lexer": "_markdown",
-        "expires": 86400,
-        "content": content,
-    }
-    resp = await var.httpx_client.post(
-        "https://paste.mozilla.org/",
-        headers={
-            "Origin": "https://paste.mozilla.org",
-            "Referer": "https://paste.mozilla.org/",
-        },
-        data=data,
-    )
-    if resp.status_code == 302:
-        location = resp.headers.get("Location")
-        return f"https://paste.mozilla.org{location}/slim"
-    else:
-        raise Exception("提交后响应码非302")

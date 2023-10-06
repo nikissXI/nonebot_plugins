@@ -4,6 +4,7 @@ from nonebot import get_bot, get_bots, get_driver
 from nonebot.adapters import Bot
 from nonebot.log import logger
 from pydantic import BaseModel, Extra
+from playwright.async_api import Playwright, Browser
 
 
 class Config(BaseModel, extra=Extra.ignore):
@@ -55,8 +56,10 @@ class Global_var:
     enable_group_list: List[int] = []
     # 会话数据   qqnum/groupnum_qqnum  :  eop id
     session_data: Dict[str, str] = dict()
-    # 异步task强引用
+    # 会话锁
     session_lock: Dict[str, bool] = {}
+    # 粘贴板的csrftoken缓存
+    paste_csrftoken: Dict[str, str] = {}
     # httpx
     httpx_client = AsyncClient(
         base_url=pc.eop_ai_base_addr,
@@ -65,6 +68,9 @@ class Global_var:
         proxies=pc.eop_ai_http_proxy_addr,
     )
     access_token = ""
+    # playwright浏览器对象
+    playwright: Optional[Playwright] = None
+    browser: Optional[Browser] = None
 
 
 var = Global_var()
