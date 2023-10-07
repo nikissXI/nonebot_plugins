@@ -11,14 +11,16 @@ from .rules import (
     talk_tome_rule,
     talk_cmd,
     talk_p_cmd,
+    reply_type_cmd,
 )
 from .utils import RequestError, get_answer, get_id, http_request
 
 usage = f"""插件命令如下
-{pc.eop_ai_talk_cmd}   # 开始对话，默认群里@机器人也可以
-{pc.eop_ai_talk_p_cmd}   # 沉浸式对话（仅限私聊）
-{pc.eop_ai_reset_cmd}   # 重置对话（不会重置预设）
-{pc.eop_ai_group_enable_cmd}   # 如果关闭所有群启用，则用这个命令启用"""
+{talk_cmd}   # 开始对话，默认群里@机器人也可以
+{talk_p_cmd}   # 沉浸式对话（仅限私聊）
+{reset_cmd}   # 重置对话（不会重置预设）
+{enable_cmd}   # 如果关闭所有群启用，则用这个命令启用
+{reply_type_cmd}   # AI回答输出类型切换，仅对使用命令的会话生效"""
 
 
 talk_keyword = on_startswith(talk_cmd, rule=talk_keyword_rule)
@@ -28,6 +30,10 @@ talk_p = on_fullmatch(talk_p_cmd)
 
 reset = on_fullmatch(reset_cmd, rule=rule_admin)
 group_enable = on_fullmatch(enable_cmd, rule=rule_admin)
+
+# 规则需要写一个新的，如果私聊直接pass，如果是群聊，要检查share是否开启，如果开了就只能管理员，否则就pass
+# matcher还没写
+reply_type = on_startswith(reply_type_cmd, rule=todo)
 
 
 @talk_keyword.handle()
@@ -53,7 +59,7 @@ async def _(matcher: Matcher, event: MessageEvent):
     id = get_id(event)
     eop_id = var.session_data[id]
     if not eop_id:
-        await matcher.finish("还没聊过呢", at_sender=True)
+        await matcher.finish("尚未发起对话", at_sender=pc.eop_ai_reply_at_user)
 
     try:
         await http_request("delete", f"/bot/{eop_id}/clear")
@@ -66,7 +72,7 @@ async def _(matcher: Matcher, event: MessageEvent):
         await matcher.finish(str(e))
 
     var.session_data[id] = ""
-    await matcher.finish("已重置会话", at_sender=True)
+    await matcher.finish("已重置对话", at_sender=pc.eop_ai_reply_at_user)
 
 
 @group_enable.handle()

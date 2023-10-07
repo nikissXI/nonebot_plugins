@@ -71,14 +71,18 @@ eop_ai_passwd = password
 ```bash
 # 代理地址，当前仅支持http代理
 eop_ai_http_proxy_addr = http://127.0.0.1:7890
-# AI回答是否使用图片输出（建议开启）
-eop_ai_reply_with_img = true
+# AI回答默认输出类型，填1/2/3其中一个数字，1=纯文字，2=纯图片，3=图片+文字（文字在网页粘贴板）
+eop_ai_reply_type = true
+# 图片输出时，图片的宽度
+eop_ai_img_width = 400
 # 处理消息时是否提示（不嫌烦或测试的时候可以打开）
 eop_ai_reply_notice = false
 # 群聊是否共享会话
 eop_ai_group_share = true
 # 是否默认允许所有群聊使用，否则需要使用命令启用（默认 /eopai）
 eop_ai_all_group_enable = true
+# 群聊中，机器人的回复是否艾特提问用户，如果eop_ai_group_share为true该选项强制为true
+eop_ai_reply_at_user = true
 ```
 
 #### 如果要修改触发命令就填
@@ -93,6 +97,8 @@ eop_ai_talk_cmd = /talk
 eop_ai_talk_p_cmd = /hi
 # 重置对话，就是清空聊天记录
 eop_ai_reset_cmd = /reset
+# AI回答输出类型切换，仅对使用命令的会话生效
+eop_ai_reply_type_cmd = /reply
 ```
 
 #### 大概率用不上的选填项

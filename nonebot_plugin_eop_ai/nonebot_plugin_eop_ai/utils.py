@@ -27,6 +27,53 @@ try:
 except:
     from json import dump, load, loads
 
+driver = get_driver()
+
+
+@driver.on_startup
+async def _():
+    """
+    启动时执行
+    """
+    # 如果eop_ai_group_share为true该选项强制为true
+    if pc.eop_ai_group_share:
+        pc.eop_ai_reply_at_user = True
+
+    # 读取数据
+    if path.exists(f"data/{pc.eop_ai_data}"):
+        with open(f"data/{pc.eop_ai_data}", "r", encoding="utf-8") as r:
+            _ = load(r)
+            version = _["version"]
+
+        if version != pc.eop_ai_version:
+            logger.warning(f"配置文件版本不对应哦~")
+        else:
+            var.enable_group_list = _["enable_group_list"]
+            var.session_data = _["session_data"]
+            var.reply_type = _["reply_type"]
+    else:
+        if not path.exists("data"):
+            makedirs("data")
+
+
+@driver.on_shutdown
+async def _():
+    """
+    关闭时执行
+    """
+    with open(f"data/{pc.eop_ai_data}", "w", encoding="utf-8") as w:
+        dump(
+            {
+                "version": pc.eop_ai_version,
+                "enable_group_list": var.enable_group_list,
+                "session_data": var.session_data,
+                "reply_type": var.reply_type,
+            },
+            w,
+            indent=4,
+            ensure_ascii=False,
+        )
+
 
 async def md_to_pic(md_text: str) -> bytes:
     """markdown 转 图片
@@ -74,7 +121,9 @@ async def md_to_pic(md_text: str) -> bytes:
     )
 
     html = await template.render_async(md=md, css=css, extra=extra)
-    async with get_new_page(2, viewport={"width": 400, "height": 10}) as page:
+    async with get_new_page(
+        2, viewport={"width": pc.eop_ai_img_width, "height": 10}
+    ) as page:
         await page.goto(f"file://{TEMPLATES_PATH}")
         await page.set_content(html, wait_until="networkidle")
         img_raw = await page.screenshot(full_page=True, type="png")
@@ -127,43 +176,6 @@ async def get_pasted_url(content: str, id: str) -> str:
         return await get_pasted_url(content, id)
     else:
         raise Exception("提交后响应码非302")
-
-
-driver = get_driver()
-
-
-@driver.on_startup
-async def _():
-    """
-    启动时执行
-    """
-    # 读取数据
-    if path.exists(f"data/{pc.eop_ai_data}"):
-        with open(f"data/{pc.eop_ai_data}", "r", encoding="utf-8") as r:
-            (
-                var.enable_group_list,
-                var.session_data,
-            ) = load(r)
-    else:
-        if not path.exists("data"):
-            makedirs("data")
-
-
-@driver.on_shutdown
-async def _():
-    """
-    关闭时执行
-    """
-    with open(f"data/{pc.eop_ai_data}", "w", encoding="utf-8") as w:
-        dump(
-            [
-                var.enable_group_list,
-                var.session_data,
-            ],
-            w,
-            indent=4,
-            ensure_ascii=False,
-        )
 
 
 def get_id(event: MessageEvent) -> str:
@@ -287,12 +299,12 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
 
         # 沉浸式对话
         if not immersive:
-            if pc.eop_ai_reply_with_img:
+            if pc.eop_ai_reply_type:
                 await matcher.finish(await _reply_with_img(answer))
             await matcher.finish(answer, at_sender=True)
         # 普通对话
         else:
-            if pc.eop_ai_reply_with_img:
+            if pc.eop_ai_reply_type:
                 await matcher.reject(await _reply_with_img(answer))
             await matcher.reject(answer, at_sender=True)
 

@@ -4,10 +4,12 @@ from nonebot import get_bot, get_bots, get_driver
 from nonebot.adapters import Bot
 from nonebot.log import logger
 from pydantic import BaseModel, Extra
-from playwright.async_api import Playwright, Browser
 
 
 class Config(BaseModel, extra=Extra.ignore):
+    # 配置文件版本号，不要改
+    eop_ai_version: int = 1
+
     # eop后端url地址，如 https://api.eop.com
     eop_ai_base_addr: str = ""
 
@@ -18,14 +20,18 @@ class Config(BaseModel, extra=Extra.ignore):
     # 代理地址
     eop_ai_http_proxy_addr: Optional[str] = None
 
-    # AI回答是否使用图片输出
-    eop_ai_reply_with_img: bool = True
+    # AI回答输出类型，填1/2/3其中一个数字，1=纯文字，2=纯图片，3=图片+文字（文字在网页粘贴板）
+    eop_ai_reply_type: bool = True
+    # 图片输出时，图片的宽度
+    eop_ai_img_width: int = 400
     # 处理消息时是否提示
     eop_ai_reply_notice: bool = False
     # 群聊是否共享会话
     eop_ai_group_share: bool = True
     # 是否默认允许所有群聊使用，否则需要使用命令启用
     eop_ai_all_group_enable: bool = False
+    # 群聊中，机器人的回复是否艾特提问用户，如果eop_ai_group_share为true该选项强制为true
+    eop_ai_reply_at_user: bool = True
 
     # 群聊艾特和发bot昵称是否响应（需要先启用该群的eop ai）
     eop_ai_talk_tome: bool = False
@@ -37,6 +43,8 @@ class Config(BaseModel, extra=Extra.ignore):
     eop_ai_talk_p_cmd: str = "/hi"
     # 重置对话，就是清空聊天记录
     eop_ai_reset_cmd: str = "/reset"
+    # AI回答输出类型切换，仅对使用命令的会话生效
+    eop_ai_reply_type_cmd: str = "/reply"
 
     # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） [1234, 5678, 6666]  ["all"]则全部响应
     eop_ai_bot_qqnum_list: List[str] = []  # 可选
@@ -56,6 +64,8 @@ class Global_var:
     enable_group_list: List[int] = []
     # 会话数据   qqnum/groupnum_qqnum  :  eop id
     session_data: Dict[str, str] = dict()
+    # 指定回复类型   id  :  int
+    reply_type: Dict[str, int] = dict()
     # 会话锁
     session_lock: Dict[str, bool] = {}
     # 粘贴板的csrftoken缓存
@@ -68,9 +78,6 @@ class Global_var:
         proxies=pc.eop_ai_http_proxy_addr,
     )
     access_token = ""
-    # playwright浏览器对象
-    playwright: Optional[Playwright] = None
-    browser: Optional[Browser] = None
 
 
 var = Global_var()
