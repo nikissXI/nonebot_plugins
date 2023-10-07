@@ -6,6 +6,7 @@
 <div align="center">
 
 # nonebot_plugin_nya_music
+# 该插件接口已失效，插件已无法使用
 
 _✨ Nonebot2 喵喵点歌 ✨_
 
