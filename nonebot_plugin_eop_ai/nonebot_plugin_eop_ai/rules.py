@@ -10,6 +10,10 @@ enable_cmd = pc.eop_ai_group_enable_cmd
 reply_type_cmd = pc.eop_ai_reply_type_cmd
 
 
+def bot_check(bot: Bot) -> bool:
+    return pc.eop_ai_bot_qqnum_list == ["all"] or bot == var.handle_bot
+
+
 async def talk_keyword_rule(event: MessageEvent, bot: Bot) -> bool:
     if isinstance(event, PrivateMessageEvent):
         return True
@@ -18,14 +22,17 @@ async def talk_keyword_rule(event: MessageEvent, bot: Bot) -> bool:
         if (
             pc.eop_ai_all_group_enable is True
             or event.group_id in var.enable_group_list
-        ) and (pc.eop_ai_bot_qqnum_list == ["all"] or bot == var.handle_bot):
+        ) and bot_check(bot):
             return True
 
     return False
 
 
 async def talk_tome_rule(event: MessageEvent) -> bool:
-    if isinstance(event, GroupMessageEvent):
+    if isinstance(event, PrivateMessageEvent):
+        return False
+
+    elif isinstance(event, GroupMessageEvent):
         if (event.is_tome() and pc.eop_ai_talk_tome) and (
             pc.eop_ai_all_group_enable is True
             or event.group_id in var.enable_group_list
@@ -35,10 +42,25 @@ async def talk_tome_rule(event: MessageEvent) -> bool:
     return False
 
 
-async def rule_admin(event: MessageEvent, bot: Bot) -> bool:
-    if await SUPERUSER(bot, event) and (
-        pc.eop_ai_bot_qqnum_list == ["all"] or bot == var.handle_bot
-    ):
+async def admin_rule(event: MessageEvent, bot: Bot) -> bool:
+    if not await SUPERUSER(bot, event):
+        return False
+
+    if isinstance(event, PrivateMessageEvent):
         return True
+    else:
+        return bot_check(bot)
+
+
+# 如果私聊直接pass，如果是群聊，要检查share是否开启，如果开了就只能管理员，否则就pass
+async def baga_rule(event: MessageEvent, bot: Bot) -> bool:
+    if isinstance(event, PrivateMessageEvent):
+        return True
+
+    elif isinstance(event, GroupMessageEvent) and bot_check(bot):
+        if pc.eop_ai_group_share:
+            return await SUPERUSER(bot, event)
+        else:
+            return False
 
     return False

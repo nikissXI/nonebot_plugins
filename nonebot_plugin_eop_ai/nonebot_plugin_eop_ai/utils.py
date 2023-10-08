@@ -9,7 +9,6 @@ from nonebot.matcher import Matcher
 from nonebot import get_driver, require
 from nonebot.exception import RejectedException, FinishedException
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
-from datetime import datetime
 from asyncio import gather, create_task
 
 require("nonebot_plugin_htmlrender")

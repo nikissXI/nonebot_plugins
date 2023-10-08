@@ -6,17 +6,18 @@ from .config import pc, var
 from .rules import (
     enable_cmd,
     reset_cmd,
-    rule_admin,
+    admin_rule,
     talk_keyword_rule,
     talk_tome_rule,
     talk_cmd,
     talk_p_cmd,
     reply_type_cmd,
+    baga_rule,
 )
 from .utils import RequestError, get_answer, get_id, http_request
 
 usage = f"""插件命令如下
-{talk_cmd}   # 开始对话，默认群里@机器人也可以
+{talk_cmd}   # 触发对话关键字，默认群里@机器人也可以
 {talk_p_cmd}   # 沉浸式对话（仅限私聊）
 {reset_cmd}   # 重置对话（不会重置预设）
 {enable_cmd}   # 如果关闭所有群启用，则用这个命令启用
@@ -28,18 +29,16 @@ talk_tome = on_message(rule=talk_tome_rule)
 
 talk_p = on_fullmatch(talk_p_cmd)
 
-reset = on_fullmatch(reset_cmd, rule=rule_admin)
-group_enable = on_fullmatch(enable_cmd, rule=rule_admin)
+reset = on_fullmatch(reset_cmd, rule=baga_rule)
+reply_type = on_startswith(reply_type_cmd, rule=baga_rule)
 
-# 规则需要写一个新的，如果私聊直接pass，如果是群聊，要检查share是否开启，如果开了就只能管理员，否则就pass
-# matcher还没写
-reply_type = on_startswith(reply_type_cmd, rule=todo)
-
+group_enable = on_fullmatch(enable_cmd, rule=admin_rule)
 
 @talk_keyword.handle()
 @talk_tome.handle()
 async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
-    if not event.get_plaintext():
+    _in = event.get_plaintext()
+    if not _in or _in == talk_cmd:
         await matcher.finish(usage)
 
     await get_answer(matcher, event, bot)
@@ -87,3 +86,11 @@ async def _(matcher: Matcher, event: GroupMessageEvent):
     else:
         var.enable_group_list.append(event.group_id)
         await matcher.finish("eop ai已启用")
+
+
+@reply_type.handle()
+async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
+    _in = event.get_plaintext()
+    if _in == reply_type_cmd:
+        await matcher.finish(usage)
+
