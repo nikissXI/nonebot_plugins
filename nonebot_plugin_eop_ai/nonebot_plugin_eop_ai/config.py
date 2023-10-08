@@ -20,8 +20,8 @@ class Config(BaseModel, extra=Extra.ignore):
     # 代理地址
     eop_ai_http_proxy_addr: Optional[str] = None
 
-    # AI回答输出类型，填1/2/3其中一个数字，1=纯文字，2=纯图片，3=图片+文字（文字在网页粘贴板）
-    eop_ai_reply_type: bool = True
+    # AI回答输出类型，填1/2/3其中一个数字，1=文字，2=图片，3=图片+文字（文字在网页粘贴板）
+    eop_ai_reply_type: int = 3
     # 图片输出时，图片的宽度
     eop_ai_img_width: int = 400
     # 处理消息时是否提示
@@ -30,11 +30,11 @@ class Config(BaseModel, extra=Extra.ignore):
     eop_ai_group_share: bool = True
     # 是否默认允许所有群聊使用，否则需要使用命令启用
     eop_ai_all_group_enable: bool = False
-    # 群聊中，机器人的回复是否艾特提问用户，如果eop_ai_group_share为true该选项强制为true
+    # 群聊中，机器人的回复是否艾特提问用户，如果eop_ai_group_share为false该选项强制为true
     eop_ai_reply_at_user: bool = True
 
     # 群聊艾特和发bot昵称是否响应（需要先启用该群的eop ai）
-    eop_ai_talk_tome: bool = False
+    eop_ai_talk_tome: bool = True
     # 如果关闭所有群聊使用，启用该群的命令
     eop_ai_group_enable_cmd: str = "/eopai"
     # 触发对话的命令前缀，群聊直接艾特也可以触发

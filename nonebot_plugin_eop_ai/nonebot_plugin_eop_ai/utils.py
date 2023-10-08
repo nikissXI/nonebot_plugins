@@ -7,7 +7,7 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent, Bot
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 from nonebot import get_driver, require
-from nonebot.exception import RejectedException, FinishedException
+from nonebot.exception import FinishedException
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from asyncio import gather, create_task
 
@@ -35,7 +35,8 @@ async def _():
     启动时执行
     """
     # 如果eop_ai_group_share为true该选项强制为true
-    if pc.eop_ai_group_share:
+    if pc.eop_ai_group_share == False:
+        logger.warning(f"因eop_ai_group_share为False，eop_ai_reply_at_user改为True")
         pc.eop_ai_reply_at_user = True
 
     # 读取数据
@@ -53,6 +54,12 @@ async def _():
     else:
         if not path.exists("data"):
             makedirs("data")
+
+    # 如果默认回复类型不是1，之前所有1的都改成默认
+    if pc.eop_ai_reply_type != 1:
+        for id in var.reply_type.keys():
+            if var.reply_type[id] == 1:
+                var.reply_type.pop(id)
 
 
 @driver.on_shutdown
@@ -222,6 +229,14 @@ async def gen_chat_text(event: MessageEvent, bot: Bot) -> str:
     return msg
 
 
+async def send_with_at(matcher: Matcher, content):
+    await matcher.send(content, at_sender=pc.eop_ai_reply_at_user)
+
+
+async def finish_with_at(matcher: Matcher, content):
+    await matcher.finish(content, at_sender=pc.eop_ai_reply_at_user)
+
+
 async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=False):
     """ "从api获取回答"""
     # 获取问题
@@ -233,17 +248,21 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
     # 判断是否有回答没完成
     if id in var.session_lock and var.session_lock[id]:
         if immersive:
-            await matcher.reject("上一个回答还没完成呢")
-
-        await matcher.finish("上一个回答还没完成呢")
+            await send_with_at(matcher, "上一个回答还没完成呢")
+        else:
+            await send_with_at(matcher, "上一个回答还没完成呢")
+        return
 
     # 根据配置是否发出提示
     if pc.eop_ai_reply_notice:
-        await matcher.send("响应中...")
+        await send_with_at(matcher, "响应中...")
 
     eop_id = var.session_data[id]
 
     try:
+        # 上锁
+        var.session_lock[id] = True
+
         # 检查登陆权限
         await http_request("get", "/user/info")
 
@@ -265,8 +284,7 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
             eop_id: str = resp_data["bot_info"]["eop_id"]
 
         var.session_data[id] = eop_id
-        # 上锁
-        var.session_lock[id] = True
+
         # 获取回答
         answer = ""
         async with var.httpx_client.stream(
@@ -285,40 +303,67 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                     var.session_lock[id] = False
                     if data["type"] == "deleted":
                         var.session_data[id] = ""
-                        await matcher.finish(f"原会话失效，已自动刷新会话，请重新发起对话")
+                        await send_with_at(matcher, f"原会话失效，已自动刷新会话，请复述问题")
+                        return
+                    else:
+                        await finish_with_at(
+                            matcher, f"生成回答异常，类型：{data['type']}：{data['data']}"
+                        )
 
-                    await matcher.finish(f"生成回答异常，类型：{data['type']}：{data['data']}")
+        # 转图片
+        async def _reply_with_img(answer: str):
+            answer_image = await md_to_pic(answer)
+            return MS.image(answer_image)
 
         # 转图片并粘贴到剪切板
-        async def _reply_with_img(answer: str):
+        async def _reply_with_img_and_text(answer: str):
             answer_image, answer_text_link = await gather(
                 md_to_pic(answer), get_pasted_url(answer, id)
             )
             return MS.image(answer_image) + MS.text("文本：" + answer_text_link)
 
+        reply_type = pc.eop_ai_reply_type
+        if id in var.reply_type:
+            reply_type = var.reply_type[id]
+
         # 沉浸式对话
-        if not immersive:
-            if pc.eop_ai_reply_type:
-                await matcher.finish(await _reply_with_img(answer))
-            await matcher.finish(answer, at_sender=True)
+        if immersive:
+            if reply_type == 1:
+                await send_with_at(matcher, answer)
+            elif reply_type == 2:
+                await send_with_at(matcher, await _reply_with_img(answer))
+            else:
+                await send_with_at(matcher, await _reply_with_img_and_text(answer))
+
         # 普通对话
         else:
-            if pc.eop_ai_reply_type:
-                await matcher.reject(await _reply_with_img(answer))
-            await matcher.reject(answer, at_sender=True)
+            if reply_type == 1:
+                await send_with_at(matcher, answer)
+            elif reply_type == 2:
+                await send_with_at(matcher, await _reply_with_img(answer))
+            else:
+                await send_with_at(matcher, await _reply_with_img_and_text(answer))
 
-    except (RejectedException, FinishedException) as e:
+    except FinishedException as e:
         raise e
 
+    except AnswerError as e:
+        await finish_with_at(matcher, repr(e))
+
     except RequestError as e:
-        await matcher.finish(str(e))
+        await finish_with_at(matcher, repr(e))
 
     except Exception as e:
-        await matcher.finish(str(e))
+        await finish_with_at(matcher, repr(e))
 
     finally:
         # 解锁
         var.session_lock[id] = False
+
+
+class AnswerError(Exception):
+    def __init__(self, text: str):
+        super().__init__(text)
 
 
 class RequestError(Exception):
