@@ -124,6 +124,10 @@ eop_ai_data = eop_ai.json
 <img width="400" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/4.jpg"/>  
 
 ## 更新日志
+### 2023/11/21 \[v0.1.6]
+
+* 适配后端的接口更新
+
 ### 2023/10/8 \[v0.1.5]
 
 * 更新命令/reply用于切换输出模式
