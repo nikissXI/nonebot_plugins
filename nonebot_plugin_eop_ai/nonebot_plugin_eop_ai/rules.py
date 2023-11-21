@@ -42,6 +42,16 @@ async def talk_tome_rule(event: MessageEvent) -> bool:
     return False
 
 
+async def baga_rule(event: MessageEvent, bot: Bot) -> bool:
+    if isinstance(event, PrivateMessageEvent):
+        return True
+
+    elif isinstance(event, GroupMessageEvent) and bot_check(bot):
+        return True
+
+    return False
+
+
 async def admin_rule(event: MessageEvent, bot: Bot) -> bool:
     if not await SUPERUSER(bot, event):
         return False
@@ -50,17 +60,3 @@ async def admin_rule(event: MessageEvent, bot: Bot) -> bool:
         return True
     else:
         return bot_check(bot)
-
-
-# 如果私聊直接pass，如果是群聊，要检查share是否开启，如果开了就只能管理员，否则就pass
-async def baga_rule(event: MessageEvent, bot: Bot) -> bool:
-    if isinstance(event, PrivateMessageEvent):
-        return True
-
-    elif isinstance(event, GroupMessageEvent) and bot_check(bot):
-        if pc.eop_ai_group_share:
-            return await SUPERUSER(bot, event)
-        else:
-            return False
-
-    return False

@@ -71,8 +71,8 @@ eop_ai_passwd = password
 ```bash
 # 代理地址，当前仅支持http代理
 eop_ai_http_proxy_addr = http://127.0.0.1:7890
-# AI回答默认输出类型，填1/2/3其中一个数字，1=纯文字，2=纯图片，3=图片+文字（文字在网页粘贴板）
-eop_ai_reply_type = true
+# AI回答默认输出类型，填1/2/3其中一个数字，1=文字，2=图片，3=图片+文字（文字在网页粘贴板）
+eop_ai_reply_type = 3
 # 图片输出时，图片的宽度
 eop_ai_img_width = 400
 # 处理消息时是否提示（不嫌烦或测试的时候可以打开）
@@ -81,14 +81,14 @@ eop_ai_reply_notice = false
 eop_ai_group_share = true
 # 是否默认允许所有群聊使用，否则需要使用命令启用（默认 /eopai）
 eop_ai_all_group_enable = true
-# 群聊中，机器人的回复是否艾特提问用户，如果eop_ai_group_share为true该选项强制为true
+# 群聊中，机器人的回复是否艾特提问用户，如果eop_ai_group_share为false该选项强制为true
 eop_ai_reply_at_user = true
 ```
 
 #### 如果要修改触发命令就填
 ```bash
 # 群聊艾特和发bot昵称是否响应（需要先启用该群的eop ai）
-eop_ai_talk_tome = false
+eop_ai_talk_tome = true
 # 如果关闭所有群聊使用，启用该群的命令
 eop_ai_group_enable_cmd = /eopai
 # 触发对话的命令前缀，如果eop_ai_talk_tome为true直接艾特即可
@@ -124,6 +124,10 @@ eop_ai_data = eop_ai.json
 <img width="400" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/4.jpg"/>  
 
 ## 更新日志
+### 2023/10/8 \[v0.1.5]
+
+* 更新命令/reply用于切换输出模式
+
 ### 2023/10/7 \[v0.1.4]
 
 * 优化转图片输出的速度
