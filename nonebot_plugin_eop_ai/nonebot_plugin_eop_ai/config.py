@@ -21,7 +21,7 @@ class Config(BaseModel, extra=Extra.ignore):
     eop_ai_http_proxy_addr: Optional[str] = None
 
     # AI回答输出类型，填1/2/3其中一个数字，1=纯文字，2=纯图片，3=图片+文字（文字在网页粘贴板）
-    eop_ai_reply_type: bool = True
+    eop_ai_reply_type: int = 2
     # 图片输出时，图片的宽度
     eop_ai_img_width: int = 400
     # 处理消息时是否提示

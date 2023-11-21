@@ -274,13 +274,10 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
         ) as response:
             async for chunk in response.aiter_lines():
                 data = loads(chunk)
-                if data["type"] == "msg_info":
+                if data["type"] == "msg_info" or data["type"] == "end":
                     continue
                 if data["type"] == "response":
-                    if data["data"]["complete"]:
-                        answer = data["data"]["content"]
-                    else:
-                        continue
+                    answer = data["data"]
                 else:
                     var.session_lock[id] = False
                     if data["type"] == "deleted":
