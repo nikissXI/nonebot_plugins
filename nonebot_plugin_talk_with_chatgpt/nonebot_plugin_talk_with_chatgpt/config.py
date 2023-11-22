@@ -15,7 +15,7 @@ class Config(BaseModel, extra=Extra.ignore):
     # access_token
     talk_with_chatgpt_accesstoken: str = ""
     # chatgpt反代地址
-    talk_with_chatgpt_api_addr: str = "https://ai.fakeopen.com/api/conversation"
+    talk_with_chatgpt_api_addr: str = ""
     # http代理
     talk_with_chatgpt_http_proxy: Optional[str] = None
 
