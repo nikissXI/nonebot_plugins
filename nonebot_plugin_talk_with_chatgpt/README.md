@@ -26,8 +26,8 @@ _✨ Nonebot2 一个简单易用的chatgpt插件 ✨_
 - <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
 
 # 注意！
-由于现在社区反代API用的人太多，稳定性可能不咋地，最好就自建一个，目前内置的是[https://ai.fakeopen.com/api/conversation](https://ai.fakeopen.com/api/conversation) ，截止2023/4/22是能用的，而且不需要设置代理。
-[自建反代API搭建教程](https://github.com/dqzboy/ChatGPT-Porxy)
+使用本插件需要自建反代服务器来绕过403盾，后面我看看有没有别的社区反代再加回来 [自建反代API搭建教程](https://github.com/dqzboy/ChatGPT-Porxy)  
+网页直接使用的话推荐[潘多拉next](https://github.com/pandora-next/deploy)  
 
 ## 简介
 发现商店里没有基于accessToken登录的chatgpt插件，也没看到喜欢的插件，就花一天时间自己写了一个。参考了[chatgpt web](https://github.com/Chanzhaoyu/chatgpt-web)这个开源项目，使用了社区上的反代，如果要使用其他反代可以参考这个项目里的。  
@@ -52,12 +52,12 @@ nb plugin install nonebot_plugin_talk_with_chatgpt
 ```bash
 # 填上面获取到的accessToken
 talk_with_chatgpt_accesstoken = xxxxxxxxxxx
+# chatgpt反代地址，默认 
+talk_with_chatgpt_api_addr = 
 ```
 
 #### 大概率用得上的选填项
 ```bash
-# chatgpt反代地址，默认 https://ai.fakeopen.com/api/conversation
-talk_with_chatgpt_api_addr = https://ai.fakeopen.com/api/conversation
 # 默认无代理，视api情况看是否需要梯子。这个内置的反代我测过是不需要梯子的。
 talk_with_chatgpt_http_proxy = null
 
@@ -118,6 +118,10 @@ talk_with_chatgpt_font_size = 18
 | /chatgpt | 如果talk_with_chatgpt_all_group_enable为false，则用该命令启用 |
 
 ## 更新日志
+### 2023/11/22 \[v0.6.3]
+
+* 移除内置的社区反代，因为失效了，更新readme，提醒自建反代
+
 ### 2023/7/21 \[v0.6.2]
 
 * [修复无法响应的问题](https://github.com/nikissXI/nonebot_plugins/issues/29)
