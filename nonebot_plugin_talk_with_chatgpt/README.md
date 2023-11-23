@@ -6,7 +6,6 @@
 <div align="center">
 
 # nonebot_plugin_talk_with_chatgpt
-# 开发者的chatgpt账号被封了后就没用过了，所以不清楚该插件还能不能使用
 
 _✨ Nonebot2 一个简单易用的chatgpt插件 ✨_
 
