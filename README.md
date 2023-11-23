@@ -6,4 +6,4 @@
 
 ## Star历史
 
-[![Star History Chart](https://api.star-history.com/svg?repos=nikissXI/nonebot_plugins&type=Date)](https://star-history.com/#nikissXI/nonebot_plugins&Date)
+![Star History Chart](https://api.star-history.com/svg?repos=nikissXI/nonebot_plugins&type=Date)
