@@ -25,7 +25,7 @@ _✨ Nonebot2 一个简单易用的chatgpt插件 ✨_
 - <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
 
 # 注意！
-使用本插件需要自建反代服务器来绕过403盾，推荐使用[潘多拉next](https://github.com/pandora-next/deploy)搭建反代，免梯直连访问稳定，很方便，使用代理模式启动，接口路径为/backend-api/conversation   
+使用本插件需要自建反代服务器来绕过403盾，推荐使用[潘多拉next](https://github.com/pandora-next/deploy)搭建反代，免梯直连访问稳定，很方便，使用代理模式启动，接口路径为/{proxy_api_prefix}/backend-api/conversation   
 
 ## 简介
 发现商店里没有基于accessToken登录的chatgpt插件，也没看到喜欢的插件，就花一天时间自己写了一个。参考了[chatgpt web](https://github.com/Chanzhaoyu/chatgpt-web)这个开源项目，使用了社区上的反代，如果要使用其他反代可以参考这个项目里的。  
