@@ -1,8 +1,8 @@
 from typing import Dict, List, Optional
+
 from httpx import AsyncClient
 from nonebot import get_bot, get_bots, get_driver
 from nonebot.adapters import Bot
-from nonebot.log import logger
 from pydantic import BaseModel, Extra
 
 

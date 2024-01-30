@@ -1,30 +1,34 @@
+from asyncio import create_task, gather
 from hashlib import sha256
+from html import unescape
 from os import makedirs, path
 from re import search
-from html import unescape
 from typing import Optional
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent, Bot
+
+from nonebot import get_driver, require
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageEvent
+from nonebot.adapters.onebot.v11 import MessageSegment as MS
+from nonebot.exception import FinishedException
 from nonebot.log import logger
 from nonebot.matcher import Matcher
-from nonebot import get_driver, require
-from nonebot.exception import FinishedException
-from nonebot.adapters.onebot.v11 import MessageSegment as MS
-from asyncio import gather, create_task
 
-require("nonebot_plugin_htmlrender")
-from nonebot_plugin_htmlrender.data_source import (
-    env as htmlrender_env,
-    markdown,
-    read_tpl,
-    TEMPLATES_PATH,
-    get_new_page,
-)
 from .config import pc, var
 
 try:
     from ujson import dump, load, loads
-except:
+except Exception:
     from json import dump, load, loads
+
+require("nonebot_plugin_htmlrender")
+from nonebot_plugin_htmlrender.data_source import (
+    TEMPLATES_PATH,
+    get_new_page,
+    markdown,
+    read_tpl,
+)
+from nonebot_plugin_htmlrender.data_source import (
+    env as htmlrender_env,
+)
 
 driver = get_driver()
 
@@ -35,8 +39,8 @@ async def _():
     启动时执行
     """
     # 如果eop_ai_group_share为true该选项强制为true
-    if pc.eop_ai_group_share == False:
-        logger.warning(f"因eop_ai_group_share为False，eop_ai_reply_at_user改为True")
+    if pc.eop_ai_group_share is False:
+        logger.warning("因eop_ai_group_share为False，eop_ai_reply_at_user改为True")
         pc.eop_ai_reply_at_user = True
 
     # 读取数据
@@ -46,7 +50,7 @@ async def _():
             version = _["version"]
 
         if version != pc.eop_ai_version:
-            logger.warning(f"配置文件版本不对应哦~")
+            logger.warning("配置文件版本不对应哦~")
         else:
             var.enable_group_list = _["enable_group_list"]
             var.session_data = _["session_data"]
@@ -300,7 +304,7 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                     var.session_lock[id] = False
                     if data["type"] == "deleted":
                         var.session_data[id] = ""
-                        await send_with_at(matcher, f"原会话失效，已自动刷新会话，请复述问题")
+                        await send_with_at(matcher, "原会话失效，已自动刷新会话，请复述问题")
                         return
                     else:
                         await finish_with_at(

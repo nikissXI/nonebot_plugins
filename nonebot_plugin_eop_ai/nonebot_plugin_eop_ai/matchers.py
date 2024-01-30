@@ -1,26 +1,31 @@
 from nonebot import on_fullmatch, on_message, on_startswith
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageEvent
-from nonebot.adapters.onebot.v11 import PrivateMessageEvent, Bot
-from nonebot.permission import SUPERUSER
+from nonebot.adapters.onebot.v11 import (
+    Bot,
+    GroupMessageEvent,
+    MessageEvent,
+    PrivateMessageEvent,
+)
 from nonebot.matcher import Matcher
+from nonebot.permission import SUPERUSER
+
 from .config import pc, var
 from .rules import (
-    enable_cmd,
-    reset_cmd,
     admin_rule,
-    talk_keyword_rule,
-    talk_tome_rule,
-    talk_cmd,
-    talk_p_cmd,
-    reply_type_cmd,
     baga_rule,
+    enable_cmd,
+    reply_type_cmd,
+    reset_cmd,
+    talk_cmd,
+    talk_keyword_rule,
+    talk_p_cmd,
+    talk_tome_rule,
 )
 from .utils import (
     RequestError,
+    finish_with_at,
     get_answer,
     get_id,
     http_request,
-    finish_with_at,
 )
 
 usage = f"""插件命令如下

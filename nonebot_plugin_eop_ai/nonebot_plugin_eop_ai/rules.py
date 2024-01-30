@@ -1,6 +1,11 @@
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageEvent
-from nonebot.adapters.onebot.v11 import PrivateMessageEvent
+from nonebot.adapters.onebot.v11 import (
+    Bot,
+    GroupMessageEvent,
+    MessageEvent,
+    PrivateMessageEvent,
+)
 from nonebot.permission import SUPERUSER
+
 from .config import pc, var
 
 talk_cmd = pc.eop_ai_talk_cmd
