@@ -5,7 +5,7 @@ from re import findall
 from typing import Union
 
 from mcstatus import BedrockServer, JavaServer
-from nonebot import on_command, on_regex
+from nonebot import get_plugin_config, on_command, on_regex
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
@@ -19,7 +19,7 @@ from nonebot.log import logger
 from nonebot.params import RegexGroup
 from nonebot.plugin import PluginMetadata
 
-from .config import pc, save_file, var
+from .config import Config, pc, save_file, var
 
 __plugin_meta__ = PluginMetadata(
     name="MC服务器查询插件",
@@ -27,6 +27,7 @@ __plugin_meta__ = PluginMetadata(
     type="application",
     homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_server_status",
     supported_adapters={"~onebot.v11"},
+    config=Config,
     usage=f"""插件命令如下：
 信息  # 字面意思，需要加命令前缀，默认/
 信息数据  # 查看已启用群以及服务器信息，需要加命令前缀，默认/
