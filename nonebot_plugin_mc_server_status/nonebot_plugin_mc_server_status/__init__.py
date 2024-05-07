@@ -1,25 +1,32 @@
+from asyncio import gather
+from base64 import b64decode
+from io import BytesIO
 from re import findall
+from typing import Union
+
 from mcstatus import BedrockServer, JavaServer
 from nonebot import on_command, on_regex
 from nonebot.adapters.onebot.v11 import (
-    MessageSegment as MS,
     Bot,
-    Message,
     GroupMessageEvent,
+    Message,
     MessageEvent,
+)
+from nonebot.adapters.onebot.v11 import (
+    MessageSegment as MS,
 )
 from nonebot.log import logger
 from nonebot.params import RegexGroup
 from nonebot.plugin import PluginMetadata
-from .config import var, pc, save_file
-from asyncio import gather
-from base64 import b64decode
-from io import BytesIO
-from typing import Union
+
+from .config import pc, save_file, var
 
 __plugin_meta__ = PluginMetadata(
     name="MC服务器查询插件",
     description="如名",
+    type="application",
+    homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_server_status",
+    supported_adapters={"~onebot.v11"},
     usage=f"""插件命令如下：
 信息  # 字面意思，需要加命令前缀，默认/
 信息数据  # 查看已启用群以及服务器信息，需要加命令前缀，默认/

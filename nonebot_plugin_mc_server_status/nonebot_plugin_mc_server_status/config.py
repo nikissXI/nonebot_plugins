@@ -1,10 +1,10 @@
 from json import dump, load
 from os import makedirs, path
-from nonebot import get_driver, get_bot, get_bots
-from nonebot.log import logger
-from pydantic import BaseModel, Extra
-from typing import List, Dict, Optional
+from typing import List, Optional
+
+from nonebot import get_bot, get_bots, get_driver
 from nonebot.adapters import Bot
+from pydantic import BaseModel, Extra
 
 
 class Config(BaseModel, extra=Extra.ignore):

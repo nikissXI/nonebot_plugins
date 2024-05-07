@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_mc_server_status"
-version = "0.2.11"
+version = "0.2.13"
 description = "Nonebot2查询MC服务器在线信息插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
@@ -9,11 +9,6 @@ packages = [{include = "nonebot_plugin_mc_server_status"}]
 homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_server_status"
 repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_server_status"
 documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_server_status#README.md"
-
-[[tool.poetry.source]]
-name = "tsinghua"
-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
-default = true
 
 [tool.poetry.dependencies]
 python = ">=3.8"
