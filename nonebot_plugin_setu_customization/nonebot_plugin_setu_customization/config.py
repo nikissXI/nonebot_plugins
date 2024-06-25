@@ -2,8 +2,8 @@ from json import dump, load
 from os import listdir, makedirs, path
 from pathlib import Path
 from typing import Dict, List, Optional, Set
-from nonebot import get_bot, get_bots, get_driver
 
+from nonebot import get_bot, get_bots, get_driver, get_plugin_config
 from nonebot.adapters import Bot
 from pydantic import BaseModel, Extra
 
@@ -123,9 +123,8 @@ class Var:
 
 
 driver = get_driver()
-global_config = driver.config
-pc = Config.parse_obj(global_config)
 var = Var()
+pc = get_plugin_config(Config)
 
 
 def read_data():
