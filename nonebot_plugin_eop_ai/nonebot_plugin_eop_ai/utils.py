@@ -291,7 +291,9 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                     var.default_bot[uid] if uid in var.default_bot else pc.default_bot
                 )
                 resp = await http_request("GET", f"/user/bot/{bot_name}")
-                var.session_data[uid] = Session(price=resp["price"])
+                var.session_data[uid] = Session(
+                    botName=resp["botName"], price=resp["price"]
+                )
 
         # 拉取session元数据
         session = var.session_data[uid]

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_eop_ai"
-version = "0.2.2"
+version = "0.2.3"
 description = "Nonebot2 一款调用eop api的AI聊天插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
