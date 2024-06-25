@@ -22,10 +22,10 @@ from nonebot.plugin import PluginMetadata
 from .config import Config, pc, save_file, var
 
 __plugin_meta__ = PluginMetadata(
-    name="MC服务器查询插件",
+    name="图图插件",
     description="如名",
     type="application",
-    homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_mc_server_status",
+    homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization",
     supported_adapters={"~onebot.v11"},
     config=Config,
     usage=f"""插件命令如下：
@@ -47,7 +47,9 @@ async def admin_check(event: MessageEvent, bot: Bot) -> bool:
 
 xinxi = on_command("信息", rule=group_check)
 list_all = on_command("信息数据", rule=admin_check)
-add_server = on_regex(r"^添加服务器\s*((\d+)\s+(\S+)\s+(\S+)\s+(\S+))?", rule=admin_check)
+add_server = on_regex(
+    r"^添加服务器\s*((\d+)\s+(\S+)\s+(\S+)\s+(\S+))?", rule=admin_check
+)
 del_server = on_regex(r"^删除服务器\s*((\d+)\s+(\S+))?", rule=admin_check)
 
 

@@ -2,7 +2,7 @@ from json import dump, load
 from os import makedirs, path
 from typing import List, Optional
 
-from nonebot import get_bot, get_bots, get_driver
+from nonebot import get_bot, get_bots, get_driver, get_plugin_config
 from nonebot.adapters import Bot
 from pydantic import BaseModel, Extra
 
@@ -24,8 +24,7 @@ class Var:
 
 
 driver = get_driver()
-global_config = driver.config
-pc = Config.parse_obj(global_config)
+pc = get_plugin_config(Config)
 var = Var()
 
 
@@ -91,14 +90,16 @@ async def on_bot_disconnect(bot: Bot):
             ]
             if available_bot_id_list:
                 # 打擂台排序？
-                new_bot_index = pc.mc_status_bot_qqnum_list.index(available_bot_id_list[0])
+                new_bot_index = pc.mc_status_bot_qqnum_list.index(
+                    available_bot_id_list[0]
+                )
                 for bot_id in available_bot_id_list:
                     now_bot_index = pc.mc_status_bot_qqnum_list.index(bot_id)
                     if now_bot_index < new_bot_index:
                         new_bot_index = now_bot_index
                 # 取下标在qq列表里最小的bot qq为新的handle bot
                 var.handle_bot = get_bot(pc.mc_status_bot_qqnum_list[new_bot_index])
-                
+
             else:
                 var.handle_bot = None
 
