@@ -287,14 +287,17 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                     break
             # 没有一样的会话
             else:
-                resp = await http_request("GET", f"/user/bot/{pc.default_bot}")
+                bot_name = (
+                    var.default_bot[uid] if uid in var.default_bot else pc.default_bot
+                )
+                resp = await http_request("GET", f"/user/bot/{bot_name}")
                 var.session_data[uid] = Session(price=resp["price"])
 
         # 拉取session元数据
         session = var.session_data[uid]
 
         answer = ""
-        # 拉取回答
+        # 对话
         async with var.httpx_client.stream(
             "POST",
             f"/user/talk/{session.chatCode}",
