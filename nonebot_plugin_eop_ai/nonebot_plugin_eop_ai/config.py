@@ -8,18 +8,17 @@ from pydantic import BaseModel, Extra
 
 class Config(BaseModel, extra=Extra.ignore):
     # 配置文件版本号，不要改
-    eop_ai_version: int = 1
+    eop_ai_version: int = 2
 
     # eop后端url地址，如 https://api.eop.com
     eop_ai_base_addr: str = ""
-
-    # eop登录账号密码
-    eop_ai_user: str = ""
-    eop_ai_passwd: str = ""
+    # eop登录access_token
+    eop_ai_access_token: str = ""
 
     # 代理地址
     eop_ai_http_proxy_addr: Optional[str] = None
-
+    # 默认bot
+    default_bot: str = "ChatGPT"
     # AI回答输出类型，填1/2/3其中一个数字，1=文字，2=图片，3=图片+文字（文字在网页粘贴板）
     eop_ai_reply_type: int = 3
     # 图片输出时，图片的宽度
@@ -41,8 +40,10 @@ class Config(BaseModel, extra=Extra.ignore):
     eop_ai_talk_cmd: str = "/talk"
     # 私聊沉浸式对话触发命令
     eop_ai_talk_p_cmd: str = "/hi"
-    # 重置对话，就是清空聊天记录
+    # 重置对话，清空上下文记忆
     eop_ai_reset_cmd: str = "/reset"
+    # 删除对话
+    eop_ai_delete_cmd: str = "/delete"
     # AI回答输出类型切换，仅对使用命令的会话生效
     eop_ai_reply_type_cmd: str = "/reply"
 
@@ -57,15 +58,21 @@ global_config = driver.config
 pc = Config.parse_obj(global_config)
 
 
+class Session(BaseModel):
+    botName: str = pc.default_bot
+    chatCode: str = "0"
+    price: int = 0
+
+
 class Global_var:
     # 处理消息的bot
     handle_bot: Optional[Bot] = None
     # 启用群
     enable_group_list: List[int] = []
-    # 会话数据   qqnum/groupnum_qqnum  :  eop id
-    session_data: Dict[str, str] = dict()
+    # 会话数据   qqnum/groupnum_qqnum（uid）  :  chatCode
+    session_data: Dict[str, Session] = {}
     # 指定回复类型   id  :  int
-    reply_type: Dict[str, int] = dict()
+    reply_type: Dict[str, int] = {}
     # 会话锁
     session_lock: Dict[str, bool] = {}
     # 粘贴板的csrftoken缓存
@@ -73,11 +80,10 @@ class Global_var:
     # httpx
     httpx_client = AsyncClient(
         base_url=pc.eop_ai_base_addr,
-        headers={},
-        timeout=20,
+        headers={"Authorization": f"Bearer {pc.eop_ai_access_token}"},
+        timeout=10,
         proxies=pc.eop_ai_http_proxy_addr,
     )
-    access_token = ""
 
 
 var = Global_var()

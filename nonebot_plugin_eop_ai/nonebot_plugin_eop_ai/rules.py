@@ -11,6 +11,7 @@ from .config import pc, var
 talk_cmd = pc.eop_ai_talk_cmd
 talk_p_cmd = pc.eop_ai_talk_p_cmd
 reset_cmd = pc.eop_ai_reset_cmd
+delete_cmd = pc.eop_ai_delete_cmd
 enable_cmd = pc.eop_ai_group_enable_cmd
 reply_type_cmd = pc.eop_ai_reply_type_cmd
 
@@ -47,7 +48,7 @@ async def talk_tome_rule(event: MessageEvent) -> bool:
     return False
 
 
-async def baga_rule(event: MessageEvent, bot: Bot) -> bool:
+async def normal_rule(event: MessageEvent, bot: Bot) -> bool:
     if isinstance(event, PrivateMessageEvent):
         return True
 

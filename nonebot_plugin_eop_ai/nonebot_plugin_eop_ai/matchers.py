@@ -5,14 +5,16 @@ from nonebot.adapters.onebot.v11 import (
     MessageEvent,
     PrivateMessageEvent,
 )
+from nonebot.exception import FinishedException
 from nonebot.matcher import Matcher
 from nonebot.permission import SUPERUSER
 
 from .config import pc, var
 from .rules import (
     admin_rule,
-    baga_rule,
+    delete_cmd,
     enable_cmd,
+    normal_rule,
     reply_type_cmd,
     reset_cmd,
     talk_cmd,
@@ -21,17 +23,17 @@ from .rules import (
     talk_tome_rule,
 )
 from .utils import (
-    RequestError,
     finish_with_at,
     get_answer,
-    get_id,
+    get_uid,
     http_request,
 )
 
 usage = f"""插件命令如下
 {talk_cmd}   # 触发对话关键字，默认群里@机器人也可以
 {talk_p_cmd}   # 沉浸式对话（仅限私聊）
-{reset_cmd}   # 重置对话（不会重置预设）
+{reset_cmd}   # 重置会话，清除上下文记忆
+{delete_cmd}   # 删除会话
 {reply_type_cmd}   # AI回答输出类型切换，仅对使用命令的会话生效
 {enable_cmd}   # 启用/禁用该群的eop ai（仅管理员）"""
 
@@ -41,8 +43,9 @@ talk_tome = on_message(rule=talk_tome_rule)
 
 talk_p = on_fullmatch(talk_p_cmd)
 
-reset = on_fullmatch(reset_cmd, rule=baga_rule)
-reply_type = on_startswith(reply_type_cmd, rule=baga_rule)
+reset = on_fullmatch(reset_cmd, rule=normal_rule)
+delete = on_fullmatch(delete_cmd, rule=normal_rule)
+reply_type = on_startswith(reply_type_cmd, rule=normal_rule)
 
 group_enable = on_fullmatch(enable_cmd, rule=admin_rule)
 
@@ -54,7 +57,12 @@ async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
     if not _in or _in == talk_cmd:
         await finish_with_at(matcher, usage)
 
-    await get_answer(matcher, event, bot)
+    try:
+        await get_answer(matcher, event, bot)
+    except FinishedException:
+        pass
+    except Exception as e:
+        await finish_with_at(matcher, f"出错：{repr(e)}")
 
 
 @talk_p.got("msg", prompt="进入沉浸式对话模式，发送“退出”结束对话")
@@ -62,8 +70,14 @@ async def _(matcher: Matcher, event: PrivateMessageEvent, bot: Bot):
     if event.get_plaintext() == "退出":
         await finish_with_at(matcher, "Bye~")
 
-    await get_answer(matcher, event, bot, True)
-    await matcher.reject()
+    try:
+        await get_answer(matcher, event, bot, True)
+    except FinishedException:
+        pass
+    except Exception as e:
+        await finish_with_at(matcher, f"出错：{repr(e)}")
+    else:
+        await matcher.reject()
 
 
 @reset.handle()
@@ -76,23 +90,40 @@ async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
         await finish_with_at(matcher, "群会话共享状态下仅限管理员执行")
 
     # 获取用户id
-    id = get_id(event)
-    eop_id = var.session_data[id]
-    if not eop_id:
+    uid = get_uid(event)
+    if uid not in var.session_data:
         await finish_with_at(matcher, "尚未发起对话")
-
+    session = var.session_data[uid]
     try:
-        await http_request("delete", f"/bot/{eop_id}/clear")
-
-    except RequestError as e:
-        if not (e.data and e.data["code"] == 2005):
-            await finish_with_at(matcher, repr(e))
-
+        await http_request("DELETE", f"/user/chatMemory/{session.chatCode}")
     except Exception as e:
         await finish_with_at(matcher, repr(e))
 
-    var.session_data[id] = ""
-    await finish_with_at(matcher, "已重置对话")
+    var.session_data.pop(uid)
+    await finish_with_at(matcher, "已清除上下文记忆")
+
+
+@delete.handle()
+async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
+    if (
+        isinstance(event, GroupMessageEvent)
+        and pc.eop_ai_group_share
+        and not await SUPERUSER(bot, event)
+    ):
+        await finish_with_at(matcher, "群会话共享状态下仅限管理员执行")
+
+    # 获取用户id
+    uid = get_uid(event)
+    if uid not in var.session_data:
+        await finish_with_at(matcher, "尚未发起对话")
+    session = var.session_data[uid]
+    try:
+        await http_request("DELETE", f"/user/chat/{session.chatCode}")
+    except Exception as e:
+        await finish_with_at(matcher, repr(e))
+
+    var.session_data.pop(uid)
+    await finish_with_at(matcher, "已删除会话")
 
 
 # 如果私聊直接pass，如果是群聊，要检查share是否开启，如果开了就只能管理员，否则就pass
@@ -116,9 +147,11 @@ async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
         await finish_with_at(matcher, f"{reply_type_cmd} 数字\n2 - 图片\n3 - 图片+文字")
 
     elif _in not in ["1", "2", "3"]:
-        await finish_with_at(matcher, f"{reply_type_cmd} 数字\n1 - 文字\n2 - 图片\n3 - 图片+文字")
+        await finish_with_at(
+            matcher, f"{reply_type_cmd} 数字\n1 - 文字\n2 - 图片\n3 - 图片+文字"
+        )
 
-    var.reply_type[get_id(event)] = int(_in)
+    var.reply_type[get_uid(event)] = int(_in)
     await finish_with_at(matcher, f"回复类型切换至{_in}")
 
 

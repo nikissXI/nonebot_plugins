@@ -1,7 +1,8 @@
-from nonebot.plugin import PluginMetadata
 from nonebot.log import logger
-from .matchers import usage, talk_keyword, talk_tome, talk_p, reset, group_enable
+from nonebot.plugin import PluginMetadata
 
+from .config import Config
+from .matchers import group_enable, reset, talk_keyword, talk_p, talk_tome, usage
 
 __plugin_meta__ = PluginMetadata(
     name="talk with eop ai",
@@ -9,6 +10,7 @@ __plugin_meta__ = PluginMetadata(
     type="application",
     homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_eop_ai",
     supported_adapters={"~onebot.v11"},
+    config=Config,
     usage=usage,
 )
 logger.success("eop ai插件已加载，" + usage)

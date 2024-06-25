@@ -1,8 +1,9 @@
 from asyncio import create_task, gather
-from hashlib import sha256
 from html import unescape
+from json import dump, load, loads
 from os import makedirs, path
 from re import search
+from traceback import format_exc
 from typing import Optional
 
 from nonebot import get_driver, require
@@ -12,12 +13,7 @@ from nonebot.exception import FinishedException
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 
-from .config import pc, var
-
-try:
-    from ujson import dump, load, loads
-except Exception:
-    from json import dump, load, loads
+from .config import Session, pc, var
 
 require("nonebot_plugin_htmlrender")
 from nonebot_plugin_htmlrender.data_source import (
@@ -53,17 +49,19 @@ async def _():
             logger.warning("配置文件版本不对应哦~")
         else:
             var.enable_group_list = _["enable_group_list"]
-            var.session_data = _["session_data"]
+            for uid, s in _["session_data"].items():
+                var.session_data[uid] = Session(**s)
             var.reply_type = _["reply_type"]
     else:
         if not path.exists("data"):
             makedirs("data")
 
-    # 如果默认回复类型不是1，之前所有1的都改成默认
-    if pc.eop_ai_reply_type != 1:
-        for id in var.reply_type.keys():
-            if var.reply_type[id] == 1:
-                var.reply_type.pop(id)
+    # 验证access_token
+    try:
+        await http_request("GET", "/user/info")
+        logger.success(f"eop ai认证成功")
+    except Exception as e:
+        logger.error(f"eop ai认证失败：{repr(e)}")
 
 
 @driver.on_shutdown
@@ -71,12 +69,16 @@ async def _():
     """
     关闭时执行
     """
+    _session_data = {}
+    for uid, s in var.session_data.items():
+        _session_data[uid] = s.dict()
+
     with open(f"data/{pc.eop_ai_data}", "w", encoding="utf-8") as w:
         dump(
             {
                 "version": pc.eop_ai_version,
                 "enable_group_list": var.enable_group_list,
-                "session_data": var.session_data,
+                "session_data": _session_data,
                 "reply_type": var.reply_type,
             },
             w,
@@ -144,7 +146,9 @@ async def md_to_pic(md_text: str) -> bytes:
 async def get_csrftoken(id: str) -> str:
     resp = await var.httpx_client.get("https://paste.mozilla.org/")
     if resp.status_code != 200:
-        raise Exception(f"访问https://paste.mozilla.org/失败，响应码：{resp.status_code}")
+        raise Exception(
+            f"访问https://paste.mozilla.org/失败，响应码：{resp.status_code}"
+        )
 
     match = search(
         r'<input[^>]+name="csrfmiddlewaretoken"[^>]+value="([^"]+)"', resp.text
@@ -188,19 +192,16 @@ async def get_pasted_url(content: str, id: str) -> str:
         raise Exception("提交后响应码非302")
 
 
-def get_id(event: MessageEvent) -> str:
-    """获取会话id"""
+def get_uid(event: MessageEvent) -> str:
+    """获取对话用户的唯一标识"""
     if isinstance(event, GroupMessageEvent):
         if pc.eop_ai_group_share:
-            id = f"{(event.group_id)}-share"
+            uid = f"{(event.group_id)}-share"
         else:
-            id = f"{event.user_id}"
+            uid = f"{event.user_id}"
     else:
-        id = f"{event.user_id}"
-    # 记录id
-    if id not in var.session_data:
-        var.session_data[id] = ""
-    return id
+        uid = f"{event.user_id}"
+    return uid
 
 
 async def gen_chat_text(event: MessageEvent, bot: Bot) -> str:
@@ -229,7 +230,9 @@ async def gen_chat_text(event: MessageEvent, bot: Bot) -> str:
                         "nickname", None
                     )
                     if user_name:
-                        msg += f"@{user_name}"  # 保持给bot看到的内容与真实用户看到的一致
+                        msg += (
+                            f"@{user_name}"  # 保持给bot看到的内容与真实用户看到的一致
+                        )
     return msg
 
 
@@ -247,69 +250,78 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
     question = unescape(await gen_chat_text(event, bot))
 
     # 获取用户id
-    id = get_id(event)
+    uid = get_uid(event)
 
     # 判断是否有回答没完成
-    if id in var.session_lock and var.session_lock[id]:
+    if uid in var.session_lock and var.session_lock[uid]:
+        # 沉浸式对话
         if immersive:
             await send_with_at(matcher, "上一个回答还没完成呢")
         else:
-            await send_with_at(matcher, "上一个回答还没完成呢")
+            await finish_with_at(matcher, "上一个回答还没完成呢")
         return
 
     # 根据配置是否发出提示
     if pc.eop_ai_reply_notice:
         await send_with_at(matcher, "响应中...")
 
-    eop_id = var.session_data[id]
-
     try:
         # 上锁
-        var.session_lock[id] = True
+        var.session_lock[uid] = True
 
-        # 检查登陆权限
-        await http_request("get", "/user/info")
-
-        # 检查会话列表是否有
-        if not eop_id:
-            resp_data = await http_request("get", "/bot/list")
-            for b in resp_data["bots"]:
-                if id == b["alias"]:
-                    eop_id = b["eop_id"]
+        # 新的对话
+        if uid not in var.session_data:
+            # 检查账号的会话列表是否有title和uid一样的会话
+            resp = await http_request("GET", "/user/chats/all")
+            for chat in resp:
+                if uid == chat["title"]:
+                    resp = await http_request("GET", f"/user/chat/{chat['chatCode']}/0")
+                    # 绑定session
+                    var.session_data[uid] = Session(
+                        botName=resp["botInfo"]["botName"],
+                        chatCode=chat["chatCode"],
+                        price=resp["botInfo"]["price"],
+                    )
                     break
+            # 没有一样的会话
+            else:
+                resp = await http_request("GET", f"/user/bot/{pc.default_bot}")
+                var.session_data[uid] = Session(price=resp["price"])
 
-        # 没有就创建新的
-        if not eop_id:
-            resp_data = await http_request(
-                "post",
-                "/bot/create",
-                json={"model": "ChatGPT", "prompt": "", "alias": id},
-            )
-            eop_id: str = resp_data["bot_info"]["eop_id"]
+        # 拉取session元数据
+        session = var.session_data[uid]
 
-        var.session_data[id] = eop_id
-
-        # 获取回答
         answer = ""
+        # 拉取回答
         async with var.httpx_client.stream(
-            "POST", f"/bot/{eop_id}/talk", json={"q": question}
-        ) as response:
-            async for chunk in response.aiter_lines():
+            "POST",
+            f"/user/talk/{session.chatCode}",
+            data={
+                "botName": session.botName,
+                "question": question,
+                "price": session.price,
+            },
+        ) as resp:
+            async for chunk in resp.aiter_lines():
                 data = loads(chunk)
-                if data["type"] == "msg_info" or data["type"] == "end":
-                    continue
-                if data["type"] == "response":
-                    answer = data["data"]
-                else:
-                    var.session_lock[id] = False
-                    if data["type"] == "deleted":
-                        var.session_data[id] = ""
-                        await send_with_at(matcher, "原会话失效，已自动刷新会话，请复述问题")
-                        return
-                    else:
-                        await finish_with_at(
-                            matcher, f"生成回答异常，类型：{data['type']}：{data['data']}"
-                        )
+                # 新会话
+                if data["type"] == "newChat":
+                    # 记录新会话的chatCode
+                    session.chatCode = data["data"]["chatCode"]
+                # 回答的内容
+                if data["type"] == "botMessageAdded":
+                    answer = data["data"]["text"]
+                # 更新title
+                if data["type"] == "chatTitleUpdated":
+                    # 更新title为uid
+                    await http_request(
+                        "POST",
+                        f"/user/titleUpdate/{session.chatCode}",
+                        json={"title": uid},
+                    )
+                # 出错
+                elif data["type"] == "talkError":
+                    raise AnswerError(f"生成回答出错：{data['data']['err_msg']}")
 
         # 转图片
         async def _reply_with_img(answer: str):
@@ -319,13 +331,13 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
         # 转图片并粘贴到剪切板
         async def _reply_with_img_and_text(answer: str):
             answer_image, answer_text_link = await gather(
-                md_to_pic(answer), get_pasted_url(answer, id)
+                md_to_pic(answer), get_pasted_url(answer, uid)
             )
             return MS.image(answer_image) + MS.text("文本：" + answer_text_link)
 
         reply_type = pc.eop_ai_reply_type
-        if id in var.reply_type:
-            reply_type = var.reply_type[id]
+        if uid in var.reply_type:
+            reply_type = var.reply_type[uid]
 
         # 沉浸式对话
         if immersive:
@@ -346,12 +358,17 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                 await send_with_at(matcher, await _reply_with_img_and_text(answer))
 
     except FinishedException as e:
+        logger.error("here")
         raise e
 
     except AnswerError as e:
         await finish_with_at(matcher, repr(e))
 
     except RequestError as e:
+        if e.status_code == 402 and e.data and e.data["msg"] == "会话不存在":
+            var.session_data.pop(uid)
+            await finish_with_at(matcher, "原会话失效，已刷新")
+
         await finish_with_at(matcher, repr(e))
 
     except Exception as e:
@@ -359,7 +376,7 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
 
     finally:
         # 解锁
-        var.session_lock[id] = False
+        var.session_lock[uid] = False
 
 
 class AnswerError(Exception):
@@ -385,24 +402,26 @@ async def http_request(method: str, url: str, **kwargs) -> dict:
     except Exception as e:
         raise e
 
-    # 非登录时验证异常尝试重新验证
-    if url != "/user/login" and (resp.status_code == 401 or resp.status_code == 403):
-        hash_object = sha256()
-        hash_object.update(pc.eop_ai_passwd.encode("utf-8"))
-        resp_data = await http_request(
-            "post",
-            "/user/login",
-            json={"user": pc.eop_ai_user, "passwd": hash_object.hexdigest()},
-        )
-        var.access_token = resp_data["access_token"]
-        var.httpx_client.headers.update({"Authorization": f"Bearer {var.access_token}"})
-        # 重新请求
-        return await http_request(method, url, **kwargs)
+    # # 非登录时验证异常尝试重新验证
+    # if url != "/user/login" and (resp.status_code == 401 or resp.status_code == 403):
+    #     hash_object = sha256()
+    #     hash_object.update(pc.eop_ai_passwd.encode("utf-8"))
+    #     resp = await http_request(
+    #         "post",
+    #         "/user/login",
+    #         json={"user": pc.eop_ai_user, "passwd": hash_object.hexdigest()},
+    #     )
+    #     var.access_token = resp["access_token"]
+    #     var.httpx_client.headers.update({"Authorization": f"Bearer {var.access_token}"})
+    #     # 重新请求
+    #     return await http_request(method, url, **kwargs)
 
     if resp.status_code == 204:
         return {}
 
     if resp.status_code != 200:
-        raise RequestError(method, url, resp.status_code, resp.json())
+        resp_json = resp.json()
+
+        raise RequestError(method, url, resp.status_code, resp_json)
 
     return resp.json()

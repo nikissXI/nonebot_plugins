@@ -1,9 +1,0 @@
-mutation BotDeletionButton_poeBotDelete_Mutation($botId: BigInt!) {
-  poeBotDelete(botId: $botId) {
-    status
-    bot {
-      deletionState
-      id
-    }
-  }
-}

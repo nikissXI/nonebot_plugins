@@ -1,18 +1,22 @@
-from nonebot import on_message, on_fullmatch
+from html import unescape
+
+from nonebot import on_fullmatch, on_message
 from nonebot.adapters.onebot.v11 import (
     Bot,
-    MessageEvent,
     GroupMessageEvent,
+    MessageEvent,
     PrivateMessageEvent,
+)
+from nonebot.adapters.onebot.v11 import (
     MessageSegment as MS,
 )
 from nonebot.log import logger
+from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
+from nonebot.typing import T_State
+
 from .config import pc, var
 from .data_handle import req_chatgpt, text_to_img
-from nonebot.typing import T_State
-from html import unescape
-from nonebot.permission import SUPERUSER
 
 talk_cmd = pc.talk_with_chatgpt_talk_cmd
 talk_p_cmd = pc.talk_with_chatgpt_talk_p_cmd
@@ -32,7 +36,7 @@ __plugin_meta__ = PluginMetadata(
 )
 
 
-def get_id(event: MessageEvent) -> str:
+def get_uid(event: MessageEvent) -> str:
     """获取会话id"""
     if isinstance(event, GroupMessageEvent):
         if pc.talk_with_chatgpt_group_share:
@@ -155,7 +159,7 @@ async def _(event: MessageEvent):
 {prompt_cmd}  # 设置预设（人格），设置后会清空聊天记录"""
         )
     # 获取用户id
-    id = get_id(event)
+    id = get_uid(event)
 
     # 根据配置是否发出提示
     if pc.talk_with_chatgpt_reply_notice:
@@ -180,7 +184,7 @@ async def _(event: PrivateMessageEvent):
     if text == "退出":
         await talk_p.finish("Bye~")
     # 获取用户id
-    id = get_id(event)
+    id = get_uid(event)
 
     # 根据配置是否发出提示
     if pc.talk_with_chatgpt_reply_notice:
@@ -201,7 +205,7 @@ async def _(event: PrivateMessageEvent):
 @reset.handle()
 async def _(event: MessageEvent):
     # 获取用户id
-    id = get_id(event)
+    id = get_uid(event)
     # 尝试删除（需api支持）
     await req_chatgpt(id, "", "delete")
     # 清空会话id
@@ -216,7 +220,7 @@ async def _(event: MessageEvent):
 )
 async def _(event: MessageEvent, s: T_State):
     # 获取用户id
-    id = get_id(event)
+    id = get_uid(event)
     # 获取信息
     text = unescape(event.get_plaintext().strip())
     # 上一次输入的内容
@@ -226,7 +230,9 @@ async def _(event: MessageEvent, s: T_State):
         if s["last"] == "增加":
             if text == "开发者模式":
                 s["last"] = ""
-                await prompt_set.reject(f"预设“开发者模式”不能删除或修改，如要改动请改源码", at_sender=True)
+                await prompt_set.reject(
+                    f"预设“开发者模式”不能删除或修改，如要改动请改源码", at_sender=True
+                )
             s["new_prompt"] = text
             s["last"] = "新预设名称"
             await prompt_set.reject(f"请输入预设内容", at_sender=True)
@@ -243,7 +249,9 @@ async def _(event: MessageEvent, s: T_State):
             if prompt_name == "默认":
                 await prompt_set.reject(f"预设“默认”不能删除！只能修改", at_sender=True)
             if prompt_name == "开发者模式":
-                await prompt_set.reject(f"预设“开发者模式”不能删除或修改，如要改动请改源码", at_sender=True)
+                await prompt_set.reject(
+                    f"预设“开发者模式”不能删除或修改，如要改动请改源码", at_sender=True
+                )
             var.prompt_list.pop(prompt_name)
             await prompt_set.reject(f"已删除预设“{prompt_name}”", at_sender=True)
 
@@ -262,7 +270,9 @@ async def _(event: MessageEvent, s: T_State):
     if text[:2] == "查看":
         prompt_name = text[2:].strip()
         prompt_text = var.prompt_list[prompt_name]
-        await prompt_set.reject(f"预设：{prompt_name}\n内容：{prompt_text}", at_sender=True)
+        await prompt_set.reject(
+            f"预设：{prompt_name}\n内容：{prompt_text}", at_sender=True
+        )
 
     # 选择预设
     if text[:2] == "选择":
@@ -280,7 +290,8 @@ async def _(event: MessageEvent, s: T_State):
         await prompt_set.send("测试预设响应，请稍后...", at_sender=True)
         result = await req_chatgpt(id, var.prompt_list[prompt_name])
         await prompt_set.reject(
-            f"已设置预设为“{prompt_name}”并清空聊天记录\n预设响应内容：{result}", at_sender=True
+            f"已设置预设为“{prompt_name}”并清空聊天记录\n预设响应内容：{result}",
+            at_sender=True,
         )
 
     # 增加预设
