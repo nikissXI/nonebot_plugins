@@ -140,7 +140,7 @@ async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
     ):
         await finish_with_at(matcher, "群会话共享状态下仅限管理员执行")
 
-    _in = event.get_plaintext().strip()[len(reply_type_cmd) :]
+    _in = event.get_plaintext()[len(reply_type_cmd) :].strip()
 
     # 如果默认是图片回复，只能切2和3（除非管理员）
     if (
@@ -161,7 +161,7 @@ async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
 
 @default.handle()
 async def _(matcher: Matcher, event: MessageEvent):
-    bot_name = event.get_plaintext().strip()[len(default_bot_cmd) :]
+    bot_name = event.get_plaintext()[len(default_bot_cmd) :].strip()
     if not bot_name:
         await matcher.finish(
             f"当前默认bot：{pc.default_bot}\n命令后面接需要设置的bot名称可修改"
