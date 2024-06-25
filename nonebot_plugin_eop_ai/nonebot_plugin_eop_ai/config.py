@@ -1,14 +1,14 @@
 from typing import Dict, List, Optional
 
 from httpx import AsyncClient
-from nonebot import get_bot, get_bots, get_driver
+from nonebot import get_bot, get_bots, get_driver, get_plugin_config
 from nonebot.adapters import Bot
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel
 
 
-class Config(BaseModel, extra=Extra.ignore):
+class Config(BaseModel):
     # 配置文件版本号，不要改
-    eop_ai_version: int = 2
+    eop_ai_version: int = 3
 
     # eop后端url地址，如 https://api.eop.com
     eop_ai_base_addr: str = ""
@@ -46,6 +46,8 @@ class Config(BaseModel, extra=Extra.ignore):
     eop_ai_delete_cmd: str = "/delete"
     # AI回答输出类型切换，仅对使用命令的会话生效
     eop_ai_reply_type_cmd: str = "/reply"
+    # 设置新会话默认bot
+    eop_ai_default_bot_cmd: str = "/default"
 
     # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） [1234, 5678, 6666]  ["all"]则全部响应
     eop_ai_bot_qqnum_list: List[str] = []  # 可选
@@ -54,8 +56,7 @@ class Config(BaseModel, extra=Extra.ignore):
 
 
 driver = get_driver()
-global_config = driver.config
-pc = Config.parse_obj(global_config)
+pc = get_plugin_config(Config)
 
 
 class Session(BaseModel):
@@ -77,6 +78,8 @@ class Global_var:
     session_lock: Dict[str, bool] = {}
     # 粘贴板的csrftoken缓存
     paste_csrftoken: Dict[str, str] = {}
+    # 默认bot
+    default_bot: Dict[str, str] = {}
     # httpx
     httpx_client = AsyncClient(
         base_url=pc.eop_ai_base_addr,

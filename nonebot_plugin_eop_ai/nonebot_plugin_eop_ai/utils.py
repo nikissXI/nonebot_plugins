@@ -52,6 +52,7 @@ async def _():
             for uid, s in _["session_data"].items():
                 var.session_data[uid] = Session(**s)
             var.reply_type = _["reply_type"]
+            var.default_bot = _["default_bot"]
     else:
         if not path.exists("data"):
             makedirs("data")
@@ -80,6 +81,7 @@ async def _():
                 "enable_group_list": var.enable_group_list,
                 "session_data": _session_data,
                 "reply_type": var.reply_type,
+                "default_bot": var.default_bot,
             },
             w,
             indent=4,

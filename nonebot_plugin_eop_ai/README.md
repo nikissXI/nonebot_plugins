@@ -25,9 +25,7 @@ _✨ Nonebot2 一款调用eop api的AI聊天插件 ✨_
 - <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
 
 ## 简介
-本插件需要调用一个逆向poe前端写的后端，也是我负责开发维护的，[eop-next-api仓库](https://github.com/nikissXI/eop-next-api)，前端不是我开发的，目前尚未开源。  
-> 后端可以自行部署，或者付费租用我的，目前价格10元/月，带前端，免梯直连，图省事且不差钱的可以加我QQ129957715了解。
-> 目前插件功能尚不完善，建议配合付费租用后的前端使用。  
+本插件需要调用一个逆向poe前端写的后端，也是我负责开发维护的，[eop-next-api仓库](https://github.com/nikissXI/eop-next-api)，不带前端
 
 <img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/1.jpg"/>  
 
@@ -39,7 +37,7 @@ _✨ Nonebot2 一款调用eop api的AI聊天插件 ✨_
 - [x] 基本的对话功能，支持文字或图片回复，如使用图片回复调用mozilla的剪切板查看回复的纯文字
 - [x] 配合前端进行会话管理
 - [x] 登陆失败时自动尝试重新登录
-- [ ] 默认会话设置
+- [x] 默认bot设置
 - [ ] 预设管理
 - [ ] 更完善的会话管理
 
@@ -53,8 +51,6 @@ nb plugin install nonebot_plugin_eop_ai
 或者  
 直接把插件clone下来放进去plugins文件夹，依赖库自己补全  
 
-可选安装ujson进行解析json数据  
-
 ## 配置
 在bot对应的.env文件修改，文档中的均是默认值。  
 
@@ -62,15 +58,16 @@ nb plugin install nonebot_plugin_eop_ai
 ```bash
 # eop后端url地址，如 https://api.eop.com
 eop_ai_base_addr = 
-# eop登录账号密码
-eop_ai_user = username
-eop_ai_passwd = password
+# eop登录token
+eop_ai_access_token = token
 ```
 
 #### 大概率用得上的选填项
 ```bash
-# 代理地址，当前仅支持http代理
+# 代理地址，仅支持http代理
 eop_ai_http_proxy_addr = http://127.0.0.1:7890
+# 默认bot
+default_bot = ChatGPT
 # AI回答默认输出类型，填1/2/3其中一个数字，1=文字，2=图片，3=图片+文字（文字在网页粘贴板）
 eop_ai_reply_type = 3
 # 图片输出时，图片的宽度
@@ -95,10 +92,14 @@ eop_ai_group_enable_cmd = /eopai
 eop_ai_talk_cmd = /talk
 # 私聊沉浸式对话触发命令
 eop_ai_talk_p_cmd = /hi
-# 重置对话，就是清空聊天记录
+# 重置对话，清空上下文记忆
 eop_ai_reset_cmd = /reset
+# 删除对话
+eop_ai_delete_cmd = /delete
 # AI回答输出类型切换，仅对使用命令的会话生效
 eop_ai_reply_type_cmd = /reply
+# 设置新会话默认bot
+eop_ai_default_bot_cmd = /default
 ```
 
 #### 大概率用不上的选填项
@@ -117,13 +118,16 @@ eop_ai_data = eop_ai.json
 | /eopai | 如果eop_ai_group_enable_cmd为false，则用该命令启用 |
 | /talk | 开始对话，默认群里@机器人也可以 |
 | /hi | 沉浸式对话（仅限私聊） |
-| /reset | 重置对话 |
+| /reset | 清空上下文记忆 |
+| /reply | AI回答输出类型切换 |
+| /default | 设置新会话默认bot |
 
-## 会话管理
-如果租了了开发者的后端，可以使用配套的前端进行会话管理。创建会话别名为{QQ号}或{群号}-share，插件会自动调用那个会话。  
-<img width="400" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/4.jpg"/>  
 
 ## 更新日志
+### 2024/06/25 \[v0.2.0]
+
+* 适配新的后端，新增默认bot设置
+
 ### 2023/11/21 \[v0.1.6]
 
 * 适配后端的接口更新

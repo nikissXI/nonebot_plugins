@@ -13,6 +13,7 @@ talk_p_cmd = pc.eop_ai_talk_p_cmd
 reset_cmd = pc.eop_ai_reset_cmd
 delete_cmd = pc.eop_ai_delete_cmd
 enable_cmd = pc.eop_ai_group_enable_cmd
+default_bot_cmd = pc.eop_ai_default_bot_cmd
 reply_type_cmd = pc.eop_ai_reply_type_cmd
 
 

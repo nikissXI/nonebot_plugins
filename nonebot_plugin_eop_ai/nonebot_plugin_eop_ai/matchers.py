@@ -12,6 +12,7 @@ from nonebot.permission import SUPERUSER
 from .config import pc, var
 from .rules import (
     admin_rule,
+    default_bot_cmd,
     delete_cmd,
     enable_cmd,
     normal_rule,
@@ -35,6 +36,7 @@ usage = f"""插件命令如下
 {reset_cmd}   # 重置会话，清除上下文记忆
 {delete_cmd}   # 删除会话
 {reply_type_cmd}   # AI回答输出类型切换，仅对使用命令的会话生效
+{default_bot_cmd}   # 设置默认bot
 {enable_cmd}   # 启用/禁用该群的eop ai（仅管理员）"""
 
 
@@ -46,6 +48,8 @@ talk_p = on_fullmatch(talk_p_cmd)
 reset = on_fullmatch(reset_cmd, rule=normal_rule)
 delete = on_fullmatch(delete_cmd, rule=normal_rule)
 reply_type = on_startswith(reply_type_cmd, rule=normal_rule)
+
+default = on_startswith(default_bot_cmd, rule=admin_rule)
 
 group_enable = on_fullmatch(enable_cmd, rule=admin_rule)
 
@@ -136,7 +140,7 @@ async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
     ):
         await finish_with_at(matcher, "群会话共享状态下仅限管理员执行")
 
-    _in = event.get_plaintext()[len(reply_type_cmd) :].strip()
+    _in = event.get_plaintext().strip()[len(reply_type_cmd) :]
 
     # 如果默认是图片回复，只能切2和3（除非管理员）
     if (
@@ -153,6 +157,28 @@ async def _(matcher: Matcher, event: MessageEvent, bot: Bot):
 
     var.reply_type[get_uid(event)] = int(_in)
     await finish_with_at(matcher, f"回复类型切换至{_in}")
+
+
+@default.handle()
+async def _(matcher: Matcher, event: MessageEvent):
+    bot_name = event.get_plaintext().strip()[len(default_bot_cmd) :]
+    if not bot_name:
+        await matcher.finish(
+            f"当前默认bot：{pc.default_bot}\n命令后面接需要设置的bot名称可修改"
+        )
+
+    try:
+        await http_request("GET", f"/user/bot/{bot_name}")
+    except Exception as e:
+        await matcher.finish(f"访问接口出错：{repr(e)}")
+
+    # 获取用户id
+    uid = get_uid(event)
+    var.default_bot[uid] = bot_name
+
+    await matcher.finish(
+        f"会话默认bot已设置为：{bot_name}，如果已存在会话需要先执行命令“{delete_cmd}”删除会话"
+    )
 
 
 @group_enable.handle()
