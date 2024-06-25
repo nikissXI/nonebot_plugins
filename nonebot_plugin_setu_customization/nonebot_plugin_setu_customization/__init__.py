@@ -2,9 +2,11 @@ from asyncio import gather, sleep
 from datetime import datetime, timedelta
 from io import BytesIO
 from os import listdir, makedirs, path, walk
+from pathlib import Path
 from random import choice
 from urllib.parse import unquote
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZIP_DEFLATED, ZipFile
+
 from httpx import AsyncClient
 from httpx_socks import AsyncProxyTransport
 from nonebot import on_fullmatch, on_notice, on_regex
@@ -13,17 +15,19 @@ from nonebot.adapters.onebot.v11 import (
     GroupMessageEvent,
     Message,
     MessageEvent,
+    PrivateMessageEvent,
+    helpers,
 )
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
-from nonebot.adapters.onebot.v11 import PrivateMessageEvent, helpers
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 from nonebot.params import ArgPlainText, RegexGroup
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 from PIL import Image
-from pathlib import Path
+
 from .config import (
+    Config,
     load_local_api,
     pc,
     save_data,
@@ -32,8 +36,8 @@ from .config import (
 from .data_handle import (
     download_img,
     get_art_img_url,
-    handle_exception,
     get_img_url,
+    handle_exception,
     load_crawler_files,
     send_img_msg,
     text_to_img,
@@ -46,6 +50,10 @@ from .web import app
 __plugin_meta__ = PluginMetadata(
     name="图图插件",
     description="如名",
+    type="application",
+    homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization",
+    supported_adapters={"~onebot.v11"},
+    config=Config,
     usage=f"""图图帮助 看图图的详细命令格式
 图图群管理 增删群
 图图接口管理 增删API接口
@@ -104,7 +112,9 @@ download_local_img_lib = on_fullmatch("打包", rule=admin_check)
 
 
 @tutu.handle(
-    parameterless=[helpers.Cooldown(cooldown=pc.tutu_cooldown, prompt="我知道你很急，但你先别急")]
+    parameterless=[
+        helpers.Cooldown(cooldown=pc.tutu_cooldown, prompt="我知道你很急，但你先别急")
+    ]
 )
 @handle_exception("图图")
 async def handle_tutu(
@@ -144,7 +154,9 @@ async def handle_tutu(
         if api_type:
             api_type = api_type.strip()
             if api_type not in var.api_list_online:
-                await tutu.finish(f"【{api_type}】类型不存在，支持的类型{list(var.api_list_online)}")
+                await tutu.finish(
+                    f"【{api_type}】类型不存在，支持的类型{list(var.api_list_online)}"
+                )
             elif api_type == pc.tutu_r18_name:
                 await tutu.finish(f"群聊不能用这个类型！")
             else:
@@ -158,7 +170,9 @@ async def handle_tutu(
         if api_type:
             api_type = api_type.strip()
             if api_type not in var.api_list_online:
-                await tutu.finish(f"【{api_type}】类型不存在，支持的类型{list(var.api_list_online)}")
+                await tutu.finish(
+                    f"【{api_type}】类型不存在，支持的类型{list(var.api_list_online)}"
+                )
             else:
                 api_type = [api_type]
         else:

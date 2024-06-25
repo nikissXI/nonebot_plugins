@@ -141,7 +141,7 @@ http://127.0.0.1:8080/tutu （具体域名和端口看你nb绑定的地址）
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/url_diy_replace.jpg"/>
 
 ## 使用示例、导入api和图片库
-自己看看接口的图片是否合适和能否正常访问再导入，有一些接口返图速度慢的就别用了    
+接口不一定能用或稳定使用，这些只是以前找的接口    
 **二次元图片api**  
 http://api.tangdouz.com/sjdmbz.php  
 https://api.dujin.org/pic/yuanshen/  
@@ -232,6 +232,11 @@ split_url.py会遍历result里面的文件，把里面命名含有“new_data_�
 然后给机器人私聊发送“开爬”就会自动爬取
 
 ## 更新日志
+### 2024/6/25 \[v1.8.0]
+
+* 优化readme
+* 修改插件元数据
+
 ### 2023/3/31 \[v1.7.0]
 
 * 优化readme
