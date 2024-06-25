@@ -1,8 +1,8 @@
-from nonebot import get_bot, get_bots, get_driver
-from nonebot.log import logger
-from pydantic import BaseModel, Extra
+from typing import List, Optional
+
+from nonebot import get_bot, get_bots, get_driver, get_plugin_config
 from nonebot.adapters import Bot
-from typing import Optional, List, Dict, Tuple
+from pydantic import BaseModel, Extra
 
 
 class Config(BaseModel, extra=Extra.ignore):
@@ -19,7 +19,7 @@ class Var:
 
 driver = get_driver()
 
-pc = Config.parse_obj(driver.config)
+pc = get_plugin_config(Config)
 var = Var()
 
 
