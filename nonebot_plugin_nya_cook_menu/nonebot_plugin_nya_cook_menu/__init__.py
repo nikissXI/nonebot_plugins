@@ -6,12 +6,17 @@ from nonebot.log import logger
 from nonebot.params import Arg
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
-from .config import pc, var
+
+from .config import Config, pc, var
 from .data_handle import add_menu, del_menu, text_to_img
 
 __plugin_meta__ = PluginMetadata(
     name="喵喵自记菜谱",
     description="记录生活中的小菜谱",
+    type="application",
+    homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization",
+    supported_adapters={"~onebot.v11"},
+    config=Config,
     usage=f"""插件命令如下：
 菜谱  # 字面意思
 """,
@@ -102,6 +107,10 @@ async def handle_caipu_got(content: Message = Arg()):
             ]
         )
         if search_result:
-            await caipu.reject(MS.image(text_to_img("喵喵菜谱搜索结果~\n" + search_result)))
+            await caipu.reject(
+                MS.image(text_to_img("喵喵菜谱搜索结果~\n" + search_result))
+            )
         else:
-            await caipu.reject(f"没有包含关键字【{keyword}】的菜名喵~\n发送“0”退出交互模式")
+            await caipu.reject(
+                f"没有包含关键字【{keyword}】的菜名喵~\n发送“0”退出交互模式"
+            )

@@ -1,14 +1,15 @@
 from json import dump, load
 from os import makedirs, path
 from pathlib import Path
-from nonebot import get_bot, get_bots, get_driver
-from nonebot.log import logger
-from pydantic import BaseModel, Extra
+from typing import Dict, List, Optional, Tuple
+
+from nonebot import get_bot, get_bots, get_driver, get_plugin_config
 from nonebot.adapters import Bot
-from typing import Optional, List, Dict, Tuple
+from nonebot.log import logger
+from pydantic import BaseModel
 
 
-class Config(BaseModel, extra=Extra.ignore):
+class Config(BaseModel):
     # 使用用户qq号 [1234, 5678]
     nya_cook_user_list: List[int] = []
     # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） ['1234','5678','6666']
@@ -20,6 +21,7 @@ class Config(BaseModel, extra=Extra.ignore):
     # 字体大小
     nya_cook_menu_font_size: int = 18
 
+
 class Global_var:
     # 菜谱数据  {id : tuple[菜名，内容]}
     cook_menu_data_dict: Dict[str, Tuple[str, str]] = {}
@@ -29,7 +31,7 @@ class Global_var:
 
 driver = get_driver()
 global_config = driver.config
-pc = Config.parse_obj(global_config)
+pc = get_plugin_config(Config)
 var = Global_var()
 
 
@@ -76,7 +78,9 @@ async def on_bot_connect(bot: Bot):
         # 如果已经有bot连了
         if var.handle_bot:
             # 当前bot qq 下标
-            handle_bot_id_index = pc.nya_cook_bot_qqnum_list.index(var.handle_bot.self_id)
+            handle_bot_id_index = pc.nya_cook_bot_qqnum_list.index(
+                var.handle_bot.self_id
+            )
             # 新连接的bot qq 下标
             new_bot_id_index = pc.nya_cook_bot_qqnum_list.index(bot.self_id)
             # 判断优先级，下标越低优先级越高
