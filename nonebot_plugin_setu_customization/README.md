@@ -141,24 +141,18 @@ http://127.0.0.1:8080/tutu （具体域名和端口看你nb绑定的地址）
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/url_diy_replace.jpg"/>
 
 ## 使用示例、导入api和图片库
-接口不一定能用或稳定使用，这些只是以前找的接口    
+接口不一定能用或稳定使用，这些只是以前找的接口，如果访问不了可以试试挂梯子    
 **二次元图片api**  
-http://api.tangdouz.com/sjdmbz.php  
-https://api.dujin.org/pic/yuanshen/  
-https://www.dmoe.cc/random.php  
-https://setu.yuban10703.xyz/setu  
-https://tuapi.eees.cc/api.php?category=dongman&type=302  
-https://api.yimian.xyz/img/  
 https://image.anosu.top/pixiv/direct  
 https://api.lolicon.app/setu/v2  
-https://moe.anosu.top/img/?sort=pixiv  
 https://moe.anosu.top/img/?sort=setu  
+https://moe.anosu.top/img/?sort=pixiv&size=original  
 
 **R18图片api**  
 https://setu.yuban10703.xyz/setu?r18=1  
 https://image.anosu.top/pixiv/direct?r18=1  
 https://api.lolicon.app/setu/v2?r18=1  
-https://moe.anosu.top/img/?sort=r18  
+https://moe.anosu.top/img/?sort=r18&size=original  
 
 **三次元图片api**  
 没收集到好的，但是我爬了很多，在仓库的tutu_local_img_lib文件夹，下载放进去data/tutu_local_img_lib/里面，没事来看看有没有更新，里面也有二次元的
