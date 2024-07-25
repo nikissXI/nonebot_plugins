@@ -310,16 +310,21 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
             },
         ) as resp:
             async for chunk in resp.aiter_lines():
-                data = loads(chunk)
+                chunk_data = loads(chunk)
+                if chunk_data["code"] != 0:
+                    raise AnswerError(f"生成回答出错：{chunk_data['msg']}")
+
+                data_type = chunk_data["data"]["data_type"]
+                data_content = chunk_data["data"]["data_content"]
                 # 新会话
-                if data["type"] == "newChat":
+                if data_type == "newChat":
                     # 记录新会话的chatCode
-                    session.chatCode = data["data"]["chatCode"]
+                    session.chatCode = data_content["chatCode"]
                 # 回答的内容
-                if data["type"] == "botMessageAdded":
-                    answer = data["data"]["text"]
+                if data_type == "botMessageAdded":
+                    answer = data_content["text"]
                 # 更新title
-                if data["type"] == "chatTitleUpdated":
+                if data_type == "chatTitleUpdated":
                     # 更新title为uid
                     await http_request(
                         "POST",
@@ -327,8 +332,8 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                         json={"title": uid},
                     )
                 # 出错
-                elif data["type"] == "talkError":
-                    raise AnswerError(f"生成回答出错：{data['data']['err_msg']}")
+                elif data_type == "talkError":
+                    raise AnswerError(f"生成回答出错：{data_content['errMsg']}")
 
         # 转图片
         async def _reply_with_img(answer: str):
@@ -423,12 +428,8 @@ async def http_request(method: str, url: str, **kwargs) -> dict:
     #     # 重新请求
     #     return await http_request(method, url, **kwargs)
 
-    if resp.status_code == 204:
-        return {}
-
     if resp.status_code != 200:
         resp_json = resp.json()
-
         raise RequestError(method, url, resp.status_code, resp_json)
 
-    return resp.json()
+    return resp.json()["data"]
