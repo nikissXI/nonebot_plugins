@@ -4,28 +4,29 @@ A Translation module.
 
 You can translate text using this module.
 """
-import random
-import typing
-import re
+
 import json
+import random
+import re
+import typing
 
 import httpcore
 import httpx
 from httpx import Timeout
 
 from . import urls, utils
-from .gtoken import TokenAcquirer
 from .constants import (
     DEFAULT_CLIENT_SERVICE_URLS,
     DEFAULT_FALLBACK_SERVICE_URLS,
+    DEFAULT_RAISE_EXCEPTION,
     DEFAULT_USER_AGENT,
+    DUMMY_DATA,
     LANGCODES,
     LANGUAGES,
     SPECIAL_CASES,
-    DEFAULT_RAISE_EXCEPTION,
-    DUMMY_DATA,
 )
-from .models import Translated, Detected, TranslatedPart
+from .gtoken import TokenAcquirer
+from .models import Detected, Translated, TranslatedPart
 
 EXCLUDES = ("en", "ca", "fr")
 
@@ -135,9 +136,7 @@ class Translator:
             "soc-device": 1,
             "rt": "c",
         }
-        print(111)
         r = await self.client.post(url, params=params, data=data)
-        print(222)
         if r.status_code != 200:
             raise Exception(
                 'Unexpected status code "{}" from {}'.format(
