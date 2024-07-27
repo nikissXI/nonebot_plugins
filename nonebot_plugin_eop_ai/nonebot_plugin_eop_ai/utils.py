@@ -314,14 +314,14 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                 if chunk_data["code"] != 0:
                     raise AnswerError(f"生成回答出错：{chunk_data['msg']}")
 
-                data_type = chunk_data["data"]["data_type"]
-                data_content = chunk_data["data"]["data_content"]
+                data_type = chunk_data["data"]["dataType"]
+                data_content = chunk_data["data"]["dataContent"]
                 # 新会话
                 if data_type == "newChat":
                     # 记录新会话的chatCode
                     session.chatCode = data_content["chatCode"]
                 # 回答的内容
-                if data_type == "botMessageAdded":
+                if data_type == "botMessageAdd":
                     answer = data_content["text"]
                 # 更新title
                 if data_type == "chatTitleUpdated":
