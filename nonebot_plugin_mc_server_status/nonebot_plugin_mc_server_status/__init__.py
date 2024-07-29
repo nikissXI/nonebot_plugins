@@ -5,7 +5,7 @@ from re import findall
 from typing import Union
 
 from mcstatus import BedrockServer, JavaServer
-from nonebot import get_plugin_config, on_command, on_regex
+from nonebot import on_command, on_regex
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
@@ -22,7 +22,7 @@ from nonebot.plugin import PluginMetadata
 from .config import Config, pc, save_file, var
 
 __plugin_meta__ = PluginMetadata(
-    name="图图插件",
+    name="MC服务器信息查询插件",
     description="如名",
     type="application",
     homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization",
@@ -79,16 +79,16 @@ async def handle_xinxi(event: GroupMessageEvent):
 
 
 @add_server.handle()
-async def handle_add_server(matchgroup=RegexGroup()):
-    if not matchgroup[0]:
+async def handle_add_server(mp=RegexGroup()):
+    if not mp[0]:
         await add_server.finish(
             f"添加服务器 [群号] [名称] [服务器地址] [类型]\n类型写js或bds，js是Java服务器，bds是基岩服务器\n服务器地址如果知道端口号把端口加上，否则查询速度会慢一点\n添加例子：\nexp1: 添加服务器 114514 哈皮咳嗽 mc.hypixel.net js\nexp2: 添加服务器 114514 某基岩服 mc.bds.net bds\nexp3: 添加服务器 114514 某Java服 mc.java.net:25577 js"
         )
     else:
-        group = int(matchgroup[1])
-        new_server_name = matchgroup[2]
-        server_host = matchgroup[3]
-        server_type = matchgroup[4].lower()
+        group = int(mp[1])
+        new_server_name = mp[2]
+        server_host = mp[3]
+        server_type = mp[4].lower()
 
     if server_type not in ["js", "bds"]:
         await add_server.finish("类型请填js或bds")
@@ -105,12 +105,12 @@ async def handle_add_server(matchgroup=RegexGroup()):
 
 
 @del_server.handle()
-async def handle_del_server(matchgroup=RegexGroup()):
-    if not matchgroup[0]:
+async def handle_del_server(mp=RegexGroup()):
+    if not mp[0]:
         await del_server.finish(f"删除服务器 [群号] [名称]")
     else:
-        group = int(matchgroup[1])
-        name = matchgroup[2]
+        group = int(mp[1])
+        name = mp[2]
 
     if group not in var.group_list:
         await del_server.finish("这个群没有添加服务器")
@@ -144,7 +144,7 @@ async def check_mc_status(
 ) -> Union[str, Message]:
     try:
         if server_type == "js":
-            js = await JavaServer.async_lookup(host, timeout=5)
+            js = await JavaServer.async_lookup(host, timeout=2)
             status = js.status()
             # if status.description.strip():
             #     print(f"des: {status.description}")
