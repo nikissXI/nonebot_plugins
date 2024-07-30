@@ -155,20 +155,27 @@ async def check_mc_status(
                 version = version_list[0]
 
             online = f"{status.players.online}/{status.players.max}"
-            player_list = []
-            if status.players.online:
-                if status.players.sample:
-                    player_list = [
-                        p.name
-                        for p in status.players.sample
-                        if p.id != "00000000-0000-0000-0000-000000000000"
-                    ]
-                if player_list:
-                    player_list = ", ".join(player_list)
+            if status.players.online and status.players.sample:
+                anonymous_player = 0
+                _player_list = []
+                for p in status.players.sample:
+                    if p.id == "00000000-0000-0000-0000-000000000000":
+                        anonymous_player += 1
+                    else:
+                        _player_list.append(p.name)
+
+                if anonymous_player:
+                    _player_list.append(f"[{anonymous_player}个匿名玩家]")
+
+                if _player_list:
+                    player_list = ", ".join(_player_list)
+
                 else:
                     player_list = "没返回玩家列表"
+
             else:
                 player_list = "没人在线"
+
             latency = round(status.latency)
             # base64图标
             if status.favicon:
