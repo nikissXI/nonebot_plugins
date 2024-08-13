@@ -46,7 +46,7 @@ async def _():
             version = _["version"]
 
         if version != pc.eop_ai_version:
-            logger.warning("配置文件版本不对应哦~")
+            logger.warning("配置文件版本不对应哦~已重置数据")
         else:
             var.enable_group_list = _["enable_group_list"]
             for uid, s in _["session_data"].items():
@@ -281,6 +281,7 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                     # 绑定session
                     var.session_data[uid] = Session(
                         botName=resp["botInfo"]["botName"],
+                        botHandle=resp["botHandle"],
                         chatCode=chat["chatCode"],
                         price=resp["botInfo"]["price"],
                     )
@@ -288,11 +289,15 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
             # 没有一样的会话
             else:
                 bot_name = (
-                    var.default_bot[uid] if uid in var.default_bot else pc.default_bot
+                    var.default_bot[uid]
+                    if uid in var.default_bot
+                    else pc.default_botName
                 )
                 resp = await http_request("GET", f"/user/bot/{bot_name}")
                 var.session_data[uid] = Session(
-                    botName=resp["botName"], price=resp["price"]
+                    botName=resp["botName"],
+                    botHandle=resp["botHandle"],
+                    price=resp["price"],
                 )
 
         # 拉取session元数据
@@ -305,6 +310,7 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
             f"/user/talk/{session.chatCode}",
             data={
                 "botName": session.botName,
+                "botHandle": session.botHandle,
                 "question": question,
                 "price": session.price,
             },

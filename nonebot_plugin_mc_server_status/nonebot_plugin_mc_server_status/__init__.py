@@ -51,10 +51,11 @@ add_server = on_regex(
     r"^添加服务器\s*((\d+)\s+(\S+)\s+(\S+)\s+(\S+))?", rule=admin_check
 )
 del_server = on_regex(r"^删除服务器\s*((\d+)\s+(\S+))?", rule=admin_check)
+test_server = on_regex(r"^测试服务器\s*((\S+)\s+(\S+))?", rule=admin_check)
 
 
 @xinxi.handle()
-async def handle_xinxi(event: GroupMessageEvent):
+async def _(event: GroupMessageEvent):
     group = event.group_id
     task_list = []
     for server_name in var.group_list[group]:
@@ -79,7 +80,7 @@ async def handle_xinxi(event: GroupMessageEvent):
 
 
 @add_server.handle()
-async def handle_add_server(mp=RegexGroup()):
+async def _(mp=RegexGroup()):
     if not mp[0]:
         await add_server.finish(
             f"添加服务器 [群号] [名称] [服务器地址] [类型]\n类型写js或bds，js是Java服务器，bds是基岩服务器\n服务器地址如果知道端口号把端口加上，否则查询速度会慢一点\n添加例子：\nexp1: 添加服务器 114514 哈皮咳嗽 mc.hypixel.net js\nexp2: 添加服务器 114514 某基岩服 mc.bds.net bds\nexp3: 添加服务器 114514 某Java服 mc.java.net:25577 js"
@@ -105,7 +106,7 @@ async def handle_add_server(mp=RegexGroup()):
 
 
 @del_server.handle()
-async def handle_del_server(mp=RegexGroup()):
+async def _(mp=RegexGroup()):
     if not mp[0]:
         await del_server.finish(f"删除服务器 [群号] [名称]")
     else:
@@ -126,7 +127,7 @@ async def handle_del_server(mp=RegexGroup()):
 
 
 @list_all.handle()
-async def handle_list_all():
+async def _():
     msg = ""
     for group_id in var.group_list:
         msg += f"群{group_id}服务器列表\n"
@@ -137,6 +138,23 @@ async def handle_list_all():
     if not msg:
         msg = "无数据"
     await list_all.finish(f"mc_status数据\n{msg}")
+
+
+@test_server.handle()
+async def _(mp=RegexGroup()):
+    if not mp[0]:
+        await test_server.finish(
+            f"测试服务器 [服务器地址] [类型]\n类型写js或bds，js是Java服务器，bds是基岩服务器"
+        )
+    else:
+        server_host = mp[1]
+        server_type = mp[2].lower()
+
+    if server_type not in ["js", "bds"]:
+        await add_server.finish("类型请填js或bds")
+
+    msg = await check_mc_status("测试", server_host, server_type)
+    await list_all.finish(msg)
 
 
 async def check_mc_status(

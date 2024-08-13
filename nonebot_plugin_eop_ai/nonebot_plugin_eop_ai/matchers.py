@@ -164,7 +164,7 @@ async def _(matcher: Matcher, event: MessageEvent):
     bot_name = event.get_plaintext()[len(default_bot_cmd) :].strip()
     if not bot_name:
         await matcher.finish(
-            f"当前默认bot：{pc.default_bot}\n命令后面接需要设置的bot名称可修改"
+            f"当前默认bot：{pc.default_botName}\n命令后面接需要设置的bot名称可修改"
         )
 
     try:

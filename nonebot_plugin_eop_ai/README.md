@@ -67,7 +67,7 @@ eop_ai_access_token = token
 # 代理地址，仅支持http代理
 eop_ai_http_proxy_addr = http://127.0.0.1:7890
 # 默认bot
-default_bot = ChatGPT
+default_botName = GPT-4o-Mini
 # AI回答默认输出类型，填1/2/3其中一个数字，1=文字，2=图片，3=图片+文字（文字在网页粘贴板）
 eop_ai_reply_type = 3
 # 图片输出时，图片的宽度
@@ -124,6 +124,10 @@ eop_ai_data = eop_ai.json
 
 
 ## 更新日志
+### 2024/08/13 \[v0.3.0]
+
+* 适配最新后端
+
 ### 2024/07/29 \[v0.2.6]
 
 * 默认模型改为GPT4o mini

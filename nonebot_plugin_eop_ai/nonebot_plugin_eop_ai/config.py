@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 class Config(BaseModel):
     # 配置文件版本号，不要改
-    eop_ai_version: int = 3
+    eop_ai_version: int = 4
 
     # eop后端url地址，如 https://api.eop.com
     eop_ai_base_addr: str = ""
@@ -18,7 +18,7 @@ class Config(BaseModel):
     # 代理地址
     eop_ai_http_proxy_addr: Optional[str] = None
     # 默认bot
-    default_bot: str = "ChatGPT"
+    default_botName: str = "GPT-4o-Mini"
     # AI回答输出类型，填1/2/3其中一个数字，1=文字，2=图片，3=图片+文字（文字在网页粘贴板）
     eop_ai_reply_type: int = 3
     # 图片输出时，图片的宽度
@@ -60,7 +60,8 @@ pc = get_plugin_config(Config)
 
 
 class Session(BaseModel):
-    botName: str = pc.default_bot
+    botName: str
+    botHandle: str
     chatCode: str = "0"
     price: int = 0
 
