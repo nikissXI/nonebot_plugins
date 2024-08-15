@@ -281,7 +281,7 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                     # 绑定session
                     var.session_data[uid] = Session(
                         botName=resp["botInfo"]["botName"],
-                        botHandle=resp["botHandle"],
+                        botHandle=resp["botInfo"]["botHandle"],
                         chatCode=chat["chatCode"],
                         price=resp["botInfo"]["price"],
                     )
