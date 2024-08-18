@@ -42,7 +42,7 @@ async def group_check(event: GroupMessageEvent, bot: Bot) -> bool:
 
 
 async def admin_check(event: MessageEvent, bot: Bot) -> bool:
-    return bot == var.handle_bot and event.user_id == pc.mc_status_admin_qqnum
+    return bot == var.handle_bot and event.user_id in pc.mc_status_admin_qqnum
 
 
 xinxi = on_command("信息", rule=group_check)

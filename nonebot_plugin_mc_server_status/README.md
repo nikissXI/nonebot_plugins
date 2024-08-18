@@ -47,7 +47,7 @@ nb plugin install nonebot_plugin_mc_server_status
 
 ```bash
 # 管理员的QQ号（别问我为什么要另外写）
-mc_status_admin_qqnum = 114514
+mc_status_admin_qqnum = [1234, 5678, 6666]
 
 # 可选配置
 # 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
@@ -64,6 +64,10 @@ mc_status_bot_qqnum_list = [1234, 5678, 6666]
 | 删除服务器|字面意思，bot超级管理员用|
 
 ## 更新日志
+### 2024/8/18 \[v0.3.1]
+
+* 管理员配置支持多个
+
 ### 2024/7/30 \[v0.3.0]
 
 * 增加匿名玩家的判断

@@ -4,12 +4,12 @@ from typing import List, Optional
 
 from nonebot import get_bot, get_bots, get_driver, get_plugin_config
 from nonebot.adapters import Bot
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel
 
 
-class Config(BaseModel, extra=Extra.ignore):
+class Config(BaseModel):
     # 管理员的QQ号（别问我为什么）
-    mc_status_admin_qqnum: int = 0  # 必填
+    mc_status_admin_qqnum: List[int] = []  # 必填
     # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） ['1234','5678','6666']
     mc_status_bot_qqnum_list: List[str] = []  # 可选
     # 数据文件名
