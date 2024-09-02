@@ -318,6 +318,9 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
             async for chunk in resp.aiter_lines():
                 chunk_data = loads(chunk)
                 if chunk_data["code"] != 0:
+                    if chunk_data["code"] == 2001:
+                        var.session_data.pop(uid)
+                        raise AnswerError("原会话丢失，重置会话")
                     raise AnswerError(f"生成回答出错：{chunk_data['msg']}")
 
                 data_type = chunk_data["data"]["dataType"]
@@ -376,7 +379,6 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                 await send_with_at(matcher, await _reply_with_img_and_text(answer))
 
     except FinishedException as e:
-        logger.error("here")
         raise e
 
     except AnswerError as e:
