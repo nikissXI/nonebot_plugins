@@ -30,7 +30,6 @@ class Global_var:
 
 
 driver = get_driver()
-global_config = driver.config
 pc = get_plugin_config(Config)
 var = Global_var()
 
