@@ -7,7 +7,7 @@
 
 # nonebot_plugin_eop_ai
 
-_✨ Nonebot2 一款调用eop api的AI聊天插件 ✨_
+_✨ Nonebot2 一款调用 eop api 的 AI 聊天插件 ✨_
 
 </div>
 <p align="center">
@@ -21,48 +21,54 @@ _✨ Nonebot2 一款调用eop api的AI聊天插件 ✨_
 </p>
 
 ## 开发者信息
-- nikiss，个人QQ 1299577815，插件反馈QQ群 226462236，插件有问题到群里反馈响应更快哦
-- <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>  
+
+- nikiss，个人 QQ 1299577815，插件反馈 QQ 群 226462236，插件有问题到群里反馈响应更快哦
+- <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>
 
 ## 简介
-本插件需要调用一个逆向poe前端写的后端，也是我负责开发维护的，[eop-next-api仓库](https://github.com/nikissXI/eop-next-api)，不带前端
 
-<img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/1.jpg"/>  
+本插件需要调用一个逆向 poe 前端写的后端，也是我负责开发维护的，[eop-next-api 仓库](https://github.com/nikissXI/eop-next-api)，不带前端
+
+<img width="100%" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_eop_ai/readme_img/1.jpg"/>
 
 ## 功能列表
 
 > 以下未勾选功能仅表示未来可能开发的方向，不代表实际规划进度，具体开发事项可能随时变动
 > 勾选: 已实现功能；未勾选: 正在开发 / 计划开发 / 待定设计
 
-- [x] 基本的对话功能，支持文字或图片回复，如使用图片回复调用mozilla的剪切板查看回复的纯文字
+- [x] 基本的对话功能，支持文字或图片回复，如使用图片回复调用 mozilla 的剪切板查看回复的纯文字
 - [x] 配合前端进行会话管理
 - [x] 登陆失败时自动尝试重新登录
-- [x] 默认bot设置
+- [x] 默认 bot 设置
 - [ ] 预设管理
 - [ ] 更完善的会话管理
 
 ## 安装
 
-使用nb-cli安装
+使用 nb-cli 安装
+
 ```bash
 nb plugin install nonebot_plugin_eop_ai
 ```
 
 或者  
-直接把插件clone下来放进去plugins文件夹，依赖库自己补全  
+直接把插件 clone 下来放进去 plugins 文件夹，依赖库自己补全
 
 ## 配置
-在bot对应的.env文件修改，文档中的均是默认值。  
+
+在 bot 对应的.env 文件修改，文档中的均是默认值。
 
 #### 必填项
+
 ```bash
 # eop后端url地址，如 https://api.eop.com
-eop_ai_base_addr = 
+eop_ai_base_addr =
 # eop登录token
 eop_ai_access_token = token
 ```
 
 #### 大概率用得上的选填项
+
 ```bash
 # 代理地址，仅支持http代理
 eop_ai_http_proxy_addr = http://127.0.0.1:7890
@@ -83,6 +89,7 @@ eop_ai_reply_at_user = true
 ```
 
 #### 如果要修改触发命令就填
+
 ```bash
 # 群聊艾特和发bot昵称是否响应（需要先启用该群的eop ai）
 eop_ai_talk_tome = true
@@ -103,6 +110,7 @@ eop_ai_default_bot_cmd = /default
 ```
 
 #### 大概率用不上的选填项
+
 ```bash
 # 机器人的QQ号列表，选填
 # 如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
@@ -112,63 +120,64 @@ eop_ai_bot_qqnum_list = [1234, 5678, 6666]
 eop_ai_data = eop_ai.json
 ```
 
-## 插件命令（均可修改！） 
-| 指令 | 说明 |
-|:-----:|:----:|
-| /eopai | 如果eop_ai_group_enable_cmd为false，则用该命令启用 |
-| /talk | 开始对话，默认群里@机器人也可以 |
-| /hi | 沉浸式对话（仅限私聊） |
-| /reset | 清空上下文记忆 |
-| /reply | AI回答输出类型切换 |
-| /default | 设置新会话默认bot |
+## 插件命令（均可修改！）
 
+|   指令   |                         说明                          |  权限  |
+| :------: | :---------------------------------------------------: | :----: |
+|  /eopai  | 如果 eop_ai_group_enable_cmd 为 false，则用该命令启用 | 管理员 |
+|  /talk   |            开始对话，默认群里@机器人也可以            | 所有 |
+|   /hi    |                沉浸式对话（仅限私聊）                 | 所有 |
+|  /reset  |                    清空上下文记忆                     | 群聊时要管理员 |
+|  /reply  |                  AI 回答输出类型切换                  | 群聊时要管理员 |
+| /default |                  设置新会话默认 bot                   | 群聊时要管理员 |
 
 ## 更新日志
+
 ### 2024/09/02 \[v0.3.2]
 
-* 修复会话丢失不能重置
+- 修复会话丢失不能重置
 
 ### 2024/08/15 \[v0.3.1]
 
-* 修复bug
+- 修复 bug
 
 ### 2024/08/13 \[v0.3.0]
 
-* 适配最新后端
+- 适配最新后端
 
 ### 2024/07/29 \[v0.2.6]
 
-* 默认模型改为GPT4o mini
+- 默认模型改为 GPT4o mini
 
 ### 2024/07/27 \[v0.2.5]
 
-* 适配最新后端
+- 适配最新后端
 
 ### 2024/06/25 \[v0.2.3]
 
-* 适配新的后端，新增默认bot设置
+- 适配新的后端，新增默认 bot 设置
 
 ### 2023/11/21 \[v0.1.6]
 
-* 适配后端的接口更新
+- 适配后端的接口更新
 
 ### 2023/10/8 \[v0.1.5]
 
-* 更新命令/reply用于切换输出模式
+- 更新命令/reply 用于切换输出模式
 
 ### 2023/10/7 \[v0.1.4]
 
-* 优化转图片输出的速度
+- 优化转图片输出的速度
 
 ### 2023/10/6 \[v0.1.3]
 
-* 优化md转图片的格式
+- 优化 md 转图片的格式
 
 ### 2023/10/6 \[v0.1.2]
 
-* 参考项目[nonebot-plugin-naturel-gpt](https://github.com/KroMiose/nonebot_plugin_naturel_gpt)，增加utils.py中的gen_chat_text函数
-* 优化响应器逻辑
+- 参考项目[nonebot-plugin-naturel-gpt](https://github.com/KroMiose/nonebot_plugin_naturel_gpt)，增加 utils.py 中的 gen_chat_text 函数
+- 优化响应器逻辑
 
 ### 2023/10/5 \[v0.1.1]
 
-* 发布插件
+- 发布插件
