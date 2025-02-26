@@ -19,8 +19,8 @@ from .config import Config, load_local_api, pc, save_data, var
 from .data_handle import get_img_url
 
 __plugin_meta__ = PluginMetadata(
-    name="图图插件",
-    description="如名",
+    name="动态API色图插件",
+    description="Nonebot2 可动态管理API的setu(色图)插件",
     type="application",
     homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization",
     supported_adapters={"~onebot.v11"},
