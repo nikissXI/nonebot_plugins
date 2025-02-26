@@ -7,17 +7,23 @@ from re import findall, search
 from traceback import format_exc
 from typing import Optional, Tuple, Union
 from urllib.parse import unquote
+
+from aiohttp import ClientSession, ClientTimeout
 from bs4 import BeautifulSoup
-from httpx import AsyncClient, Response
-from httpx_socks import AsyncProxyTransport
-from nonebot.adapters.onebot.v11 import ActionFailed, Bot, Message, MessageEvent
+from nonebot.adapters.onebot.v11 import (
+    ActionFailed,
+    Bot,
+    Message,
+    MessageEvent,
+    NetworkError,
+)
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
-from nonebot.adapters.onebot.v11 import NetworkError
 from nonebot.exception import FinishedException, RejectedException
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 from PIL import Image, ImageDraw, ImageFont
 from ujson import dumps, loads
+
 from .config import pc, var
 
 
@@ -69,7 +75,7 @@ def text_to_img(text: str, font_path: str = pc.tutu_font_path) -> BytesIO:
     # 增加行距
     line_height += 3
     # 获取画布需要的高度
-    height = line_height * line_count + 20
+    height = int(line_height * line_count + 20)
     # 获取画布需要的宽度
     width = int(max([font.getlength(line) for line in lines])) + 25
     # 字体颜色
@@ -100,13 +106,13 @@ def pixiv_reverse_proxy(img_url: str, resize: bool = True) -> str:
         if pc.tutu_pixiv_proxy:
             img_url = pc.tutu_pixiv_proxy + "/".join(img_url_group)
         else:
-            img_url = f"https://i.pixiv.re/" + "/".join(img_url_group)
+            img_url = "https://i.pixiv.re/" + "/".join(img_url_group)
 
         # 缩小图片大小
         if resize:
             img_url = img_url.replace("/img-original/img/", "/img-master/img/")
             ext = img_url.split(".")[-1]
-            img_url = img_url.replace(f".{ext}", f"_master1200.jpg")
+            img_url = img_url.replace(f".{ext}", "_master1200.jpg")
     return img_url
 
 
@@ -208,38 +214,30 @@ async def download_img(img_url: str) -> Tuple[bool, Union[BytesIO, str]]:
     else:
         headers = var.headers
 
-    socks5_proxy = None
     http_proxy = None
     if img_url.find("127.0.0.1") == -1:
-        if pc.tutu_socks5_proxy:
-            socks5_proxy = AsyncProxyTransport.from_url(pc.tutu_socks5_proxy)
         if pc.tutu_http_proxy:
             http_proxy = pc.tutu_http_proxy
 
     async def _request_img(img_url: str) -> Union[str, BytesIO]:
-        async with AsyncClient(
-            headers=headers,
-            transport=socks5_proxy,
-            proxies=http_proxy,
-            timeout=var.http_timeout,
-            verify=False,
-        ) as c:
-            try:
-                res = await c.get(url=img_url)
-            except Exception as e:
-                return f"{img_url}\n图片下载出错：{repr(e)}"
-            else:
-                if res.status_code == 200:
-                    img_bytesio = BytesIO(res.content)
-                    img = Image.open(img_bytesio)
-                    try:
-                        img.width
-                    except Exception as e:
-                        return f"{img_url}\n图片解析出错：{repr(e)}"
+        try:
+            async with ClientSession(
+                headers=headers, timeout=ClientTimeout(var.http_timeout)
+            ) as session:
+                async with session.get(img_url, proxy=http_proxy) as resp:
+                    if resp.status == 200:
+                        img_bytesio = BytesIO(await resp.read())
+                        img = Image.open(img_bytesio)
+                        try:
+                            img.width
+                        except Exception as e:
+                            return f"{img_url}\n图片解析出错：{repr(e)}"
+                        else:
+                            return img_bytesio
                     else:
-                        return img_bytesio
-                else:
-                    return f"{img_url}\n图片响应异常：状态码{res.status_code}"
+                        return f"{img_url}\n图片响应异常：状态码{resp.status}"
+        except Exception as e:
+            return f"{img_url}\n图片下载出错：{repr(e)}"
 
     result = await _request_img(img_url)
 
@@ -285,80 +283,72 @@ async def get_img_url(
     """
     向API发起请求，获取返回的图片url
     """
-    socks5_proxy = None
     http_proxy = None
     if api_url.find("127.0.0.1") == -1:
-        if pc.tutu_socks5_proxy:
-            socks5_proxy = AsyncProxyTransport.from_url(pc.tutu_socks5_proxy)
         if pc.tutu_http_proxy:
             http_proxy = pc.tutu_http_proxy
 
     error_times = 0
 
-    async def _get_img_url(api_url: str) -> Union[Response, str]:
-        nonlocal error_times
-        async with AsyncClient(
-            headers=var.headers,
-            transport=socks5_proxy,
-            proxies=http_proxy,
-            timeout=var.http_timeout,
-            verify=False,
-        ) as c:
-            try:
-                rr = await c.get(url=api_url)
-                return rr
-            except Exception as e:
-                error_times += 1
-                if error_times < 2:
-                    await sleep(1)
-                    return await _get_img_url(api_url)
-                else:
-                    msg = f"{api_url}\n请求API出错：{repr(e)}"
-                    logger.error(msg)
-                    await send_error_msg(msg)
-                    return msg
+    while True:
+        try:
+            async with ClientSession(
+                headers=var.headers, timeout=ClientTimeout(var.http_timeout)
+            ) as session:
+                async with session.get(api_url, proxy=http_proxy) as resp:
+                    resp_status = resp.status
+                    resp_text = await resp.text()
 
-    rr = await _get_img_url(api_url)
-    if isinstance(rr, str):
-        return (False, rr, "")
+                    if resp_status == 200:
+                        img_url = extract_img_url(resp_text)
+                        if not img_url:
+                            msg = f"{api_url}\n找不到img_url\n响应码: {resp_status}\n响应内容: {resp_text}"
+                            logger.error(msg)
+                            await send_error_msg(msg)
+                            return (False, msg, "")
+                    elif 300 < resp_status < 310:
+                        img_url = resp.headers["location"]
+                    else:
+                        msg = f"{api_url}\n获取图片url出错 [{resp_status}]"
+                        logger.error(msg)
+                        await send_error_msg(msg)
+                        return (False, msg, "")
 
-    if rr.status_code == 200:
-        img_url = extract_img_url(rr.text)
-        if not img_url:
-            msg = f"{api_url}\n找不到img_url\n响应码: {rr.status_code}\n响应内容: {rr.text}"
-            logger.error(msg)
-            await send_error_msg(msg)
-            return (False, msg, "")
-    elif 300 < rr.status_code < 310:
-        img_url = rr.headers["location"]
-    else:
-        msg = f"{api_url}\n获取图片url出错 [{rr.status_code}]"
-        logger.error(msg)
-        await send_error_msg(msg)
-        return (False, msg, "")
+                    # 没有协议头补上https
+                    if img_url.find("http") == -1:
+                        img_url = f"https:{img_url}"
+                    # 去掉反斜杠
+                    img_url = img_url.replace("\\", "")
 
-    # 没有协议头补上https
-    if img_url.find("http") == -1:
-        img_url = f"https:{img_url}"
-    # 去掉反斜杠
-    img_url = img_url.replace("\\", "")
+                    if api_test == 0:
+                        if cache_data:
+                            ext_msg = str(cache_sent_img(api_url, img_url))
+                        else:
+                            ext_msg = ""
+                    elif api_test == 1:
+                        res_headers = "\n".join(
+                            [f"'{i}' : '{j}'" for i, j in resp.headers.items()]
+                        )
+                        ext_msg = f"响应码: 【{resp_status}】\n响应头:\n{res_headers}\n响应内容:\n{resp_text}"
+                    else:
+                        ext_msg = api_url
 
-    if api_test == 0:
-        if cache_data:
-            ext_msg = str(cache_sent_img(api_url, img_url))
-        else:
-            ext_msg = ""
-    elif api_test == 1:
-        res_headers = "\n".join([f"'{i}' : '{j}'" for i, j in rr.headers.items()])
-        ext_msg = f"响应码: 【{rr.status_code}】\n响应头:\n{res_headers}\n响应内容:\n{rr.text}"
-    else:
-        ext_msg = api_url
+                    return (
+                        True,
+                        img_url,
+                        ext_msg,
+                    )
 
-    return (
-        True,
-        img_url,
-        ext_msg,
-    )
+        except Exception as e:
+            error_times += 1
+            if error_times < 2:
+                await sleep(1)
+                continue
+            else:
+                msg = f"{api_url}\n请求API出错：{repr(e)}"
+                logger.error(msg)
+                await send_error_msg(msg)
+                return (False, msg, "")
 
 
 async def load_crawler_files(
@@ -372,7 +362,9 @@ async def load_crawler_files(
     """
     if not listdir(f"{pc.tutu_crawler_file_path}/{local_api_filename}"):
         rmdir(f"{pc.tutu_crawler_file_path}/{local_api_filename}")
-        await matcher.send(f"{pc.tutu_crawler_file_path}/{local_api_filename}是空文件夹，已删除")
+        await matcher.send(
+            f"{pc.tutu_crawler_file_path}/{local_api_filename}是空文件夹，已删除"
+        )
         return
 
     async def _rename(new_fn) -> str:
@@ -486,12 +478,12 @@ async def get_art_img_url(
         return 0
 
     try:
-        async with AsyncClient(
-            headers=var.headers,
-            timeout=var.http_timeout,
-            verify=False,
-        ) as c:
-            res = await c.get(url)
+        async with ClientSession(
+            headers=var.headers, timeout=ClientTimeout(var.http_timeout)
+        ) as session:
+            async with session.get(url) as resp:
+                content = (await resp.read()).decode("utf-8")
+
     except Exception as e:
         msg = f"{url}\n请求出错：{repr(e)}"
         logger.error(msg)
@@ -509,7 +501,6 @@ async def get_art_img_url(
     error_times = 0
     html_text = ""
 
-    content = res.content.decode("utf-8")
     soup = BeautifulSoup(content, "lxml")
 
     if art_type == "wx":
@@ -522,7 +513,11 @@ async def get_art_img_url(
 
     else:
         html_text = soup.prettify()
-        aa = search(r"\s+window\.__INITIAL_STATE__=(?P<MSG>.*);\(function", html_text)
+        aa = search(
+            r"\s+window\.__INITIAL_STATE__=(?P<MSG>.*);\(function",
+            str(html_text),  # type: ignore
+        )
+
         if aa:
             bb = loads(aa.group("MSG"))
             title = bb["readInfo"]["title"]
@@ -534,7 +529,9 @@ async def get_art_img_url(
     if crawler:
         for k in pc.tutu_crawler_keyword:
             if title.find(k) != -1:
-                await matcher.send(f"文章：{title}\n{url}\n标题发现关键字【{k}】，忽略该文章")
+                await matcher.send(
+                    f"文章：{title}\n{url}\n标题发现关键字【{k}】，忽略该文章"
+                )
                 return 0
 
     async def _get_img_size(img_url) -> Tuple[int, int, str]:
@@ -545,14 +542,12 @@ async def get_art_img_url(
             # else:
             #     headers = var.bili_headers
 
-            async with AsyncClient(
-                headers=var.headers,
-                timeout=var.http_timeout,
-                verify=False,
-            ) as c:
-                res = await c.get(img_url)
-                img = Image.open(BytesIO(res.content))
-                return (img.width, img.height, img_url)
+            async with ClientSession(
+                headers=var.headers, timeout=ClientTimeout(var.http_timeout)
+            ) as session:
+                async with session.get(img_url) as resp:
+                    img = Image.open(BytesIO(await resp.read()))
+                    return (img.width, img.height, img_url)
         # except UnidentifiedImageError:
         #     get_img_size_error += 1
         #     if get_img_size_error < 10:
@@ -589,18 +584,18 @@ async def get_art_img_url(
         img_set = soup.find_all("img")
         for node in img_set:
             try:
-                if node["data-type"] == "gif" or not node["data-src"]:
+                if node["data-type"] == "gif" or not node["data-src"]:  # type: ignore
                     continue
             except:
                 continue
             img_found += 1
-            img_src = node["data-src"]
+            img_src = node["data-src"]  # type: ignore
 
             if img_src in var.api_list_local[filename]:
                 filter_count += 1
                 continue
 
-            pp = search("mmbiz_[^/]*", img_src)
+            pp = search("mmbiz_[^/]*", img_src)  # type: ignore
             if pp:
                 img_src_ext = pp.group()
             else:
@@ -609,7 +604,7 @@ async def get_art_img_url(
                 task_list.append(_get_img_size(img_src))
     else:
         img_url_list = []
-        aa = search(r"\s+window\.__INITIAL_STATE__=(?P<MSG>.*);\(function", html_text)
+        aa = search(r"\s+window\.__INITIAL_STATE__=(?P<MSG>.*);\(function", html_text)  # type: ignore
         if not aa:
             await matcher.send(f"{url}\n获取数据字段失败")
             return 0
@@ -683,12 +678,12 @@ async def get_art_img_url(
         )
 
         if var.merge_send:
-            await matcher.send(f"正在合并消息准备发送")
+            await matcher.send("正在合并消息准备发送")
             await bot.send_private_forward_msg(user_id=event.user_id, messages=msg_list)
         else:
             await matcher.send("\n".join(img_url_msg_list))
             await gather(*task_list)
-            await matcher.send(f"图片发送完毕")
+            await matcher.send("图片发送完毕")
     else:
         await matcher.send(
             f"从文章【{title}】中获取到图片{img_found}个\n没有收录新图片\n因重复过滤掉图片{filter_count}张"

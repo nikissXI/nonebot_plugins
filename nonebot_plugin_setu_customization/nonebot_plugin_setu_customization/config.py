@@ -42,8 +42,6 @@ class Config(BaseModel, extra=Extra.ignore):
     tutu_pixiv_proxy: Optional[str] = None
     # http代理地址，如 http://127.0.0.1:1234
     tutu_http_proxy: Optional[str] = None
-    # socks5代理地址，如 socks5://127.0.0.1:1234
-    tutu_socks5_proxy: Optional[str] = None
     # 新浪图片反代地址，如 http://img.example.top:514
     tutu_sina_img_proxy: Optional[str] = "https://i0.wp.com/tvax1.sinaimg.cn/"
     # 微信图片反代地址，如 http://img.example.top:114

@@ -7,8 +7,7 @@ from random import choice
 from urllib.parse import unquote
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from httpx import AsyncClient
-from httpx_socks import AsyncProxyTransport
+from aiohttp import ClientSession, ClientTimeout
 from nonebot import on_fullmatch, on_notice, on_regex
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -54,7 +53,7 @@ __plugin_meta__ = PluginMetadata(
     homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization",
     supported_adapters={"~onebot.v11"},
     config=Config,
-    usage=f"""图图帮助 看图图的详细命令格式
+    usage="""图图帮助 看图图的详细命令格式
 图图群管理 增删群
 图图接口管理 增删API接口
 图图接口测试 测试API接口
@@ -158,7 +157,7 @@ async def handle_tutu(
                     f"【{api_type}】类型不存在，支持的类型{list(var.api_list_online)}"
                 )
             elif api_type == pc.tutu_r18_name:
-                await tutu.finish(f"群聊不能用这个类型！")
+                await tutu.finish("群聊不能用这个类型！")
             else:
                 api_type = [api_type]
         else:
@@ -394,7 +393,7 @@ async def handle_api_manage(matchgroup=RegexGroup()):
 @handle_exception("图图接口测试")
 async def handle_api_test(matchgroup=RegexGroup()):
     if not matchgroup[0]:
-        await api_test.finish(f"图图接口测试 [接口url/all]")
+        await api_test.finish("图图接口测试 [接口url/all]")
     else:
         api_url = matchgroup[0]
         api_url = api_url.replace("&amp;", "&").replace("\\", "")
@@ -458,7 +457,7 @@ async def handle_tutu_kaipa(
 
     var.crawler_task = False
     var.crawler_current_msg.clear()
-    await tutu_kaipa.finish(f"所有爬取任务已完成")
+    await tutu_kaipa.finish("所有爬取任务已完成")
 
 
 @art_paqu.handle()
@@ -554,12 +553,12 @@ async def handle_paqu_resend(bot: Bot, event: PrivateMessageEvent):
                 )
             )
     if var.merge_send:
-        await paqu_resend.send(f"正在合并消息准备发送")
+        await paqu_resend.send("正在合并消息准备发送")
         await bot.send_private_forward_msg(user_id=event.user_id, messages=msg_list)
     else:
         await paqu_resend.send("\n".join(img_url_msg_list))
         await gather(*task_list)
-        await paqu_resend.send(f"图片发送完毕")
+        await paqu_resend.send("图片发送完毕")
 
 
 @img_no.handle()
@@ -568,7 +567,7 @@ async def handle_img_no(matchgroup=RegexGroup()):
     fn = matchgroup[1]
     img_num = matchgroup[2]
     if not matchgroup[0]:
-        await img_no.finish(f"图片序号 [数字/fn数字]")
+        await img_no.finish("图片序号 [数字/fn数字]")
     else:
         if fn:
             no_format = "No.fn"
@@ -662,7 +661,7 @@ async def handle_img_del(matchgroup=RegexGroup()):
                 w.writelines([i + "\n" for i in var.api_list_local[api_type]])
             await img_del.finish(f"已从{api_type}中删除{ext_msg}")
         else:
-            await img_del.finish(f"没找到该url在库中，删除失败")
+            await img_del.finish("没找到该url在库中，删除失败")
 
 
 @img_test.handle()
@@ -674,29 +673,24 @@ async def handle_img_test(matchgroup=RegexGroup()):
     else:
         img_url = img_url.replace("&amp;", "&")
         img_url = url_diy_replace(img_url)
-        if pc.tutu_socks5_proxy:
-            socks5_proxy = AsyncProxyTransport.from_url(pc.tutu_socks5_proxy)
-        else:
-            socks5_proxy = None
+
         if pc.tutu_http_proxy:
             http_proxy = pc.tutu_http_proxy
         else:
             http_proxy = None
         await img_test.send("图片下载中")
-        async with AsyncClient(
-            headers=var.headers,
-            transport=socks5_proxy,
-            proxies=http_proxy,
-            timeout=10,
-            verify=False,
-        ) as c:
-            try:
-                rr = await c.get(url=img_url)
-            except Exception as e:
-                msg = f"图片请求出错：{repr(e)}"
-                logger.error(msg)
-                await img_test.finish(msg)
-        img_bytes = BytesIO(rr.content)
+
+        try:
+            async with ClientSession(
+                headers=var.headers, timeout=ClientTimeout(var.http_timeout)
+            ) as session:
+                async with session.get(img_url, proxy=http_proxy) as resp:
+                    img_bytes = BytesIO(await resp.read())
+
+        except Exception as e:
+            msg = f"图片请求出错：{repr(e)}"
+            logger.error(msg)
+            await img_test.finish(msg)
         try:
             img = Image.open(img_bytes)
             img.width
@@ -739,14 +733,15 @@ async def upload_file_second_receive(
         await upload_file.finish("已忽略")
 
     try:
-        async with AsyncClient(verify=False) as client:
-            res = await client.get(url=fileurl)
+        async with ClientSession(timeout=ClientTimeout(var.http_timeout)) as session:
+            async with session.get(fileurl) as resp:
+                file = BytesIO(await resp.read())
     except Exception as e:
         await upload_file.finish(f"文件下载失败 {repr(e)}")
 
     extra_file = []
 
-    with ZipFile(file=BytesIO(res.content), mode="r") as zf:
+    with ZipFile(file=file, mode="r") as zf:
         # 解压到指定目录,首先创建一个解压目录
         makedirs(f"{pc.tutu_crawler_file_path}{lib_name}")
         for old_name in zf.namelist():
