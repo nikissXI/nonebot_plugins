@@ -110,9 +110,9 @@ https://api.anosu.top/img/?sort=r18&size=original
 
 ```bash
 # 添加一个接口到二次元类型接口
-图图接口管理 二次元 + https://api.lolicon.app/setu/v2
+图图插件接口管理 二次元 + https://api.lolicon.app/setu/v2
 # 添加一个本地图片库接口到三次元类型接口
-图图接口管理 三次元 + 本地图库self_cosplay
+图图插件接口管理 三次元 + 本地图库self_cosplay
 ```
 
 ## 更新日志
