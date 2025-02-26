@@ -60,7 +60,7 @@ tutu_cooldown = 3
 tutu_local_api_path = data/tutu_local_img_lib/
 # 插件数据文件名
 tutu_data_filename = tutu_data.json
-# pixiv图片反代地址，自己可以看看哪个快用哪个 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/
+# pixiv图片反代地址，自己可以看看哪个快用哪个 如果默认返回的地址够快就不用 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/
 tutu_pixiv_proxy = https://i.pixiv.re/
 # http代理地址，如 http://127.0.0.1:1234
 tutu_http_proxy = http://127.0.0.1:1234
