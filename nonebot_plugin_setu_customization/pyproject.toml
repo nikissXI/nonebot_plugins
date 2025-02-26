@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_setu_customization"
-version = "1.9.0"
+version = "2.0.0"
 description = "Nonebot2 可动态管理API并带网页浏览的setu插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
@@ -19,12 +19,6 @@ python = ">=3.8"
 nonebot2 = ">=2.0.0rc1"
 nonebot-adapter-onebot = ">=2.0.0"
 aiohttp = ">=3.10.0"
-beautifulsoup4 = ">=4.0.0"
-Pillow = ">=9.0.0"
-ujson = ">=5.0.0"
-starlette = ">=0.19.0"
-apscheduler = ">=3.7.0"
-Jinja2 = ">=3.0.0"
 
 [build-system]
 requires = ["poetry-core"]
