@@ -13,7 +13,6 @@ documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_p
 [[tool.poetry.source]]
 name = "tsinghua"
 url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
-default = true
 
 [tool.poetry.dependencies]
 python = ">=3.8"
