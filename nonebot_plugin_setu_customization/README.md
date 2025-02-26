@@ -117,6 +117,11 @@ https://api.anosu.top/img/?sort=r18&size=original
 
 ## 更新日志
 
+### 2025/02/27 \[v2.1.0]
+
+- 图图支持多张发送，支持在url末端写“tutuNoProxy”以实现不走代理，有的接口走代理不给访问
+- 增加api兼容性
+
 ### 2025/02/26 \[v2.0.0]
 
 - httpx 更换为 aiohttp

@@ -3,7 +3,7 @@ from json import dumps, loads
 from random import choice
 from re import search
 from typing import Optional, Tuple
-from urllib.parse import unquote
+from urllib.parse import unquote, urljoin
 
 from aiohttp import ClientSession, ClientTimeout
 
@@ -14,11 +14,6 @@ def url_diy_replace(img_url: str) -> str:
     """
     图片url自定义替换，可根据自己需求自己改
     """
-    # 没有协议头补上https
-    if "http" not in img_url:
-        img_url = f"https:{img_url}"
-    # 去掉反斜杠
-    img_url = img_url.replace("\\", "")
     # pixiv图片缩小尺寸以及pixiv反代地址
     if "/img-original/img/" in img_url:
         img_url_group = img_url.replace("//", "").split("/")
@@ -59,7 +54,12 @@ def extract_img_url(text: str) -> Optional[str]:
         if not img_url:
             raise IndexError
         else:
-            return img_url.group("MSG")
+            # 去掉反斜杠
+            img_url = img_url.group("MSG").replace("\\", "")
+            # 没有协议头补上https
+            if img_url.startswith("//"):
+                img_url = "https:" + img_url
+            return img_url
     except IndexError:
         return None
 
@@ -85,7 +85,10 @@ async def get_img_url(api_url: str) -> Tuple[bool, str, str]:
                 headers=var.headers, timeout=ClientTimeout(var.http_timeout)
             ) as session:
                 async with session.get(
-                    api_url, allow_redirects=False, ssl=False, proxy=pc.tutu_http_proxy
+                    api_url.replace("tutuNoProxy", ""),
+                    allow_redirects=False,
+                    ssl=False,
+                    proxy=None if "tutuNoProxy" in api_url else pc.tutu_http_proxy,
                 ) as resp:
                     resp_status = resp.status
 
@@ -98,7 +101,8 @@ async def get_img_url(api_url: str) -> Tuple[bool, str, str]:
 
                     elif 300 <= resp_status < 400:
                         img_url = resp.headers["location"]
-
+                        if "//" not in img_url[:10]:
+                            img_url = urljoin(api_url, img_url)
                     else:
                         img_url = extract_img_url(await resp.text())
                         if not img_url:
@@ -108,12 +112,7 @@ async def get_img_url(api_url: str) -> Tuple[bool, str, str]:
                                 f"{api_url}\n找不到图片地址，\n响应码：{resp_status}",
                             )
 
-                    # 没有协议头补上https
-                    if "http" not in img_url:
-                        img_url = f"https:{img_url}"
-
-                    # 去掉反斜杠
-                    return True, url_diy_replace(img_url.replace("\\", "")), ""
+                    return True, url_diy_replace(img_url), ""
 
         except Exception as e:
             if retried is False:
