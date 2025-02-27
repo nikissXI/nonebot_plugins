@@ -72,7 +72,7 @@ async def get_img(api_url: str) -> Tuple[bool, Union[str, bytes], str]:
     """
 
     if "本地图库" in api_url:
-        filename = api_url[4:]
+        filename = api_url[4:].replace("tutuNoProxy", "")
         if filename not in var.local_imgs:
             return False, "", f"本地图库{filename}不存在"
 

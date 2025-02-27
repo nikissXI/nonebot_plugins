@@ -214,7 +214,7 @@ async def _(matcher: Matcher, mg=RegexGroup()):
     if choice == "+":
         # 本地图库操作
         if "本地图库" in api_url:
-            filename = api_url[4:]
+            filename = api_url[4:].replace("tutuNoProxy", "")
             if filename not in var.local_imgs:
                 await api_manage.finish(
                     f"本地图库中不存在【{filename}】，如未加载请发送“图图插件刷新本地图库”"
@@ -298,4 +298,4 @@ async def _(matcher: Matcher, mg=RegexGroup()):
 
     await img_test.send("图片下载中")
 
-    await send_img(matcher, "", img_url)
+    await send_img(matcher, img_url, img_url.replace("tutuNoProxy", ""))
