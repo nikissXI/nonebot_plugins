@@ -39,38 +39,32 @@ __plugin_meta__ = PluginMetadata(
 
 # 群判断
 async def tutu_permission_check(event: MessageEvent, bot: Bot) -> bool:
-    if isinstance(event, GroupMessageEvent):
-        return event.group_id in var.group_list and bot == var.handle_bot
-    elif isinstance(event, PrivateMessageEvent):
+    if isinstance(event, PrivateMessageEvent):
         return event.sub_type == "friend"
-    else:
-        return False
 
-
-# 管理员判断
-async def admin_check(event: MessageEvent, bot: Bot) -> bool:
     if isinstance(event, GroupMessageEvent):
-        return await SUPERUSER(bot, event) and bot == var.handle_bot
-    elif isinstance(event, PrivateMessageEvent):
-        return await SUPERUSER(bot, event)
-    else:
-        return False
+        if pc.tutu_bot_id:
+            return event.group_id in var.group_list and bot.self_id == pc.tutu_bot_id
+
+        return event.group_id in var.group_list
+
+    return False
 
 
 tutu_help = on_fullmatch("图图插件帮助", rule=tutu_permission_check)
 tutu = on_regex(r"^图图(?!插件)\s*(\d+)?\s*(\S+)?", rule=tutu_permission_check)
 
-group_manage = on_regex(r"^图图插件群管理\s*((\+|\-)\s*(\d*))?", rule=admin_check)
+group_manage = on_regex(r"^图图插件群管理\s*((\+|\-)\s*(\d*))?", permission=SUPERUSER)
 api_manage = on_regex(
-    r"^图图插件接口管理\s*(?:(\S+)\s*(\+|\-)\s*(\S*))?", rule=admin_check
+    r"^图图插件接口管理\s*(?:(\S+)\s*(\+|\-)\s*(\S*))?", permission=SUPERUSER
 )
-tutu_flush_local = on_fullmatch("图图插件刷新本地图库", rule=admin_check)
-api_test = on_regex(r"^图图插件接口测试\s*(\S+)?", rule=admin_check)
-img_test = on_regex(r"^图图插件图片测试\s*(\S+)?", rule=admin_check)
+tutu_flush_local = on_fullmatch("图图插件刷新本地图库", permission=SUPERUSER)
+api_test = on_regex(r"^图图插件接口测试\s*(\S+)?", permission=SUPERUSER)
+img_test = on_regex(r"^图图插件图片测试\s*(\S+)?", permission=SUPERUSER)
 
 
 @tutu_help.handle()
-async def _():
+async def _(event: MessageEvent):
     await tutu_help.finish("""图图插件帮助
 图图 出图，后面可接图库和数量，如“图图10”、“图图二次元”、“图图10二次元”
 * 下方是管理员命令

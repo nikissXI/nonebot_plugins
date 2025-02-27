@@ -1,15 +1,13 @@
+from asyncio import Lock
 from json import dump, load
 from os import listdir, makedirs, path
 from typing import Dict, List, Optional, Set
 
-from nonebot import get_bot, get_bots, get_driver, get_plugin_config
-from nonebot.adapters import Bot
-from pydantic import BaseModel, Extra
+from nonebot import get_driver, get_plugin_config
+from pydantic import BaseModel
 
 
-class Config(BaseModel, extra=Extra.ignore):
-    # 机器人的QQ号（如果写了就按优先级响应，否则就第一个连上的响应） ['1234','5678','6666']
-    tutu_bot_qqnum_list: List[str] = []
+class Config(BaseModel):
     # 图图命令CD时间（秒）
     tutu_cooldown: int = 3
     # 危险图库，危险图库的图片无法在群聊发送
@@ -22,11 +20,11 @@ class Config(BaseModel, extra=Extra.ignore):
     tutu_pixiv_proxy: Optional[str] = None
     # http代理地址，如 http://127.0.0.1:1234
     tutu_http_proxy: Optional[str] = None
+    # 限定哪个bot响应，填bot的qq号，限定群聊只有这个bot响应，不填则均响应
+    tutu_bot_id: Optional[str] = None
 
 
 class Var:
-    # 处理bot
-    handle_bot: Optional[Bot] = None
     # 图库接口   图库名：api列表
     gallery_list: Dict[str, List[str]] = {}
     # 本地图库   文件名：图片url列表
@@ -39,6 +37,9 @@ class Var:
     }
     # http请求超时
     http_timeout = 10
+    # 消息响应锁
+    msg_lock: Lock = Lock()
+    received_msg_id_set: set[int] = set()
 
 
 driver = get_driver()
@@ -96,59 +97,3 @@ async def on_startup():
         read_data()
 
     load_local_api()
-
-
-# qq机器人连接时执行
-@driver.on_bot_connect
-async def on_bot_connect(bot: Bot):
-    # 是否有写bot qq，如果写了只处理bot qq在列表里的
-    if pc.tutu_bot_qqnum_list and bot.self_id in pc.tutu_bot_qqnum_list:
-        # 如果已经有bot连了
-        if var.handle_bot:
-            # 当前bot qq 下标
-            handle_bot_id_index = pc.tutu_bot_qqnum_list.index(var.handle_bot.self_id)
-            # 新连接的bot qq 下标
-            new_bot_id_index = pc.tutu_bot_qqnum_list.index(bot.self_id)
-            # 判断优先级，下标越低优先级越高
-            if new_bot_id_index < handle_bot_id_index:
-                var.handle_bot = bot
-
-        # 没bot连就直接给
-        else:
-            var.handle_bot = bot
-
-    # 不写就给第一个连的
-    elif not pc.tutu_bot_qqnum_list and not var.handle_bot:
-        var.handle_bot = bot
-
-
-# qq机器人断开时执行
-@driver.on_bot_disconnect
-async def on_bot_disconnect(bot: Bot):
-    # 判断掉线的是否为handle bot
-    if bot == var.handle_bot:
-        # 如果有写bot qq列表
-        if pc.tutu_bot_qqnum_list:
-            # 获取当前连着的bot列表(需要bot是在bot qq列表里)
-            available_bot_id_list = [
-                bot_id for bot_id in get_bots() if bot_id in pc.tutu_bot_qqnum_list
-            ]
-            if available_bot_id_list:
-                # 打擂台排序？
-                new_bot_index = pc.tutu_bot_qqnum_list.index(available_bot_id_list[0])
-                for bot_id in available_bot_id_list:
-                    now_bot_index = pc.tutu_bot_qqnum_list.index(bot_id)
-                    if now_bot_index < new_bot_index:
-                        new_bot_index = now_bot_index
-                # 取下标在qq列表里最小的bot qq为新的handle bot
-                var.handle_bot = get_bot(pc.tutu_bot_qqnum_list[new_bot_index])
-            else:
-                var.handle_bot = None
-
-        # 不写就随便给一个连着的(如果有)
-        elif var.handle_bot:
-            try:
-                new_bot = get_bot()
-                var.handle_bot = new_bot
-            except ValueError:
-                var.handle_bot = None

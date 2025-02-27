@@ -64,6 +64,8 @@ tutu_danger_gallery = ["R18", "触手"]
 tutu_http_proxy = http://127.0.0.1:1234
 # pixiv图片反代地址，自己可以看看哪个快用哪个 如果默认返回的地址够快就不用 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/
 tutu_pixiv_proxy = https://i.pixiv.re/
+# 限定哪个bot响应，填bot的qq号，限定群聊只有这个bot响应，不填则均响应
+tutu_bot_id = "123123123"
 
 ### 防止重名，所以给个参数可以自行修改
 # 本地图片库的路径
