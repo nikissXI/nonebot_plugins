@@ -290,7 +290,7 @@ async def _():
 
 @api_test.handle()
 async def _(matcher: Matcher, mg=RegexGroup()):
-    if not mg[0]:
+    if not mg[1]:
         await api_test.finish(
             "图图插件接口测试 [数量（可选且单个接口测试的时候才有用）] [接口url/本地图库<文件名>/all]"
         )

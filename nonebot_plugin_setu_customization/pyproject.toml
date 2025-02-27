@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_setu_customization"
-version = "2.3.5"
+version = "2.3.6"
 description = "Nonebot2 可动态管理API的setu(色图)插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
