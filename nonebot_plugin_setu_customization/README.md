@@ -98,25 +98,35 @@ data/tutu_local_img_lib/ 存储用户自己上传的图片地址文件
 
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/api_mg.jpg"/>
 
-接口不一定能用或稳定使用，这些只是以前找的接口，如果访问不了可以试试挂梯子。  
 在url末尾追加“代理翻转”，其作用是配置了http代理后  
 **如果tutu_http_proxy_default为True**：这个接口不走代理  
 **如果tutu_http_proxy_default为False**：其他接口默认不走代理，这个接口走代理  
 
+接口不一定能用或稳定使用，这些只是以前找的接口，如果访问不了可以试试挂梯子。  
 **二次元图片 api**  
 https://image.anosu.top/pixiv/direct  
 https://api.lolicon.app/setu/v2  
 https://api.anosu.top/img/?sort=setu  
-https://api.anosu.top/img/?sort=pixiv&size=original
+https://api.anosu.top/img/?sort=pixiv&size=original  
+https://api.suyanw.cn/api/mao.php  
+https://t.alcy.cc/mp  
+https://t.alcy.cc/pc  
+https://api.yimian.xyz/img  
+https://www.loliapi.com/acg/pc/  
+https://www.loliapi.com/acg/pe/  
+https://www.loliapi.com/bg/  
 
 **R18 图片 api**  
 https://setu.yuban10703.xyz/setu?r18=1  
 https://image.anosu.top/pixiv/direct?r18=1  
-https://api.lolicon.app/setu/v2?r18=1
+https://api.lolicon.app/setu/v2?r18=1  
 
 **三次元图片 api**  
-http://api.sakura.gold/ksxjjtp
-https://imgapi.cn/cos.php
+https://api.lolimi.cn/API/meizi/api.php?type=image  
+https://v2.xxapi.cn/api/baisi?return=302  
+https://v2.xxapi.cn/api/heisi?return=302  
+http://api.sakura.gold/ksxjjtp  
+https://imgapi.cn/cos.php  
 
 **本地图片库**  
 即 data/tutu_local_img_lib/中的图片，放入图片地址文件后，使用命令“图图刷新本地图库”进行载入。在本仓库的 tutu_local_img_lib 文件夹里有一些我爬的连接，可以直接丢进去用。  
@@ -132,7 +142,7 @@ https://imgapi.cn/cos.php
 ```
 
 ## 更新日志
-### 2025/02/27 \[v2.3.6]
+### 2025/02/27 \[v2.3.7]
 
 - 优化“代理翻转”逻辑
 - 测试接口命令支持多个图片
