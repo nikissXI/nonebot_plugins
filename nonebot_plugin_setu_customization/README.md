@@ -71,7 +71,9 @@ tutu_local_api_path = data/tutu_local_img_lib/
 # 插件数据文件名
 tutu_data_filename = tutu_data.json
 ```
+
 danger_type
+
 ## 目录
 
 data/tutu_data.json 存储插件信息
@@ -79,36 +81,36 @@ data/tutu_local_img_lib/ 存储用户自己上传的图片地址文件
 
 ## 命令
 
-|          指令          |                                        说明                                        |
-| :--------------------: | :--------------------------------------------------------------------------------: |
-|      图图插件帮助      |                                      帮助菜单                                      |
-|          图图          | 出图，如果后面接类型可以指定图库类型，如“图图二次元”（好友私聊，群聊要添加白名单） |
-| （下面都是管理员命令） |                               （发送命令有使用格式）                               |
-|     图图插件群管理     |                                    增删群白名单                                    |
-|  图图插件刷新本地图库  |                                    刷新本地图库                                    |
-|    图图插件接口管理    |                                   增删 API 接口                                    |
-|    图图插件接口测试    |                            测试接口连接情况和返回的数据                            |
-|    图图插件图片测试    |                              测试某张图能否正常发出来                              |
+|          指令          |                   说明                   |
+| :--------------------: | :--------------------------------------: |
+|      图图插件帮助      |                 帮助菜单                 |
+|          图图          | 出图（好友可以直接发，群聊要添加白名单） |
+| （下面都是管理员命令） |          （发送命令有使用格式）          |
+|     图图插件群管理     |               增删群白名单               |
+|  图图插件刷新本地图库  |               刷新本地图库               |
+|    图图插件接口管理    |              增删 API 接口               |
+|    图图插件接口测试    |       测试接口连接情况和返回的数据       |
+|    图图插件图片测试    |         测试某张图能否正常发出来         |
 
 ## 使用示例、导入 api 和本地图片库
 
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/api_mg.jpg"/>
 
-接口不一定能用或稳定使用，这些只是以前找的接口，如果访问不了可以试试挂梯子。如果某些接口不想走配置的代理，就在url末尾追加tutuNoProxy  
+接口不一定能用或稳定使用，这些只是以前找的接口，如果访问不了可以试试挂梯子。如果某些接口不想走配置的代理，就在 url 末尾追加 tutuNoProxy  
 **二次元图片 api**  
 https://image.anosu.top/pixiv/direct  
 https://api.lolicon.app/setu/v2  
 https://api.anosu.top/img/?sort=setu  
-https://api.anosu.top/img/?sort=pixiv&size=original  
+https://api.anosu.top/img/?sort=pixiv&size=original
 
 **R18 图片 api**  
 https://setu.yuban10703.xyz/setu?r18=1  
 https://image.anosu.top/pixiv/direct?r18=1  
-https://api.lolicon.app/setu/v2?r18=1  
+https://api.lolicon.app/setu/v2?r18=1
 
 **三次元图片 api**  
 https://api.r10086.com/樱道随机图片api接口.php?图片系列=少女写真1tutuNoProxy  
-（注，这个接口不能走代理，只能大陆内访问，所以末尾追加“tutuNoProxy”  
+（注，这个接口不能走代理，只能大陆内访问，所以末尾追加“tutuNoProxy”
 
 **本地图片库**  
 即 data/tutu_local_img_lib/中的图片，放入图片地址文件后，使用命令“图图刷新本地图库”进行载入。在本仓库的 tutu_local_img_lib 文件夹里有一些我爬的连接，可以直接丢进去用。  
@@ -127,10 +129,10 @@ https://api.r10086.com/樱道随机图片api接口.php?图片系列=少女写真
 
 ### 2025/02/27 \[v2.2.0]
 
-- 图图支持多张发送，支持在url末端写“tutuNoProxy”以实现不走代理，有的接口走代理不给访问
-- 增加api兼容性
+- 图图支持多张发送，支持在 url 末端写“tutuNoProxy”以实现不走代理，有的接口走代理不给访问
+- 增加 api 兼容性
 - 修复图图名称响应失败
-- 增加“危险图库”配置，危险图库无法在群聊发送，如R18这种
+- 增加“危险图库”配置，危险图库无法在群聊发送，如 R18 这种
 
 ### 2025/02/26 \[v2.0.0]
 
