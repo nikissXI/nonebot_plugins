@@ -75,7 +75,7 @@ group_manage = on_regex(
     r"^图图插件群管理\s*((\+|\-)\s*(\d*))?", rule=admin_permission_check
 )
 api_manage = on_regex(
-    r"^图图插件接口管理\s*(?:(\S+)\s*(\+|\-)\s*(\S*))?", rule=admin_permission_check
+    r"^图图插件接口管理\s*(\S+)?\s*(?:(\+|\-)\s*(\S*))?", rule=admin_permission_check
 )
 tutu_flush_local = on_fullmatch("图图插件刷新本地图库", rule=admin_permission_check)
 api_test = on_regex(r"^图图插件接口测试\s*(\d+)?\s*(\S+)?", rule=admin_permission_check)
@@ -200,13 +200,37 @@ async def _(matcher: Matcher, mg=RegexGroup()):
             local_gallery_info = "空"
 
         await api_manage.finish(
-            f"图图插件接口管理 [图库名] [+/-] [接口url/本地图库<文件名>]\n给二次元图库添加接口示例：“图图插件接口管理 二次元+https://api.test.org”\n给cosplay图库添加本地图库示例：“图图插件接口管理 cosplay+本地图库cosplay”\n如果可在接口url末尾添加“代理翻转”，如“https://api.test.org代理翻转”\n{online_gallery_info}\n【可用本地图片库如下】\n{local_gallery_info}"
+            f"图图插件接口管理 [图库名] [+/-] [接口url/本地图库<文件名>]\n给二次元图库添加接口示例：“图图插件接口管理 二次元 +https://api.test.org”\n给cosplay图库添加本地图库示例：“图图插件接口管理 cosplay +本地图库filename”\n{online_gallery_info}\n【本地图库如下】\n{local_gallery_info}"
         )
 
-    else:
-        gallery: str = mg[0]
-        choice: str = mg[1]
-        api_url: str = mg[2].replace("&amp;", "&").replace("\\", "")
+    gallery: str = mg[0]
+
+    if not mg[1]:
+        if gallery == "本地图库":
+            # 拼接本地图库信息
+            local_gallery_info = "\n".join(
+                [
+                    f"{filename} 数量：{len(var.local_imgs[filename])}"
+                    for filename in var.local_imgs
+                ]
+            )
+            if not local_gallery_info:
+                local_gallery_info = "空"
+
+            await api_manage.finish(
+                f"图图插件接口管理 本地图库 [+/-] [本地图库<文件名>]\n【本地图库如下】\n{local_gallery_info}"
+            )
+
+        if gallery not in var.gallery_list:
+            await api_manage.finish(f"不存在图库【{gallery}】")
+
+        await api_manage.finish(
+            f"图图插件接口管理 {gallery} [+/-] [接口url]\n【{gallery}】图片接口 数量{len(var.gallery_list[gallery])}\n"
+            + "\n".join(var.gallery_list[gallery])
+        )
+
+    choice: str = mg[1]
+    api_url: str = mg[2].replace("&amp;", "&").replace("\\", "")
 
     # 增加
     if choice == "+":
