@@ -278,7 +278,9 @@ async def _(matcher: Matcher, mg=RegexGroup()):
     # 单个接口测试
     if api_url != "all":
         for i in range(img_num):
-            await check_api(matcher, api_url)
+            await check_api(matcher, api_url, i)
+        if img_num > 1:
+            await api_test.finish("测试图片发送完毕")
         await api_test.finish()
 
     # 所有接口测试

@@ -115,8 +115,8 @@ https://image.anosu.top/pixiv/direct?r18=1
 https://api.lolicon.app/setu/v2?r18=1
 
 **三次元图片 api**  
-https://api.r10086.com/樱道随机图片api接口.php?图片系列=少女写真1代理翻转  
-（注，这个接口不能走代理，只能大陆内访问，所以末尾追加“代理翻转”
+http://api.sakura.gold/ksxjjtp
+https://imgapi.cn/cos.php
 
 **本地图片库**  
 即 data/tutu_local_img_lib/中的图片，放入图片地址文件后，使用命令“图图刷新本地图库”进行载入。在本仓库的 tutu_local_img_lib 文件夹里有一些我爬的连接，可以直接丢进去用。  
@@ -132,7 +132,7 @@ https://api.r10086.com/樱道随机图片api接口.php?图片系列=少女写真
 ```
 
 ## 更新日志
-### 2025/02/27 \[v2.3.3]
+### 2025/02/27 \[v2.3.4]
 
 - 优化“代理翻转”逻辑
 - 测试接口命令支持多个图片

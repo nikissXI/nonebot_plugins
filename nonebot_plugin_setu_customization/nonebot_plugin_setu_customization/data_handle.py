@@ -165,10 +165,11 @@ async def send_img(matcher: Matcher, api_url: str, img: Union[str, bytes]):
         )
 
 
-async def check_api(matcher: Matcher, api_url: str):
+async def check_api(matcher: Matcher, api_url: str, img_num: int = 0):
     success, img, debug_info = await get_img(api_url)
     if not success:
         await matcher.finish(f"接口解析图片失败：{api_url}\n{debug_info}")
 
-    await matcher.send("接口解析图片成功，测试发送图片")
+    if img_num == 0:
+        await matcher.send("接口解析图片成功，测试发送图片")
     await send_img(matcher, api_url, img)
