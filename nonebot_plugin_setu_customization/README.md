@@ -58,7 +58,7 @@ nb plugin install nonebot_plugin_setu_customization
 tutu_bot_qqnum_list = [1234, 5678, 6666]
 # 图图命令CD时间（秒），防止响应过于频繁
 tutu_cooldown = 3
-# 危险图库，危险图库的图片无法在群聊发送
+# 危险图库，危险图库的图片无法在群聊发送，并且需要在私聊中指定图库才能调用
 tutu_danger_gallery = ["R18", "触手"]
 # http代理地址，用于访问需要魔法的接口，如 http://127.0.0.1:1234
 tutu_http_proxy = http://127.0.0.1:1234
