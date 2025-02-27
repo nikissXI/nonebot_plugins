@@ -72,8 +72,6 @@ tutu_local_api_path = data/tutu_local_img_lib/
 tutu_data_filename = tutu_data.json
 ```
 
-danger_type
-
 ## 目录
 
 data/tutu_data.json 存储插件信息
