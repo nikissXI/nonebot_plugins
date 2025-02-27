@@ -1,6 +1,5 @@
 from random import choice
 
-from aiohttp import ClientSession, ClientTimeout
 from nonebot import on_fullmatch, on_regex
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -9,7 +8,6 @@ from nonebot.adapters.onebot.v11 import (
     PrivateMessageEvent,
     helpers,
 )
-from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.log import logger
 from nonebot.matcher import Matcher
 from nonebot.params import RegexGroup
@@ -202,7 +200,7 @@ async def _(matcher: Matcher, mg=RegexGroup()):
             local_gallery_info = "空"
 
         await api_manage.finish(
-            f"图图插件接口管理 [图库名] [+/-] [接口url/本地图库<文件名>]\n给二次元图库添加接口示例：“图图插件接口管理 二次元+https://api.test.org”\n给cosplay图库添加本地图库示例：“图图插件接口管理 cosplay+本地图库cosplay”\n如果某个接口不走配置的代理，就在接口url末尾添加“tutuNoProxy”，如“https://api.test.orgtutuNoProxy”\n{online_gallery_info}\n【可用本地图片库如下】\n{local_gallery_info}"
+            f"图图插件接口管理 [图库名] [+/-] [接口url/本地图库<文件名>]\n给二次元图库添加接口示例：“图图插件接口管理 二次元+https://api.test.org”\n给cosplay图库添加本地图库示例：“图图插件接口管理 cosplay+本地图库cosplay”\n如果可在接口url末尾添加“代理翻转”，如“https://api.test.org代理翻转”\n{online_gallery_info}\n【可用本地图片库如下】\n{local_gallery_info}"
         )
 
     else:
@@ -214,7 +212,7 @@ async def _(matcher: Matcher, mg=RegexGroup()):
     if choice == "+":
         # 本地图库操作
         if "本地图库" in api_url:
-            filename = api_url[4:].replace("tutuNoProxy", "")
+            filename = api_url[4:].replace("代理翻转", "")
             if filename not in var.local_imgs:
                 await api_manage.finish(
                     f"本地图库中不存在【{filename}】，如未加载请发送“图图插件刷新本地图库”"
@@ -292,10 +290,8 @@ async def _(matcher: Matcher, mg=RegexGroup()):
 async def _(matcher: Matcher, mg=RegexGroup()):
     img_url = mg[0]
     if not img_url:
-        await img_test.finish(
-            "图图插件图片测试 [url]\nurl末尾追加tutuNoProxy可不走代理"
-        )
+        await img_test.finish("图图插件图片测试 [url]\n支持url末尾追加“代理翻转”")
 
     await img_test.send("图片下载中")
 
-    await send_img(matcher, img_url, img_url.replace("tutuNoProxy", ""))
+    await send_img(matcher, img_url, img_url.replace("代理翻转", ""))

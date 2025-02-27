@@ -60,6 +60,8 @@ tutu_bot_qqnum_list = [1234, 5678, 6666]
 tutu_cooldown = 3
 # 危险图库，危险图库的图片无法在群聊发送，并且需要在私聊中指定图库才能调用
 tutu_danger_gallery = ["R18", "触手"]
+# 是否默认全部接口走代理，如果为False，则需要url末尾追加“代理翻转”才会走代理
+tutu_http_proxy_default = True
 # http代理地址，用于访问需要魔法的接口，如 http://127.0.0.1:1234
 tutu_http_proxy = http://127.0.0.1:1234
 # pixiv图片反代地址，自己可以看看哪个快用哪个 如果默认返回的地址够快就不用 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/
@@ -96,7 +98,11 @@ data/tutu_local_img_lib/ 存储用户自己上传的图片地址文件
 
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/api_mg.jpg"/>
 
-接口不一定能用或稳定使用，这些只是以前找的接口，如果访问不了可以试试挂梯子。如果某些接口不想走配置的代理，就在 url 末尾追加 tutuNoProxy  
+接口不一定能用或稳定使用，这些只是以前找的接口，如果访问不了可以试试挂梯子。  
+在url末尾追加“代理翻转”，其作用是配置了http代理后  
+**如果tutu_http_proxy_default为True**：这个接口不走代理  
+**如果tutu_http_proxy_default为False**：其他接口默认不走代理，这个接口走代理  
+
 **二次元图片 api**  
 https://image.anosu.top/pixiv/direct  
 https://api.lolicon.app/setu/v2  
@@ -109,8 +115,8 @@ https://image.anosu.top/pixiv/direct?r18=1
 https://api.lolicon.app/setu/v2?r18=1
 
 **三次元图片 api**  
-https://api.r10086.com/樱道随机图片api接口.php?图片系列=少女写真1tutuNoProxy  
-（注，这个接口不能走代理，只能大陆内访问，所以末尾追加“tutuNoProxy”
+https://api.r10086.com/樱道随机图片api接口.php?图片系列=少女写真1代理翻转  
+（注，这个接口不能走代理，只能大陆内访问，所以末尾追加“代理翻转”
 
 **本地图片库**  
 即 data/tutu_local_img_lib/中的图片，放入图片地址文件后，使用命令“图图刷新本地图库”进行载入。在本仓库的 tutu_local_img_lib 文件夹里有一些我爬的连接，可以直接丢进去用。  
@@ -126,9 +132,9 @@ https://api.r10086.com/樱道随机图片api接口.php?图片系列=少女写真
 ```
 
 ## 更新日志
-### 2025/02/27 \[v2.3.1]
+### 2025/02/27 \[v2.3.2]
 
-- 本地图库也支持使用tutuNoProxy绕过代理
+- 优化“代理翻转”逻辑
 
 ### 2025/02/27 \[v2.3.0]
 
@@ -137,7 +143,7 @@ https://api.r10086.com/樱道随机图片api接口.php?图片系列=少女写真
 
 ### 2025/02/27 \[v2.2.0]
 
-- 图图支持多张发送，支持在 url 末端写“tutuNoProxy”以实现不走代理，有的接口走代理不给访问
+- 图图支持多张发送，支持在 url 末端写“代理翻转”以实现不走代理，有的接口走代理不给访问
 - 增加 api 兼容性
 - 修复图图名称响应失败
 - 增加“危险图库”配置，危险图库无法在群聊发送，如 R18 这种

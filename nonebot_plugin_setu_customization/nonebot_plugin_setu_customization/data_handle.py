@@ -65,6 +65,19 @@ def extract_img_url(text: str) -> Optional[str]:
         return None
 
 
+def get_proxy(api_url: str) -> Optional[str]:
+    if pc.tutu_http_proxy:
+        if pc.tutu_http_proxy_default:
+            http_proxy = None if "代理翻转" in api_url else pc.tutu_http_proxy
+        else:
+            http_proxy = pc.tutu_http_proxy if "代理翻转" in api_url else None
+
+    else:
+        http_proxy = None
+
+    return http_proxy
+
+
 async def get_img(api_url: str) -> Tuple[bool, Union[str, bytes], str]:
     """
     向API发起请求，获取返回的图片url
@@ -72,7 +85,7 @@ async def get_img(api_url: str) -> Tuple[bool, Union[str, bytes], str]:
     """
 
     if "本地图库" in api_url:
-        filename = api_url[4:].replace("tutuNoProxy", "")
+        filename = api_url[4:].replace("代理翻转", "")
         if filename not in var.local_imgs:
             return False, "", f"本地图库{filename}不存在"
 
@@ -84,10 +97,10 @@ async def get_img(api_url: str) -> Tuple[bool, Union[str, bytes], str]:
             headers=var.headers, timeout=ClientTimeout(var.http_timeout)
         ) as session:
             async with session.get(
-                api_url.replace("tutuNoProxy", ""),
+                api_url.replace("代理翻转", ""),
                 allow_redirects=False,
                 ssl=False,
-                proxy=None if "tutuNoProxy" in api_url else pc.tutu_http_proxy,
+                proxy=get_proxy(api_url),
             ) as resp:
                 resp_status = resp.status
 
@@ -132,7 +145,7 @@ async def send_img(matcher: Matcher, api_url: str, img: Union[str, bytes]):
             ) as session:
                 async with session.get(
                     img,
-                    proxy=None if "tutuNoProxy" in api_url else pc.tutu_http_proxy,
+                    proxy=get_proxy(api_url),
                     ssl=False,
                 ) as resp:
                     if resp.status != 200:
