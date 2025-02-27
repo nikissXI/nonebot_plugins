@@ -79,7 +79,7 @@ api_manage = on_regex(
 )
 tutu_flush_local = on_fullmatch("图图插件刷新本地图库", rule=admin_permission_check)
 api_test = on_regex(r"^图图插件接口测试\s*(\d+)?\s*(\S+)?", rule=admin_permission_check)
-img_test = on_regex(r"^图图插件图片测试\s*(\S+)?", rule=admin_permission_check)
+img_test = on_regex(r"^图图插件图片测试\s*(.*)?", rule=admin_permission_check)
 
 
 @tutu_help.handle()
@@ -96,7 +96,11 @@ async def _(event: MessageEvent):
 
 @tutu.handle(
     parameterless=[
-        helpers.Cooldown(cooldown=pc.tutu_cooldown, prompt="我知道你很急，但你先别急")
+        helpers.Cooldown(
+            cooldown=pc.tutu_cooldown,
+            prompt="我知道你很急，但你先别急",
+            isolate_level=helpers.CooldownIsolateLevel.GROUP,
+        )
     ]
 )
 async def _(matcher: Matcher, event: MessageEvent, mg=RegexGroup()):

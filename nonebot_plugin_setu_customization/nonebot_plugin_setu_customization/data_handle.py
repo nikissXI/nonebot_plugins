@@ -93,14 +93,13 @@ async def get_img(api_url: str) -> Tuple[bool, Union[str, bytes], str]:
         return True, img, ""
 
     try:
-        async with ClientSession(
-            headers=var.headers, timeout=ClientTimeout(var.http_timeout)
-        ) as session:
+        async with ClientSession(headers=var.headers) as session:
             async with session.get(
                 api_url.replace("代理翻转", ""),
                 allow_redirects=False,
                 ssl=False,
                 proxy=get_proxy(api_url),
+                timeout=ClientTimeout(connect=5, total=12),
             ) as resp:
                 resp_status = resp.status
 
@@ -141,13 +140,12 @@ async def send_img(matcher: Matcher, api_url: str, img: Union[str, bytes]):
     img_url = img if isinstance(img, str) else api_url
     try:
         if isinstance(img, str):
-            async with ClientSession(
-                headers=var.headers, timeout=ClientTimeout(var.http_timeout)
-            ) as session:
+            async with ClientSession(headers=var.headers) as session:
                 async with session.get(
                     img,
                     proxy=get_proxy(api_url),
                     ssl=False,
+                    timeout=ClientTimeout(connect=5, total=12),
                 ) as resp:
                     if resp.status != 200:
                         await matcher.send(
@@ -155,9 +153,14 @@ async def send_img(matcher: Matcher, api_url: str, img: Union[str, bytes]):
                         )
                         return
 
-                    await matcher.send(MS.image(await resp.read()))
+                    img_bytes = await resp.read()
+                    if len(img_bytes) == 0:
+                        raise Exception("响应数据为空")
+                    await matcher.send(MS.image(img_bytes))
 
         else:
+            if len(img) == 0:
+                raise Exception("响应数据为空")
             await matcher.send(MS.image(img))
 
     except Exception as e:
