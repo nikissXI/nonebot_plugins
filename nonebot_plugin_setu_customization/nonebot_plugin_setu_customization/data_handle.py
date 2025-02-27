@@ -153,6 +153,7 @@ async def send_img(matcher: Matcher, api_url: str, img: Union[str, bytes]):
                         await matcher.send(
                             f"图片下载出错，响应码：{resp.status}\n接口：{api_url}\n图片地址：{img_url}"
                         )
+                        return
 
                     await matcher.send(MS.image(await resp.read()))
 

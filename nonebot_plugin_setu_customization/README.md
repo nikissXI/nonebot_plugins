@@ -23,12 +23,12 @@ _✨ Nonebot2 可动态管理 API 的 setu 插件 ✨_
 
 ## 开发者信息
 
-- 网名昵称 nikiss，插件反馈 QQ 群 226462236，插件有问题到群里反馈响应更快哦
+- 网名昵称 nikiss，插件反馈QQ群 226462236，插件有问题到群里反馈响应更快哦
 - <img width="100" src="https://avatars.githubusercontent.com/u/31379266"/>
 
 ## 简介
 
-可以动态增删网络上的图片 API 接口，也可以载入本地图库链接对外提供图片 API 接口，支持接口分类管理，不再受限于单个 API 出图。
+可以动态增删网络上的图片API接口，也可以载入本地图库链接对外提供图片API接口，支持接口分类管理，不再受限于单个API出图，兼容多种图片api  
 
 <img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_show1.jpg"/>
 <img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_show2.jpg"/>
@@ -142,7 +142,7 @@ https://imgapi.cn/cos.php
 ```
 
 ## 更新日志
-### 2025/02/27 \[v2.3.7]
+### 2025/02/27 \[v2.3.8]
 
 - 优化“代理翻转”逻辑
 - 测试接口命令支持多个图片
