@@ -153,7 +153,7 @@ async def _(event: MessageEvent, mg=RegexGroup()):
     if not mg[0]:
         group_list = "\n".join([str(i) for i in var.group_list])
         await group_manage.finish(
-            f"图图插件群管理 +/-[群号]\n图图已启用的QQ群\n{group_list if group_list else 'None'}"
+            f"图图插件群管理 +/-[群号]\n如果是在群聊中发送不用带群号\n已启用的QQ群\n{group_list if group_list else 'None'}"
         )
 
     choice = mg[1]
