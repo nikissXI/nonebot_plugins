@@ -78,7 +78,7 @@ api_manage = on_regex(
     r"^图图插件接口管理\s*(?:(\S+)\s*(\+|\-)\s*(\S*))?", rule=admin_permission_check
 )
 tutu_flush_local = on_fullmatch("图图插件刷新本地图库", rule=admin_permission_check)
-api_test = on_regex(r"^图图插件接口测试\s*(\S+)?", rule=admin_permission_check)
+api_test = on_regex(r"^图图插件接口测试\s*(\d+)?\s*(\S+)?", rule=admin_permission_check)
 img_test = on_regex(r"^图图插件图片测试\s*(\S+)?", rule=admin_permission_check)
 
 
@@ -267,15 +267,18 @@ async def _():
 @api_test.handle()
 async def _(matcher: Matcher, mg=RegexGroup()):
     if not mg[0]:
-        await api_test.finish("图图插件接口测试 [接口url/本地图库<文件名>/all]")
+        await api_test.finish(
+            "图图插件接口测试 [数量（可选且单个接口测试的时候才有用）] [接口url/本地图库<文件名>/all]"
+        )
 
-    api_url = mg[0]
-    api_url = api_url.replace("&amp;", "&").replace("\\", "")
+    img_num = int(mg[0]) if mg[0] else 1
+    api_url = mg[1].replace("&amp;", "&").replace("\\", "")
     await api_test.send("测试中，请稍后")
 
     # 单个接口测试
     if api_url != "all":
-        await check_api(matcher, api_url)
+        for i in range(img_num):
+            await check_api(matcher, api_url)
         await api_test.finish()
 
     # 所有接口测试

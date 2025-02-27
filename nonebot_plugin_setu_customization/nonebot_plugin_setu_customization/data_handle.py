@@ -138,6 +138,7 @@ async def get_img(api_url: str) -> Tuple[bool, Union[str, bytes], str]:
 
 
 async def send_img(matcher: Matcher, api_url: str, img: Union[str, bytes]):
+    img_url = img if isinstance(img, str) else api_url
     try:
         if isinstance(img, str):
             async with ClientSession(
@@ -150,7 +151,7 @@ async def send_img(matcher: Matcher, api_url: str, img: Union[str, bytes]):
                 ) as resp:
                     if resp.status != 200:
                         await matcher.send(
-                            f"图片下载出错，响应码：{resp.status}\n接口：{api_url}\n图片地址：{img}"
+                            f"图片下载出错，响应码：{resp.status}\n接口：{api_url}\n图片地址：{img_url}"
                         )
 
                     await matcher.send(MS.image(await resp.read()))
@@ -159,7 +160,9 @@ async def send_img(matcher: Matcher, api_url: str, img: Union[str, bytes]):
             await matcher.send(MS.image(img))
 
     except Exception as e:
-        await matcher.send(f"图片下载出错：{repr(e)}\n接口：{api_url}\n图片地址：{img}")
+        await matcher.send(
+            f"图片下载出错：{repr(e)}\n接口：{api_url}\n图片地址：{img_url}"
+        )
 
 
 async def check_api(matcher: Matcher, api_url: str):
@@ -167,11 +170,5 @@ async def check_api(matcher: Matcher, api_url: str):
     if not success:
         await matcher.finish(f"接口解析图片失败：{api_url}\n{debug_info}")
 
-    if isinstance(img, str):
-        await matcher.send(
-            f"接口解析图片成功，测试发送图片\n返回的图片地址：{img}\n{debug_info}"
-        )
-    else:
-        await matcher.send(f"接口解析图片成功，测试发送图片\n{debug_info}")
-
+    await matcher.send("接口解析图片成功，测试发送图片")
     await send_img(matcher, api_url, img)
