@@ -1,11 +1,12 @@
-from asyncio import sleep
 from json import dumps, loads
 from random import choice
 from re import search
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 from urllib.parse import unquote, urljoin
 
 from aiohttp import ClientSession, ClientTimeout
+from nonebot.adapters.onebot.v11 import MessageSegment as MS
+from nonebot.matcher import Matcher
 
 from .config import pc, var
 
@@ -64,7 +65,7 @@ def extract_img_url(text: str) -> Optional[str]:
         return None
 
 
-async def get_img_url(api_url: str) -> Tuple[bool, str, str]:
+async def get_img(api_url: str) -> Tuple[bool, Union[str, bytes], str]:
     """
     向API发起请求，获取返回的图片url
     返回   请求成功失败, 图片地址, debug信息
@@ -75,49 +76,89 @@ async def get_img_url(api_url: str) -> Tuple[bool, str, str]:
         if filename not in var.local_imgs:
             return False, "", f"本地图库{filename}不存在"
 
-        img_url = choice(var.local_imgs[filename])
-        return True, img_url, ""
+        img = choice(var.local_imgs[filename])
+        return True, img, ""
 
-    retried = False
-    while True:
-        try:
+    try:
+        async with ClientSession(
+            headers=var.headers, timeout=ClientTimeout(var.http_timeout)
+        ) as session:
+            async with session.get(
+                api_url.replace("tutuNoProxy", ""),
+                allow_redirects=False,
+                ssl=False,
+                proxy=None if "tutuNoProxy" in api_url else pc.tutu_http_proxy,
+            ) as resp:
+                resp_status = resp.status
+
+                if resp_status > 400:
+                    return (
+                        False,
+                        "",
+                        f"{api_url}\n响应异常，\n响应码：{resp_status}",
+                    )
+
+                if 300 <= resp_status < 400:
+                    img = resp.headers["location"]
+                    if "//" not in img[:10]:
+                        img = urljoin(api_url, img)
+                    return True, url_diy_replace(img), ""
+
+                # 判断 Content-Type
+                content_type = resp.headers.get("Content-Type", "")
+                if "image" in content_type:
+                    img = await resp.read()
+                    return True, img, ""
+
+                img = extract_img_url(await resp.text())
+                if not img:
+                    return (
+                        False,
+                        "",
+                        f"{api_url}\n找不到图片地址，\n响应码：{resp_status}",
+                    )
+
+                return True, url_diy_replace(img), ""
+
+    except Exception as e:
+        return False, "", f"{api_url}\n请求出错：{repr(e)}"
+
+
+async def send_img(matcher: Matcher, api_url: str, img: Union[str, bytes]):
+    try:
+        if isinstance(img, str):
             async with ClientSession(
                 headers=var.headers, timeout=ClientTimeout(var.http_timeout)
             ) as session:
                 async with session.get(
-                    api_url.replace("tutuNoProxy", ""),
-                    allow_redirects=False,
-                    ssl=False,
+                    img,
                     proxy=None if "tutuNoProxy" in api_url else pc.tutu_http_proxy,
+                    ssl=False,
                 ) as resp:
-                    resp_status = resp.status
-
-                    if resp_status > 400:
-                        return (
-                            False,
-                            "",
-                            f"{api_url}\n响应异常，\n响应码：{resp_status}",
+                    if resp.status != 200:
+                        await matcher.send(
+                            f"图片下载出错，响应码：{resp.status}\n接口：{api_url}\n图片地址：{img}"
                         )
 
-                    elif 300 <= resp_status < 400:
-                        img_url = resp.headers["location"]
-                        if "//" not in img_url[:10]:
-                            img_url = urljoin(api_url, img_url)
-                    else:
-                        img_url = extract_img_url(await resp.text())
-                        if not img_url:
-                            return (
-                                False,
-                                "",
-                                f"{api_url}\n找不到图片地址，\n响应码：{resp_status}",
-                            )
+                    await matcher.send(MS.image(await resp.read()))
 
-                    return True, url_diy_replace(img_url), ""
+        else:
+            await matcher.send(MS.image(img))
 
-        except Exception as e:
-            if retried is False:
-                retried = True
-                await sleep(1)
-                continue
+    except Exception as e:
+        await matcher.send(f"图片下载出错：{repr(e)}\n接口：{api_url}\n图片地址：{img}")
 
-            return False, "", f"{api_url}\n请求出错：{repr(e)}"
+
+async def check_api(matcher: Matcher, api_url: str):
+    success, img, debug_info = await get_img(api_url)
+    if not success:
+        await matcher.finish(f"接口解析图片失败：{api_url}\n{debug_info}")
+
+    if isinstance(img, str):
+        await matcher.send(
+            f"接口解析图片成功，测试发送图片\n返回的图片地址：{img}\n{debug_info}"
+        )
+    else:
+        await matcher.send(f"接口解析图片成功，测试发送图片\n{debug_info}")
+
+    await send_img(matcher, api_url, img)

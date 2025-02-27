@@ -11,12 +11,13 @@ from nonebot.adapters.onebot.v11 import (
 )
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.log import logger
+from nonebot.matcher import Matcher
 from nonebot.params import RegexGroup
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 
 from .config import Config, load_local_api, pc, save_data, var
-from .data_handle import get_img_url
+from .data_handle import check_api, get_img, send_img
 
 __plugin_meta__ = PluginMetadata(
     name="动态API色图插件",
@@ -53,16 +54,34 @@ async def tutu_permission_check(event: MessageEvent, bot: Bot) -> bool:
     return False
 
 
+async def admin_permission_check(event: MessageEvent, bot: Bot) -> bool:
+    if not SUPERUSER(bot, event):
+        return False
+
+    if isinstance(event, PrivateMessageEvent):
+        return True
+
+    if isinstance(event, GroupMessageEvent):
+        if pc.tutu_bot_id:
+            return int(bot.self_id) == pc.tutu_bot_id
+
+        return True
+
+    return False
+
+
 tutu_help = on_fullmatch("图图插件帮助", rule=tutu_permission_check)
 tutu = on_regex(r"^图图(?!插件)\s*(\d+)?\s*(\S+)?", rule=tutu_permission_check)
 
-group_manage = on_regex(r"^图图插件群管理\s*((\+|\-)\s*(\d*))?", permission=SUPERUSER)
-api_manage = on_regex(
-    r"^图图插件接口管理\s*(?:(\S+)\s*(\+|\-)\s*(\S*))?", permission=SUPERUSER
+group_manage = on_regex(
+    r"^图图插件群管理\s*((\+|\-)\s*(\d*))?", rule=admin_permission_check
 )
-tutu_flush_local = on_fullmatch("图图插件刷新本地图库", permission=SUPERUSER)
-api_test = on_regex(r"^图图插件接口测试\s*(\S+)?", permission=SUPERUSER)
-img_test = on_regex(r"^图图插件图片测试\s*(\S+)?", permission=SUPERUSER)
+api_manage = on_regex(
+    r"^图图插件接口管理\s*(?:(\S+)\s*(\+|\-)\s*(\S*))?", rule=admin_permission_check
+)
+tutu_flush_local = on_fullmatch("图图插件刷新本地图库", rule=admin_permission_check)
+api_test = on_regex(r"^图图插件接口测试\s*(\S+)?", rule=admin_permission_check)
+img_test = on_regex(r"^图图插件图片测试\s*(\S+)?", rule=admin_permission_check)
 
 
 @tutu_help.handle()
@@ -82,7 +101,7 @@ async def _(event: MessageEvent):
         helpers.Cooldown(cooldown=pc.tutu_cooldown, prompt="我知道你很急，但你先别急")
     ]
 )
-async def _(event: MessageEvent, mg=RegexGroup()):
+async def _(matcher: Matcher, event: MessageEvent, mg=RegexGroup()):
     if not var.gallery_list:
         await tutu.finish("还没有图片api呢")
 
@@ -113,32 +132,12 @@ async def _(event: MessageEvent, mg=RegexGroup()):
             gallery = choice(gallery_list_filtered)
 
         api_url = choice(var.gallery_list[gallery])
-        success, img_url, debug_info = await get_img_url(api_url)
-
+        success, img, debug_info = await get_img(api_url)
         if not success:
             await tutu.send(debug_info)
+            continue
 
-        try:
-            async with ClientSession(
-                headers=var.headers, timeout=ClientTimeout(var.http_timeout)
-            ) as session:
-                async with session.get(
-                    img_url,
-                    proxy=None if "tutuNoProxy" in api_url else pc.tutu_http_proxy,
-                    ssl=False,
-                ) as resp:
-                    if resp.status != 200:
-                        await tutu.send(
-                            f"图片下载出错，响应码：{resp.status}\n接口：{api_url}\n图片地址：{img_url}"
-                        )
-                        continue
-                    img_bytes = await resp.read()
-                    await tutu.send(MS.image(img_bytes))
-
-        except Exception as e:
-            await tutu.send(
-                f"图片下载出错：{repr(e)}\n接口：{api_url}\n图片地址：{img_url}"
-            )
+        await send_img(matcher, api_url, img)
 
     if img_num > 1:
         await tutu.send("图片已发送完毕")
@@ -178,7 +177,7 @@ async def _(event: MessageEvent, mg=RegexGroup()):
 
 
 @api_manage.handle()
-async def _(mg=RegexGroup()):
+async def _(matcher: Matcher, mg=RegexGroup()):
     # 没参数，列出帮助菜单
     if not mg[0]:
         # 拼接在线接口信息
@@ -233,29 +232,8 @@ async def _(mg=RegexGroup()):
             msg = f"新增图库【{gallery}】\n【{gallery}】新增 {api_url}"
 
         save_data()
-        await api_manage.send(msg + "\n开始测试")
-
-        success, img_url, debug_info = await get_img_url(api_url)
-        await api_manage.send(
-            f"{'响应成功，开始测试图片地址' if success else '响应失败'}\n接口：{api_url}\n返回的图片地址：{img_url}\n{debug_info}"
-        )
-
-        if success:
-            try:
-                async with ClientSession(
-                    headers=var.headers, timeout=ClientTimeout(var.http_timeout)
-                ) as session:
-                    async with session.get(
-                        img_url,
-                        proxy=None if "tutuNoProxy" in api_url else pc.tutu_http_proxy,
-                        ssl=False,
-                    ) as resp:
-                        img_bytes = await resp.read()
-
-            except Exception as e:
-                await api_manage.finish(f"图片下载出错：{repr(e)}")
-
-            await api_manage.finish(MS.image(img_bytes))
+        await api_manage.send(msg + "\n开始测试接口")
+        await check_api(matcher, api_url)
 
     # 删除
     else:
@@ -289,7 +267,7 @@ async def _():
 
 
 @api_test.handle()
-async def _(mg=RegexGroup()):
+async def _(matcher: Matcher, mg=RegexGroup()):
     if not mg[0]:
         await api_test.finish("图图插件接口测试 [接口url/本地图库<文件名>/all]")
 
@@ -297,58 +275,27 @@ async def _(mg=RegexGroup()):
     api_url = api_url.replace("&amp;", "&").replace("\\", "")
     await api_test.send("测试中，请稍后")
 
-    if api_url == "all":
-        for api_type in var.gallery_list:
-            for api_url in var.gallery_list[api_type]:
-                success, img_url, debug_info = await get_img_url(api_url)
-                await api_test.send(
-                    f"{'响应成功' if success else '响应失败'}\n接口：{api_url}\n返回的图片地址：{img_url}\n{debug_info}"
-                )
-        await api_test.finish("全部测试完毕")
-
     # 单个接口测试
-    success, img_url, debug_info = await get_img_url(api_url)
-    await api_test.send(
-        f"{'响应成功，开始测试图片地址' if success else '响应失败'}\n接口：{api_url}\n返回的图片地址：{img_url}\n{debug_info}"
-    )
-    if success:
-        try:
-            async with ClientSession(
-                headers=var.headers, timeout=ClientTimeout(var.http_timeout)
-            ) as session:
-                async with session.get(
-                    img_url,
-                    proxy=None if "tutuNoProxy" in api_url else pc.tutu_http_proxy,
-                    ssl=False,
-                ) as resp:
-                    img_bytes = await resp.read()
+    if api_url != "all":
+        await check_api(matcher, api_url)
+        await api_test.finish()
 
-        except Exception as e:
-            await api_test.finish(f"图片下载出错：{repr(e)}")
+    # 所有接口测试
+    for api_type in var.gallery_list:
+        for api_url in var.gallery_list[api_type]:
+            await check_api(matcher, api_url)
 
-        await api_test.finish(MS.image(img_bytes))
+    await api_test.finish("全部测试完毕")
 
 
 @img_test.handle()
-async def _(mg=RegexGroup()):
+async def _(matcher: Matcher, mg=RegexGroup()):
     img_url = mg[0]
     if not img_url:
-        await img_test.finish("图图插件图片测试 [url]")
+        await img_test.finish(
+            "图图插件图片测试 [url]\nurl末尾追加tutuNoProxy可不走代理"
+        )
 
     await img_test.send("图片下载中")
 
-    try:
-        async with ClientSession(
-            headers=var.headers, timeout=ClientTimeout(var.http_timeout)
-        ) as session:
-            async with session.get(
-                img_url.replace("&amp;", "&").replace("tutuNoProxy", ""),
-                ssl=False,
-                proxy=None if "tutuNoProxy" in img_url else pc.tutu_http_proxy,
-            ) as resp:
-                img_bytes = await resp.read()
-
-    except Exception as e:
-        await img_test.finish(f"图片请求出错：{repr(e)}")
-
-    await img_test.finish(MS.image(img_bytes))
+    await send_img(matcher, "", img_url)
