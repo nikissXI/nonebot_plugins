@@ -30,7 +30,9 @@ _✨ Nonebot2 可动态管理 API 的 setu 插件 ✨_
 
 可以动态增删网络上的图片 API 接口，也可以载入本地图库链接对外提供图片 API 接口，支持接口分类管理，不再受限于单个 API 出图。
 
-<img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_test.jpg"/>
+<img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_show1.jpg"/>
+<img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_show2.jpg"/>
+<img width="300" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/tutu_show3.jpg"/>
 
 ## 安装
 
@@ -54,18 +56,22 @@ nb plugin install nonebot_plugin_setu_customization
 # 机器人的QQ号列表，如果有多个bot连接，会按照填写的list，左边的机器人QQ优先级最高 1234 > 5678 > 6666，会自动切换
 # 如果不填该配置则由第一个连上的bot响应
 tutu_bot_qqnum_list = [1234, 5678, 6666]
-# 图图命令CD时间（秒）
+# 图图命令CD时间（秒），防止响应过于频繁
 tutu_cooldown = 3
+# 危险图库，危险图库的图片无法在群聊发送
+tutu_danger_gallery = ["R18", "触手"]
+# http代理地址，用于访问需要魔法的接口，如 http://127.0.0.1:1234
+tutu_http_proxy = http://127.0.0.1:1234
+# pixiv图片反代地址，自己可以看看哪个快用哪个 如果默认返回的地址够快就不用 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/
+tutu_pixiv_proxy = https://i.pixiv.re/
+
+### 防止重名，所以给个参数可以自行修改
 # 本地图片库的路径
 tutu_local_api_path = data/tutu_local_img_lib/
 # 插件数据文件名
 tutu_data_filename = tutu_data.json
-# pixiv图片反代地址，自己可以看看哪个快用哪个 如果默认返回的地址够快就不用 https://i.pixiv.re/ 、 https://i.pixiv.cat/ 、 https://i.loli.best/
-tutu_pixiv_proxy = https://i.pixiv.re/
-# http代理地址，如 http://127.0.0.1:1234
-tutu_http_proxy = http://127.0.0.1:1234
 ```
-
+danger_type
 ## 目录
 
 data/tutu_data.json 存储插件信息
@@ -84,43 +90,47 @@ data/tutu_local_img_lib/ 存储用户自己上传的图片地址文件
 |    图图插件接口测试    |                            测试接口连接情况和返回的数据                            |
 |    图图插件图片测试    |                              测试某张图能否正常发出来                              |
 
-## 使用示例、导入 api 和图片库
+## 使用示例、导入 api 和本地图片库
 
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/api_mg.jpg"/>
 
-接口不一定能用或稳定使用，这些只是以前找的接口，如果访问不了可以试试挂梯子  
+接口不一定能用或稳定使用，这些只是以前找的接口，如果访问不了可以试试挂梯子。如果某些接口不想走配置的代理，就在url末尾追加tutuNoProxy  
 **二次元图片 api**  
-https://image.anosu.top/pixiv/direct
-https://api.lolicon.app/setu/v2
-https://api.anosu.top/img/?sort=setu
-https://api.anosu.top/img/?sort=pixiv&size=original
+https://image.anosu.top/pixiv/direct  
+https://api.lolicon.app/setu/v2  
+https://api.anosu.top/img/?sort=setu  
+https://api.anosu.top/img/?sort=pixiv&size=original  
 
 **R18 图片 api**  
-https://setu.yuban10703.xyz/setu?r18=1
-https://image.anosu.top/pixiv/direct?r18=1
-https://api.lolicon.app/setu/v2?r18=1
-https://api.anosu.top/img/?sort=r18&size=original
+https://setu.yuban10703.xyz/setu?r18=1  
+https://image.anosu.top/pixiv/direct?r18=1  
+https://api.lolicon.app/setu/v2?r18=1  
 
 **三次元图片 api**  
-没收集到好的，但是我爬了很多，在仓库的 tutu_local_img_lib 文件夹，下载放进去 data/tutu_local_img_lib/里面，没事来看看有没有更新，里面也有二次元的
+https://api.r10086.com/樱道随机图片api接口.php?图片系列=少女写真1tutuNoProxy  
+（注，这个接口不能走代理，只能大陆内访问，所以末尾追加“tutuNoProxy”  
 
 **本地图片库**  
-即 data/tutu_local_img_lib/中的图片，放入图片地址文件后，使用命令“图图刷新本地图库”进行载入
+即 data/tutu_local_img_lib/中的图片，放入图片地址文件后，使用命令“图图刷新本地图库”进行载入。在本仓库的 tutu_local_img_lib 文件夹里有一些我爬的连接，可以直接丢进去用。  
 <img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/local_img_lib.jpg"/>
+<img width="600" src="https://raw.githubusercontent.com/nikissXI/nonebot_plugins/main/nonebot_plugin_setu_customization/readme_img/flush_local.jpg"/>
 
 ```bash
 # 添加一个接口到二次元类型接口
 图图插件接口管理 二次元 + https://api.lolicon.app/setu/v2
 # 添加一个本地图片库接口到三次元类型接口
 图图插件接口管理 三次元 + 本地图库self_cosplay
+# 删除就换成-就好
 ```
 
 ## 更新日志
 
-### 2025/02/27 \[v2.1.0]
+### 2025/02/27 \[v2.2.0]
 
 - 图图支持多张发送，支持在url末端写“tutuNoProxy”以实现不走代理，有的接口走代理不给访问
 - 增加api兼容性
+- 修复图图名称响应失败
+- 增加“危险图库”配置，危险图库无法在群聊发送，如R18这种
 
 ### 2025/02/26 \[v2.0.0]
 

@@ -12,7 +12,8 @@ class Config(BaseModel, extra=Extra.ignore):
     tutu_bot_qqnum_list: List[str] = []
     # 图图命令CD时间（秒）
     tutu_cooldown: int = 3
-
+    # 危险图库，危险图库的图片无法在群聊发送
+    tutu_danger_gallery: List[str] = []
     # 本地图片库的路径
     tutu_local_api_path: str = "data/tutu_local_img_lib/"
     # 插件数据文件名
@@ -26,8 +27,8 @@ class Config(BaseModel, extra=Extra.ignore):
 class Var:
     # 处理bot
     handle_bot: Optional[Bot] = None
-    # 图库接口   图片类别：api列表
-    api_list: Dict[str, List[str]] = {}
+    # 图库接口   图库名：api列表
+    gallery_list: Dict[str, List[str]] = {}
     # 本地图库   文件名：图片url列表
     local_imgs: Dict[str, List[str]] = {}
     # 图图白名单群列表
@@ -53,7 +54,7 @@ def read_data():
         tmp_data = load(r)
         for group_id in tmp_data[0]:
             var.group_list.add(group_id)
-        var.api_list = tmp_data[1]
+        var.gallery_list = tmp_data[1]
 
 
 def save_data():
@@ -64,7 +65,7 @@ def save_data():
         dump(
             [
                 list(var.group_list),
-                var.api_list,
+                var.gallery_list,
             ],
             w,
             indent=4,

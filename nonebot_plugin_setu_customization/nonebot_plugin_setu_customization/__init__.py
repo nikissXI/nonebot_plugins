@@ -25,8 +25,9 @@ __plugin_meta__ = PluginMetadata(
     homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization",
     supported_adapters={"~onebot.v11"},
     config=Config,
-    usage="""图图 获取图片，后面可接图库类型，如“图图二次元”
-图图插件帮助
+    usage="""图图插件帮助
+图图 出图，后面可接图库和数量，如“图图10”、“图图二次元”、“图图10二次元”
+* 下方是管理员命令
 图图插件群管理 增删群
 图图插件接口管理 增删API接口
 图图插件刷新本地图库 刷新本地图库文件
@@ -57,7 +58,7 @@ async def admin_check(event: MessageEvent, bot: Bot) -> bool:
 
 
 tutu_help = on_fullmatch("图图插件帮助", rule=tutu_permission_check)
-tutu = on_regex(r"^图图(?!插件)\s*(\d+)\s*(\S+)?", rule=tutu_permission_check)
+tutu = on_regex(r"^图图(?!插件)\s*(\d+)?\s*(\S+)?", rule=tutu_permission_check)
 
 group_manage = on_regex(r"^图图插件群管理\s*((\+|\-)\s*(\d*))?", rule=admin_check)
 api_manage = on_regex(
@@ -71,12 +72,13 @@ img_test = on_regex(r"^图图插件图片测试\s*(\S+)?", rule=admin_check)
 @tutu_help.handle()
 async def _():
     await tutu_help.finish("""图图插件帮助
-图图 获取图片，后面可接数量和图库类型，如“图图 10 二次元”
-图图插件群管理  增删群
-图图插件接口管理  增删API接口
-图图插件刷新本地图库  刷新本地图库文件
-图图插件接口测试  测试API接口
-图图插件图片测试  测试图片""")
+图图 出图，后面可接图库和数量，如“图图10”、“图图二次元”、“图图10二次元”
+* 下方是管理员命令
+图图插件群管理 增删群
+图图插件接口管理 增删API接口
+图图插件刷新本地图库 刷新本地图库文件
+图图插件接口测试 测试API接口
+图图插件图片测试 测试图片""")
 
 
 @tutu.handle(
@@ -85,29 +87,36 @@ async def _():
     ]
 )
 async def _(event: MessageEvent, mg=RegexGroup()):
-    if not var.api_list:
-        await tutu.finish("没有图片api呢")
+    if not var.gallery_list:
+        await tutu.finish("还没有图片api呢")
 
     img_num = int(mg[0]) if mg[0] else 1
     if img_num > 10:
         await tutu.finish("数量是否太多了？")
 
-    fix_api_type = False
-    if api_type := mg[1]:
-        if api_type not in var.api_list:
+    fix_gallery = False
+    if gallery := mg[1]:
+        if gallery not in var.gallery_list:
             await tutu.finish(
-                f"不存在类型【{api_type}】，可用类型如下：\n"
-                + "\n".join(list(var.api_list))
+                f"不存在图库【{gallery}】，可用图库如下：\n"
+                + "\n".join(list(var.gallery_list))
             )
-        fix_api_type = True
+        fix_gallery = True
+
+    if isinstance(event, GroupMessageEvent) and gallery in pc.tutu_danger_gallery:
+        await tutu.finish("危险图库在群聊中不可用")
 
     await tutu.send("图片下载中。。。")
 
-    for i in range(img_num):
-        if fix_api_type is False:
-            api_type = choice(list(var.api_list))
+    gallery_list_filtered = [
+        item for item in list(var.gallery_list) if item not in pc.tutu_danger_gallery
+    ]
 
-        api_url = choice(var.api_list[api_type])
+    for i in range(img_num):
+        if fix_gallery is False:
+            gallery = choice(gallery_list_filtered)
+
+        api_url = choice(var.gallery_list[gallery])
         success, img_url, debug_info = await get_img_url(api_url)
 
         if not success:
@@ -177,32 +186,32 @@ async def _(mg=RegexGroup()):
     # 没参数，列出帮助菜单
     if not mg[0]:
         # 拼接在线接口信息
-        api_list_online_text = "\n".join(
+        online_gallery_info = "\n".join(
             [
-                f"【{api_type}】在线图片接口 数量：{len(var.api_list[api_type])}\n"
-                + "\n".join(var.api_list[api_type])
-                for api_type in var.api_list
+                f"【{gallery}】在线图片接口 数量：{len(var.gallery_list[gallery])}\n"
+                + "\n".join(var.gallery_list[gallery])
+                for gallery in var.gallery_list
             ]
         )
-        if not api_list_online_text:
-            api_list_online_text = "空"
+        if not online_gallery_info:
+            online_gallery_info = "空"
 
         # 拼接本地图库信息
-        api_list_local_text = "\n".join(
+        local_gallery_info = "\n".join(
             [
                 f"{filename} 数量：{len(var.local_imgs[filename])}"
                 for filename in var.local_imgs
             ]
         )
-        if not api_list_local_text:
-            api_list_local_text = "空"
+        if not local_gallery_info:
+            local_gallery_info = "空"
 
         await api_manage.finish(
-            f"图图插件接口管理 [图库类型] [+/-] [接口url/本地图库<文件名>]\n给二次元图库添加接口示例：“图图插件接口管理 二次元+https://api.test.org”\n给cosplay图库添加本地图库示例：“图图插件接口管理 cosplay+本地图库cosplay”\n如果某个接口不走配置的代理，就在接口url末尾添加“tutuNoProxy”，如“https://api.test.orgtutuNoProxy”\n{api_list_online_text}\n【可用本地图片库如下】\n{api_list_local_text}"
+            f"图图插件接口管理 [图库名] [+/-] [接口url/本地图库<文件名>]\n给二次元图库添加接口示例：“图图插件接口管理 二次元+https://api.test.org”\n给cosplay图库添加本地图库示例：“图图插件接口管理 cosplay+本地图库cosplay”\n如果某个接口不走配置的代理，就在接口url末尾添加“tutuNoProxy”，如“https://api.test.orgtutuNoProxy”\n{online_gallery_info}\n【可用本地图片库如下】\n{local_gallery_info}"
         )
 
     else:
-        api_type: str = mg[0]
+        gallery: str = mg[0]
         choice: str = mg[1]
         api_url: str = mg[2].replace("&amp;", "&").replace("\\", "")
 
@@ -213,19 +222,19 @@ async def _(mg=RegexGroup()):
             filename = api_url[4:]
             if filename not in var.local_imgs:
                 await api_manage.finish(
-                    f"不存在名为【{filename}】的本地图库，如未加载请发送“图图插件刷新本地图库”"
+                    f"本地图库中不存在【{filename}】，如未加载请发送“图图插件刷新本地图库”"
                 )
 
         # 判断类型是否存在
-        if api_type in var.api_list:
-            if api_url in var.api_list[api_type]:
-                await api_manage.finish(f"【{api_type}】已存在 {api_url}")
+        if gallery in var.gallery_list:
+            if api_url in var.gallery_list[gallery]:
+                await api_manage.finish(f"【{gallery}】已存在 {api_url}")
 
-            var.api_list[api_type].append(api_url)
-            msg = f"【{api_type}】新增 {api_url}"
+            var.gallery_list[gallery].append(api_url)
+            msg = f"【{gallery}】新增 {api_url}"
         else:
-            var.api_list[api_type] = [api_url]
-            msg = f"新增类别【{api_type}】\n【{api_type}】新增 {api_url}"
+            var.gallery_list[gallery] = [api_url]
+            msg = f"新增图库【{gallery}】\n【{gallery}】新增 {api_url}"
 
         save_data()
         await api_manage.send(msg + "\n开始测试")
@@ -254,18 +263,18 @@ async def _(mg=RegexGroup()):
 
     # 删除
     else:
-        if api_type not in var.api_list:
-            await api_manage.finish(f"类型【{api_type}】不存在")
+        if gallery not in var.gallery_list:
+            await api_manage.finish(f"图库【{gallery}】不存在")
 
-        if api_url not in var.api_list[api_type]:
-            await api_manage.finish(f"【{api_type}】不存在 {api_url}")
+        if api_url not in var.gallery_list[gallery]:
+            await api_manage.finish(f"图库【{gallery}】不存在接口 {api_url}")
 
-        var.api_list[api_type].remove(api_url)
-        if not var.api_list[api_type]:
-            var.api_list.pop(api_type)
-            msg = f"【{api_type}】类型中已无数据，删除该类型"
+        var.gallery_list[gallery].remove(api_url)
+        if not var.gallery_list[gallery]:
+            var.gallery_list.pop(gallery)
+            msg = f"图库【{gallery}】中已无接口，图库已被删除"
         else:
-            msg = f"【{api_type}】删除 {api_url}"
+            msg = f"图库【{gallery}】删除接口 {api_url}"
 
         save_data()
         await api_manage.finish(msg)
@@ -293,8 +302,8 @@ async def _(mg=RegexGroup()):
     await api_test.send("测试中，请稍后")
 
     if api_url == "all":
-        for api_type in var.api_list:
-            for api_url in var.api_list[api_type]:
+        for api_type in var.gallery_list:
+            for api_url in var.gallery_list[api_type]:
                 success, img_url, debug_info = await get_img_url(api_url)
                 await api_test.send(
                     f"{'响应成功' if success else '响应失败'}\n接口：{api_url}\n返回的图片地址：{img_url}\n{debug_info}"
