@@ -44,7 +44,9 @@ async def tutu_permission_check(event: MessageEvent, bot: Bot) -> bool:
 
     if isinstance(event, GroupMessageEvent):
         if pc.tutu_bot_id:
-            return event.group_id in var.group_list and bot.self_id == pc.tutu_bot_id
+            return (
+                event.group_id in var.group_list and int(bot.self_id) == pc.tutu_bot_id
+            )
 
         return event.group_id in var.group_list
 

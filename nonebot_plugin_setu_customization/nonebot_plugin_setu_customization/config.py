@@ -21,7 +21,7 @@ class Config(BaseModel):
     # http代理地址，如 http://127.0.0.1:1234
     tutu_http_proxy: Optional[str] = None
     # 限定哪个bot响应，填bot的qq号，限定群聊只有这个bot响应，不填则均响应
-    tutu_bot_id: Optional[str] = None
+    tutu_bot_id: Optional[int] = None
 
 
 class Var:
