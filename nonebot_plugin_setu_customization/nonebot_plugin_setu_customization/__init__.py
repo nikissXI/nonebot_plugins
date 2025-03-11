@@ -53,7 +53,7 @@ async def tutu_permission_check(event: MessageEvent, bot: Bot) -> bool:
 
 
 async def admin_permission_check(event: MessageEvent, bot: Bot) -> bool:
-    if not SUPERUSER(bot, event):
+    if not await SUPERUSER(bot, event):
         return False
 
     if isinstance(event, PrivateMessageEvent):
