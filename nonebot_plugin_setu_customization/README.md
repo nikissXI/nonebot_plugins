@@ -74,6 +74,8 @@ tutu_bot_id = 123123123
 tutu_local_api_path = data/tutu_local_img_lib/
 # 插件数据文件名
 tutu_data_filename = tutu_data.json
+
+
 ```
 
 ## 目录
@@ -93,6 +95,8 @@ data/tutu_local_img_lib/ 存储用户自己上传的图片地址文件
 |    图图插件接口管理    |              增删 API 接口               |
 |    图图插件接口测试    |       测试接口连接情况和返回的数据       |
 |    图图插件图片测试    |         测试某张图能否正常发出来         |
+
+注意：管理员命令需要添加管理员，SUPERUSERS=["管理员qq号"]
 
 ## 使用示例、导入 api 和本地图片库
 
