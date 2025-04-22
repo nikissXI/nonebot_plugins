@@ -1,6 +1,5 @@
 from typing import Dict, List, Optional
 
-from httpx import AsyncClient
 from nonebot import get_bot, get_bots, get_driver, get_plugin_config
 from nonebot.adapters import Bot
 from pydantic import BaseModel
@@ -20,7 +19,7 @@ class Config(BaseModel):
     # 默认bot
     default_botName: str = "GPT-4o-Mini"
     # AI回答输出类型，填1/2/3其中一个数字，1=文字，2=图片，3=图片+文字（文字在网页粘贴板）
-    eop_ai_reply_type: int = 3
+    eop_ai_reply_type: int = 1
     # 图片输出时，图片的宽度
     eop_ai_img_width: int = 400
     # 处理消息时是否提示
@@ -81,13 +80,6 @@ class Global_var:
     paste_csrftoken: Dict[str, str] = {}
     # 默认bot
     default_bot: Dict[str, str] = {}
-    # httpx
-    httpx_client = AsyncClient(
-        base_url=pc.eop_ai_base_addr,
-        headers={"Authorization": f"Bearer {pc.eop_ai_access_token}"},
-        timeout=10,
-        proxies=pc.eop_ai_http_proxy_addr,
-    )
 
 
 var = Global_var()

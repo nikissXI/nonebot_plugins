@@ -1,11 +1,9 @@
-from asyncio import create_task, gather
 from html import unescape
 from json import dump, load, loads
 from os import makedirs, path
-from re import search
-from traceback import format_exc
 from typing import Optional
 
+from aiohttp import ClientSession, ClientTimeout
 from nonebot import get_driver, require
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageEvent
 from nonebot.adapters.onebot.v11 import MessageSegment as MS
@@ -60,7 +58,7 @@ async def _():
     # 验证access_token
     try:
         await http_request("GET", "/user/info")
-        logger.success(f"eop ai认证成功")
+        logger.success("eop ai认证成功")
     except Exception as e:
         logger.error(f"eop ai认证失败：{repr(e)}")
 
@@ -145,53 +143,62 @@ async def md_to_pic(md_text: str) -> bytes:
     return img_raw
 
 
-async def get_csrftoken(id: str) -> str:
-    resp = await var.httpx_client.get("https://paste.mozilla.org/")
-    if resp.status_code != 200:
-        raise Exception(
-            f"访问https://paste.mozilla.org/失败，响应码：{resp.status_code}"
-        )
+# async def get_csrftoken(id: str) -> str:
+#     async with ClientSession() as c:
+#         async with c.get(
+#             "https://paste.mozilla.org/",
+#             timeout=ClientTimeout(10),
+#             proxy=pc.eop_ai_http_proxy_addr,
+#         ) as resp:
+#             if resp.status != 200:
+#                 raise Exception(
+#                     f"访问https://paste.mozilla.org/失败，响应码：{resp.status}"
+#                 )
+#             resp_text = await resp.text()
 
-    match = search(
-        r'<input[^>]+name="csrfmiddlewaretoken"[^>]+value="([^"]+)"', resp.text
-    )
-    if match:
-        var.paste_csrftoken[id] = match.group(1)
-        return var.paste_csrftoken[id]
-    else:
-        raise Exception("未找到csrfmiddlewaretoken")
+#     match = search(
+#         r'<input[^>]+name="csrfmiddlewaretoken"[^>]+value="([^"]+)"', resp_text
+#     )
+#     if match:
+#         var.paste_csrftoken[id] = match.group(1)
+#         return var.paste_csrftoken[id]
+#     else:
+#         raise Exception("未找到csrfmiddlewaretoken")
 
 
-async def get_pasted_url(content: str, id: str) -> str:
-    if id in var.paste_csrftoken and var.paste_csrftoken[id]:
-        csrfmiddlewaretoken = var.paste_csrftoken[id]
-    else:
-        csrfmiddlewaretoken = await get_csrftoken(id)
+# async def get_pasted_url(content: str, id: str) -> str:
+#     if id in var.paste_csrftoken and var.paste_csrftoken[id]:
+#         csrfmiddlewaretoken = var.paste_csrftoken[id]
+#     else:
+#         csrfmiddlewaretoken = await get_csrftoken(id)
 
-    resp = await var.httpx_client.post(
-        "https://paste.mozilla.org/",
-        headers={
-            "Origin": "https://paste.mozilla.org",
-            "Referer": "https://paste.mozilla.org/",
-        },
-        data={
-            "csrfmiddlewaretoken": csrfmiddlewaretoken,
-            "title": "",
-            "lexer": "_markdown",
-            "expires": 86400,
-            "content": content,
-        },
-    )
-    if resp.status_code == 302:
-        # 缓存下一个token
-        create_task(get_csrftoken(id))
-        return f"https://paste.mozilla.org{resp.headers.get('Location')}/slim"
-    elif resp.status_code == 403:
-        # token失效
-        var.paste_csrftoken[id] = ""
-        return await get_pasted_url(content, id)
-    else:
-        raise Exception("提交后响应码非302")
+#     async with ClientSession() as c:
+#         async with c.post(
+#             "https://paste.mozilla.org/",
+#             headers={
+#                 "Origin": "https://paste.mozilla.org",
+#                 "Referer": "https://paste.mozilla.org/",
+#             },
+#             data={
+#                 "csrfmiddlewaretoken": csrfmiddlewaretoken,
+#                 "title": "",
+#                 "lexer": "_markdown",
+#                 "expires": 86400,
+#                 "content": content,
+#             },
+#             timeout=ClientTimeout(10),
+#             proxy=pc.eop_ai_http_proxy_addr,
+#         ) as resp:
+#             if resp.status == 302:
+#                 # 缓存下一个token
+#                 create_task(get_csrftoken(id))
+#                 return f"https://paste.mozilla.org{resp.headers.get('Location')}/slim"
+#             elif resp.status == 403:
+#                 # token失效
+#                 var.paste_csrftoken[id] = ""
+#                 return await get_pasted_url(content, id)
+#             else:
+#                 raise Exception("提交后响应码非302")
 
 
 def get_uid(event: MessageEvent) -> str:
@@ -305,44 +312,50 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
 
         answer = ""
         # 对话
-        async with var.httpx_client.stream(
-            "POST",
-            f"/user/talk/{session.chatCode}",
-            data={
-                "botName": session.botName,
-                "botHandle": session.botHandle,
-                "question": question,
-                "price": session.price,
-            },
-        ) as resp:
-            async for chunk in resp.aiter_lines():
-                chunk_data = loads(chunk)
-                if chunk_data["code"] != 0:
-                    if chunk_data["code"] == 2001:
-                        var.session_data.pop(uid)
-                        raise AnswerError("原会话丢失，重置会话")
-                    raise AnswerError(f"生成回答出错：{chunk_data['msg']}")
+        async with ClientSession(
+            base_url=pc.eop_ai_base_addr,
+            headers={"Authorization": f"Bearer {pc.eop_ai_access_token}"},
+            timeout=ClientTimeout(10),
+            proxy=pc.eop_ai_http_proxy_addr,
+        ) as c:
+            async with c.post(
+                f"/user/talk/{session.chatCode}",
+                data={
+                    "botName": session.botName,
+                    "botHandle": session.botHandle,
+                    "question": question,
+                    "price": session.price,
+                },
+            ) as resp:
+                async for chunks in resp.content.iter_any():
+                    for chunk in chunks.decode().splitlines():
+                        chunk_data = loads(chunk)
+                        if chunk_data["code"] != 0:
+                            if chunk_data["code"] == 2001:
+                                var.session_data.pop(uid)
+                                raise AnswerError("原会话丢失，重置会话")
+                            raise AnswerError(f"生成回答出错：{chunk_data['msg']}")
 
-                data_type = chunk_data["data"]["dataType"]
-                data_content = chunk_data["data"]["dataContent"]
-                # 新会话
-                if data_type == "newChat":
-                    # 记录新会话的chatCode
-                    session.chatCode = data_content["chatCode"]
-                # 回答的内容
-                if data_type == "botMessageAdd":
-                    answer = data_content["text"]
-                # 更新title
-                if data_type == "chatTitleUpdated":
-                    # 更新title为uid
-                    await http_request(
-                        "POST",
-                        f"/user/titleUpdate/{session.chatCode}",
-                        json={"title": uid},
-                    )
-                # 出错
-                elif data_type == "talkError":
-                    raise AnswerError(f"生成回答出错：{data_content['errMsg']}")
+                        data_type = chunk_data["data"]["dataType"]
+                        data_content = chunk_data["data"]["dataContent"]
+                        # 新会话
+                        if data_type == "newChat":
+                            # 记录新会话的chatCode
+                            session.chatCode = data_content["chatCode"]
+                        # 回答的内容
+                        if data_type == "botMessageAdd":
+                            answer = data_content["text"]
+                        # 更新title
+                        if data_type == "chatTitleUpdated":
+                            # 更新title为uid
+                            await http_request(
+                                "POST",
+                                f"/user/titleUpdate/{session.chatCode}",
+                                json={"title": uid},
+                            )
+                        # 出错
+                        elif data_type == "talkError":
+                            raise AnswerError(f"生成回答出错：{data_content['errMsg']}")
 
         # 转图片
         async def _reply_with_img(answer: str):
@@ -350,11 +363,11 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
             return MS.image(answer_image)
 
         # 转图片并粘贴到剪切板
-        async def _reply_with_img_and_text(answer: str):
-            answer_image, answer_text_link = await gather(
-                md_to_pic(answer), get_pasted_url(answer, uid)
-            )
-            return MS.image(answer_image) + MS.text("文本：" + answer_text_link)
+        # async def _reply_with_img_and_text(answer: str):
+        #     answer_image, answer_text_link = await gather(
+        #         md_to_pic(answer), get_pasted_url(answer, uid)
+        #     )
+        #     return MS.image(answer_image) + MS.text("文本：" + answer_text_link)
 
         reply_type = pc.eop_ai_reply_type
         if uid in var.reply_type:
@@ -364,19 +377,21 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
         if immersive:
             if reply_type == 1:
                 await send_with_at(matcher, answer)
-            elif reply_type == 2:
-                await send_with_at(matcher, await _reply_with_img(answer))
             else:
-                await send_with_at(matcher, await _reply_with_img_and_text(answer))
+                # elif reply_type == 2:
+                await send_with_at(matcher, await _reply_with_img(answer))
+            # else:
+            # await send_with_at(matcher, await _reply_with_img_and_text(answer))
 
         # 普通对话
         else:
             if reply_type == 1:
                 await send_with_at(matcher, answer)
-            elif reply_type == 2:
-                await send_with_at(matcher, await _reply_with_img(answer))
             else:
-                await send_with_at(matcher, await _reply_with_img_and_text(answer))
+                # elif reply_type == 2:
+                await send_with_at(matcher, await _reply_with_img(answer))
+            # else:
+            # await send_with_at(matcher, await _reply_with_img_and_text(answer))
 
     except FinishedException as e:
         raise e
@@ -418,7 +433,25 @@ class RequestError(Exception):
 
 async def http_request(method: str, url: str, **kwargs) -> dict:
     try:
-        resp = await var.httpx_client.request(method, url, **kwargs)
+        async with ClientSession(
+            base_url=pc.eop_ai_base_addr,
+            headers={"Authorization": f"Bearer {pc.eop_ai_access_token}"},
+            timeout=ClientTimeout(10),
+            proxy=pc.eop_ai_http_proxy_addr,
+        ) as c:
+            async with c.request(
+                method,
+                url,
+                **kwargs,
+            ) as resp:
+                if resp.status != 200:
+                    resp_text = await resp.text()
+                    raise RequestError(method, url, resp.status, {"text": resp_text})
+
+                resp_json = await resp.json()
+                return resp_json["data"]
+
+        # resp = await var.httpx_client.request(method, url, **kwargs)
     except Exception as e:
         raise e
 
@@ -435,9 +468,3 @@ async def http_request(method: str, url: str, **kwargs) -> dict:
     #     var.httpx_client.headers.update({"Authorization": f"Bearer {var.access_token}"})
     #     # 重新请求
     #     return await http_request(method, url, **kwargs)
-
-    if resp.status_code != 200:
-        resp_json = resp.json()
-        raise RequestError(method, url, resp.status_code, resp_json)
-
-    return resp.json()["data"]
