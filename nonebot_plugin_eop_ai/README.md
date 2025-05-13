@@ -132,7 +132,7 @@ eop_ai_data = eop_ai.json
 | /default |                  设置新会话默认 bot                   | 群聊时要管理员 |
 
 ## 更新日志
-### 2025/05/13 \[v0.3.4]
+### 2025/05/13 \[v0.3.5]
 
 - eop_ai_default_bot改为GPT-4.1-nano
 

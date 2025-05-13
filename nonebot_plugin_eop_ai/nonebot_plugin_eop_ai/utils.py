@@ -290,7 +290,6 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                         botName=resp["botInfo"]["botName"],
                         botHandle=resp["botInfo"]["botHandle"],
                         chatCode=chat["chatCode"],
-                        price=resp["botInfo"]["price"],
                     )
                     break
             # 没有一样的会话
@@ -298,13 +297,12 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                 bot_name = (
                     var.default_bot[uid]
                     if uid in var.default_bot
-                    else pc.default_botName
+                    else pc.eop_ai_default_bot
                 )
                 resp = await http_request("GET", f"/user/bot/{bot_name}")
                 var.session_data[uid] = Session(
                     botName=resp["botName"],
                     botHandle=resp["botHandle"],
-                    price=resp["price"],
                 )
 
         # 拉取session元数据
@@ -324,7 +322,6 @@ async def get_answer(matcher: Matcher, event: MessageEvent, bot: Bot, immersive=
                     "botName": session.botName,
                     "botHandle": session.botHandle,
                     "question": question,
-                    "price": session.price,
                 },
             ) as resp:
                 async for chunks in resp.content.iter_any():
