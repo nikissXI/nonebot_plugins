@@ -73,7 +73,7 @@ eop_ai_access_token = token
 # 代理地址，仅支持http代理
 eop_ai_http_proxy_addr = http://127.0.0.1:7890
 # 默认bot
-default_botName = GPT-4o-Mini
+eop_ai_default_bot = GPT-4.1-nano
 # AI回答默认输出类型，填1/2/3其中一个数字，1=文字，2=图片
 eop_ai_reply_type = 1
 # 图片输出时，图片的宽度
@@ -132,6 +132,10 @@ eop_ai_data = eop_ai.json
 | /default |                  设置新会话默认 bot                   | 群聊时要管理员 |
 
 ## 更新日志
+### 2025/05/13 \[v0.3.4]
+
+- eop_ai_default_bot改为GPT-4.1-nano
+
 ### 2025/04/22 \[v0.3.3]
 
 - paste.mozilla.org服务没了，所以移除在线粘贴板功能

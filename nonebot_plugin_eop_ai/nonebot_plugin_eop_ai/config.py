@@ -17,7 +17,7 @@ class Config(BaseModel):
     # 代理地址
     eop_ai_http_proxy_addr: Optional[str] = None
     # 默认bot
-    default_botName: str = "GPT-4o-Mini"
+    eop_ai_default_bot: str = "GPT-4o-Mini"
     # AI回答输出类型，填1/2/3其中一个数字，1=文字，2=图片，3=图片+文字（文字在网页粘贴板）
     eop_ai_reply_type: int = 1
     # 图片输出时，图片的宽度
