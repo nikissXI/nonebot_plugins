@@ -19,7 +19,7 @@ default = true
 python = ">=3.8"
 nonebot2 = ">=2.0.0rc1"
 nonebot-adapter-onebot = ">=2.0.0"
-httpx[http2] = ">=0.26.0"
+httpx = { version = ">=0.26.0", extras = ["http2"] }
 
 [build-system]
 requires = ["poetry-core"]
