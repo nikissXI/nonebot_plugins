@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_mc_server_status"
-version = "0.3.1"
+version = "0.4.0"
 description = "Nonebot2查询MC服务器在线信息插件"
 authors = ["nikissXI <1299577815@qq.com>"]
 license = "MIT"
@@ -14,7 +14,7 @@ documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_p
 python = ">=3.8"
 nonebot2 = ">=2.0.0rc1"
 nonebot-adapter-onebot = ">=2.0.0"
-mcstatus = ">=10.0.0"
+mcstatus = ">=12.0.0"
 
 [build-system]
 requires = ["poetry-core"]

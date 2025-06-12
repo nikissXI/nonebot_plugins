@@ -30,8 +30,8 @@ var = Var()
 
 @driver.on_startup
 async def on_startup():
-    if not path.exists(f"data"):
-        makedirs(f"data")
+    if not path.exists("data"):
+        makedirs("data")
 
     if not path.exists(f"data/{pc.mc_status_data_filename}"):
         save_file()

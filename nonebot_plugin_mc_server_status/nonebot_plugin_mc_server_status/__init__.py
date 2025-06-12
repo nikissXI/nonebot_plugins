@@ -12,9 +12,7 @@ from nonebot.adapters.onebot.v11 import (
     Message,
     MessageEvent,
 )
-from nonebot.adapters.onebot.v11 import (
-    MessageSegment as MS,
-)
+from nonebot.adapters.onebot.v11 import MessageSegment as MS
 from nonebot.log import logger
 from nonebot.params import RegexGroup
 from nonebot.plugin import PluginMetadata
@@ -28,7 +26,7 @@ __plugin_meta__ = PluginMetadata(
     homepage="https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_setu_customization",
     supported_adapters={"~onebot.v11"},
     config=Config,
-    usage=f"""插件命令如下：
+    usage="""插件命令如下：
 信息  # 字面意思，需要加命令前缀，默认/
 信息数据  # 查看已启用群以及服务器信息，需要加命令前缀，默认/
 添加服务器  # 字面意思
@@ -83,7 +81,7 @@ async def _(event: GroupMessageEvent):
 async def _(mp=RegexGroup()):
     if not mp[0]:
         await add_server.finish(
-            f"添加服务器 [群号] [名称] [服务器地址] [类型]\n类型写js或bds，js是Java服务器，bds是基岩服务器\n服务器地址如果知道端口号把端口加上，否则查询速度会慢一点\n添加例子：\nexp1: 添加服务器 114514 哈皮咳嗽 mc.hypixel.net js\nexp2: 添加服务器 114514 某基岩服 mc.bds.net bds\nexp3: 添加服务器 114514 某Java服 mc.java.net:25577 js"
+            "添加服务器 [群号] [名称] [服务器地址] [类型]\n类型写js或bds，js是Java服务器，bds是基岩服务器\n服务器地址如果知道端口号把端口加上，否则查询速度会慢一点\n添加例子：\nexp1: 添加服务器 114514 哈皮咳嗽 mc.hypixel.net js\nexp2: 添加服务器 114514 某基岩服 mc.bds.net bds\nexp3: 添加服务器 114514 某Java服 mc.java.net:25577 js"
         )
     else:
         group = int(mp[1])
@@ -108,7 +106,7 @@ async def _(mp=RegexGroup()):
 @del_server.handle()
 async def _(mp=RegexGroup()):
     if not mp[0]:
-        await del_server.finish(f"删除服务器 [群号] [名称]")
+        await del_server.finish("删除服务器 [群号] [名称]")
     else:
         group = int(mp[1])
         name = mp[2]
@@ -144,7 +142,7 @@ async def _():
 async def _(mp=RegexGroup()):
     if not mp[0]:
         await test_server.finish(
-            f"测试服务器 [服务器地址] [类型]\n类型写js或bds，js是Java服务器，bds是基岩服务器"
+            "测试服务器 [服务器地址] [类型]\n类型写js或bds，js是Java服务器，bds是基岩服务器"
         )
     else:
         server_host = mp[1]
@@ -196,8 +194,8 @@ async def check_mc_status(
 
             latency = round(status.latency)
             # base64图标
-            if status.favicon:
-                aa, bb = status.favicon.split("base64,")
+            if "favicon" in status.raw:
+                aa, bb = status.raw["favicon"].split("base64,")
                 icon = MS.image(BytesIO(b64decode(bb))) + "\n"
             else:
                 icon = ""
@@ -213,7 +211,7 @@ async def check_mc_status(
                 host, port = host, 19132
             bds = BedrockServer(host=host, port=int(port))
             status = await bds.async_status()
-            online = f"{status.players_online}/{status.players_max}"
+            online = f"{status.players.online}/{status.players.max}"
             latency = round(status.latency)
             version = status.version.version
             msg = f"名称：{name} 【{version}】\n在线：{online}  延迟：{latency}ms"
