@@ -10,11 +10,6 @@ homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin
 repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_easy_translate"
 documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_easy_translate#README.md"
 
-[[tool.poetry.source]]
-name = "tsinghua"
-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
-default = true
-
 [tool.poetry.dependencies]
 python = ">=3.8"
 nonebot2 = ">=2.0.0rc1"
