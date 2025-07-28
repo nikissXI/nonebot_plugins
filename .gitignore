@@ -5,3 +5,5 @@ test/
 .vscode/
 ABANDON_nya_music
 ABANDON_talk_with_chatgpt
+.python-version
+uv.lock

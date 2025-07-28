@@ -1,21 +1,15 @@
-[tool.poetry]
-name = "nonebot_plugin_easy_translate"
-version = "0.2.3"
+[project]
+name = "nonebot-plugin-easy-translate"
+version = "0.2.4"
 description = "Nonebot2 谷歌翻译插件"
-authors = ["nikissXI <1299577815@qq.com>"]
-license = "MIT"
 readme = "README.md"
-packages = [{include = "nonebot_plugin_easy_translate"}]
-homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_easy_translate"
-repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_easy_translate"
-documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_easy_translate#README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "httpx[http2]>=0.26.0",
+    "nonebot-adapter-onebot>=2.0.0",
+    "nonebot2>=2.0.0",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.8"
-nonebot2 = ">=2.0.0rc1"
-nonebot-adapter-onebot = ">=2.0.0"
-httpx = { version = ">=0.26.0", extras = ["http2"] }
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[[tool.uv.index]]
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
+default = true

@@ -1,0 +1,15 @@
+README.md
+pyproject.toml
+src/nonebot_plugin_easy_translate/__init__.py
+src/nonebot_plugin_easy_translate/config.py
+src/nonebot_plugin_easy_translate.egg-info/PKG-INFO
+src/nonebot_plugin_easy_translate.egg-info/SOURCES.txt
+src/nonebot_plugin_easy_translate.egg-info/dependency_links.txt
+src/nonebot_plugin_easy_translate.egg-info/requires.txt
+src/nonebot_plugin_easy_translate.egg-info/top_level.txt
+src/nonebot_plugin_easy_translate/gtranslate/client.py
+src/nonebot_plugin_easy_translate/gtranslate/constants.py
+src/nonebot_plugin_easy_translate/gtranslate/gtoken.py
+src/nonebot_plugin_easy_translate/gtranslate/models.py
+src/nonebot_plugin_easy_translate/gtranslate/urls.py
+src/nonebot_plugin_easy_translate/gtranslate/utils.py

@@ -75,10 +75,3 @@ async def handle_fanyi(matchgroup=RegexGroup()):
         result = repr(e)
 
     await fanyi.finish(result)
-
-    # 有道 免key翻译
-    # params = {"q": in_mess, "from": ff, "to": tt}
-    # async with AsyncClient(
-    #     verify=False,
-    # ) as client:
-    #     res = await client.get(f"https://aidemo.youdao.com/trans", params=params)
