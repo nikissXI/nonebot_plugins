@@ -1,28 +1,17 @@
-[tool.poetry]
-name = "nonebot_plugin_eop_ai"
-version = "0.3.5"
+[project]
+name = "nonebot-plugin-eop-ai"
+version = "0.3.6"
 description = "Nonebot2 一款调用eop api的AI聊天插件"
-authors = ["nikissXI <1299577815@qq.com>"]
-license = "MIT"
 readme = "README.md"
-packages = [{include = "nonebot_plugin_eop_ai"}]
-homepage = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_eop_ai"
+authors = ["nikissXI <1299577815@qq.com>"]
 repository = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_eop_ai"
 documentation = "https://github.com/nikissXI/nonebot_plugins/tree/main/nonebot_plugin_eop_ai#README.md"
-
-[[tool.poetry.source]]
-name = "tsinghua"
-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
-
-[tool.poetry.dependencies]
-python = ">=3.8"
-nonebot2 = ">=2.0.0rc1"
-nonebot-adapter-onebot = ">=2.0.0"
-aiohttp = ">=3.11.0"
-nonebot-plugin-htmlrender = ">=0.2.1"
-mdx-breakless-lists = ">=1.0.1"
-mdx-truly-sane-lists = ">=1.3"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires-python = ">=3.8"
+dependencies = [
+    "aiohttp>=3.10.0",
+    "mdx-breakless-lists>=1.0.1",
+    "mdx-truly-sane-lists>=1.3",
+    "nonebot-adapter-onebot>=2.0.0",
+    "nonebot-plugin-htmlrender>=0.3.0",
+    "nonebot2>=2.0.0",
+]

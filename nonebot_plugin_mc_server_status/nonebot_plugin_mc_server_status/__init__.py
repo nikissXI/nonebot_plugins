@@ -3,7 +3,7 @@ from base64 import b64decode
 from io import BytesIO
 from re import findall
 from typing import Union
-
+from html import unescape
 from mcstatus import BedrockServer, JavaServer
 from nonebot import on_command, on_regex
 from nonebot.adapters.onebot.v11 import (
@@ -86,7 +86,7 @@ async def _(mp=RegexGroup()):
     else:
         group = int(mp[1])
         new_server_name = mp[2]
-        server_host = mp[3]
+        server_host = unescape(mp[3])
         server_type = mp[4].lower()
 
     if server_type not in ["js", "bds"]:
@@ -145,7 +145,7 @@ async def _(mp=RegexGroup()):
             "测试服务器 [服务器地址] [类型]\n类型写js或bds，js是Java服务器，bds是基岩服务器"
         )
     else:
-        server_host = mp[1]
+        server_host = unescape(mp[1])
         server_type = mp[2].lower()
 
     if server_type not in ["js", "bds"]:

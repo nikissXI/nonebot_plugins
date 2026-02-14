@@ -9,4 +9,9 @@ dependencies = []
 [tool.uv.workspace]
 members = [
     "nonebot_plugin_easy_translate",
+    "nonebot_plugin_eop_ai",
 ]
+
+[[tool.uv.index]]
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
+default = true

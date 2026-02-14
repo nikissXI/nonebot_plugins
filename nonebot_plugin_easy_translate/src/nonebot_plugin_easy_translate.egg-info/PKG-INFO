@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: nonebot-plugin-easy-translate
-Version: 0.2.3
+Version: 0.2.4
 Summary: Nonebot2 谷歌翻译插件
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
